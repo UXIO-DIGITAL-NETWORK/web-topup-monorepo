@@ -39,6 +39,24 @@ class TransactionReportingTest extends TestCase
         $this->assertStringContainsString('INV-EXPORT-1', $body);
     }
 
+    public function test_export_neutralises_a_formula_in_a_customer_supplied_value(): void
+    {
+        $this->actingAsAdmin();
+        // A guest's contact is free text an operator later opens in Excel; a
+        // leading "=" would be run as a formula. The export must quote it into
+        // text instead.
+        Transaction::factory()->create([
+            'invoice_number' => 'INV-FORMULA-1',
+            'user_id' => null,
+            'guest_contact' => '=1+1',
+            'status' => 'COMPLETED',
+        ]);
+
+        $body = $this->get('/api/v1/transactions/export')->streamedContent();
+
+        $this->assertStringContainsString("'=1+1", $body);
+    }
+
     public function test_recap_groups_completed_transactions_per_product(): void
     {
         $this->actingAsAdmin();

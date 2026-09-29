@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Queries\UnifiedTransactionQuery;
+use App\Support\Csv;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -94,7 +95,9 @@ class FinanceTransactionController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Invoice', 'Client', 'Item', 'Total', 'Biaya Admin', 'Fee Gateway', 'Profit Kita', 'Status', 'Tanggal']);
             foreach ($rows as $row) {
-                fputcsv($out, [
+                // Merchant name and item title are client-controlled; Csv::row
+                // keeps them text in the operator's spreadsheet.
+                fputcsv($out, Csv::row([
                     $row->invoice_number,
                     $row->merchant_name ?? '',
                     $row->title,
@@ -104,7 +107,7 @@ class FinanceTransactionController extends Controller
                     (int) $row->platform_profit,
                     $row->status,
                     $this->iso($row->occurred_at),
-                ]);
+                ]));
             }
             fclose($out);
         }, 'transaksi.csv', ['Content-Type' => 'text/csv']);
