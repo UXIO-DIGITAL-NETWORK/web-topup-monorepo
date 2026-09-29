@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api\Merchant;
 
 use App\Http\Controllers\Controller;
 use App\Queries\UnifiedTransactionQuery;
+use App\Support\Csv;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
@@ -88,7 +89,9 @@ class MerchantTransactionController extends Controller
             $out = fopen('php://output', 'w');
             fputcsv($out, ['Invoice', 'Item', 'Metode', 'Arah', 'Jumlah', 'Status', 'Tanggal']);
             foreach ($rows as $row) {
-                fputcsv($out, [
+                // The projection is already narrow; Csv::row is the second half
+                // — a product title must not become a formula in the export.
+                fputcsv($out, Csv::row([
                     $row->invoice_number,
                     $row->title,
                     $row->channel ?? '',
@@ -96,7 +99,7 @@ class MerchantTransactionController extends Controller
                     (int) $row->amount,
                     $row->status,
                     $this->iso($row->occurred_at),
-                ]);
+                ]));
             }
             fclose($out);
         }, 'transaksi.csv', ['Content-Type' => 'text/csv']);
