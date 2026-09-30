@@ -1,18 +1,20 @@
 import { useTranslation } from "react-i18next";
 import { useMemo, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, Search } from "lucide-react";
+import { ChevronLeft, ChevronRight, Minus, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/utils/currency";
-import { usePoolCandidates } from "../hooks/useProviderPool";
+import { usePoolCandidates, usePoolFacets } from "../hooks/useProviderPool";
 import { useMarginPlanOptions } from "../hooks/useProviderProducts";
 import { useAddProductsFromSupplier, useProductList } from "../hooks/useProducts";
+import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 
 export type AddMode = "single" | "bulk";
 
@@ -24,29 +26,32 @@ interface AddProductsDialogProps {
 }
 
 const PER_PAGE = 10;
+const NONE = "all";
 const rupiah = (value: number) => formatCurrency(value, { fractionDigits: 0 });
 
-/** One product's editable data. Strings, because they are inputs. */
-interface DraftForm {
+/** One row's editable data. Strings, because they are inputs. */
+interface RowForm {
   name: string;
-  code: string;
-  discountType: "" | "percent" | "fixed";
-  discountValue: string;
+  subName: string;
+  subCategoryId: string;
   points: string;
   pointsFlat: string;
+  discountType: "" | "percent" | "fixed";
+  discountValue: string;
   priceMin: string;
   priceMax: string;
   margins: Record<string, string>;
   mix: { productId: string; quantity: string }[];
 }
 
-const emptyForm = (name: string, code: string): DraftForm => ({
+const emptyForm = (name: string): RowForm => ({
   name,
-  code,
-  discountType: "",
-  discountValue: "",
+  subName: "",
+  subCategoryId: "",
   points: "",
   pointsFlat: "",
+  discountType: "",
+  discountValue: "",
   priceMin: "",
   priceMax: "",
   margins: {},
@@ -61,48 +66,80 @@ const toNumber = (raw: string): number | null => {
 };
 
 /**
- * Add Products — one modal that creates AND configures, for one product or many.
+ * Add Products — one TABLE that creates and configures together.
  *
- * It replaces the pool's two screens and the older "create a draft, then go and
- * price it" split: the admin picks provider services, fills in name, discount,
- * points, price window, margins and the mix right here, then either publishes or
- * leaves them as drafts. One screen, one submit.
+ * The rows are the filtered provider price list, not a stack of forms: picking a
+ * service makes its row editable in place, so fifty of them stay one screen and
+ * two rows can be compared at a glance. `Modal` (the supplier's cost) stays
+ * visible beside the sell prices the admin's margins produce, which is the whole
+ * reason a bulk screen is worth having.
  *
- * The SKU list is paginated server-side — a whole game's catalogue is hundreds
- * of rows, and an endless scroll is what the old panel had.
+ * Prices are authored as a MARGIN; the resulting price is shown, never typed.
+ * The server still owns the maths (`PricingService`) — what is displayed here is
+ * a preview of it.
  */
 export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialogProps) {
   const { t } = useTranslation("products");
-  // The menu's choice seeds the dialog. It is NOT re-synced by an effect: the
-  // parent mounts a fresh dialog per open, so state resets by construction
-  // rather than by a cascading render.
   const [currentMode, setCurrentMode] = useState<AddMode>(mode);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [providerCategory, setProviderCategory] = useState("");
+  const [categoryId, setCategoryId] = useState("");
   const [selected, setSelected] = useState<string[]>([]);
-  const [forms, setForms] = useState<Record<string, DraftForm>>({});
+  const [forms, setForms] = useState<Record<string, RowForm>>({});
+  const [expanded, setExpanded] = useState<string | null>(null);
+
+  const { data: facets } = usePoolFacets();
 
   const params = useMemo(
     () => ({
       search: search || undefined,
       page,
       per_page: PER_PAGE,
-      // "all", not "not_pooled": a service that is already ours must be VISIBLE
-      // and un-tickable, which is the only way the admin can tell the difference
-      // between "not added yet" and "already added".
+      // "all", not "not_pooled": a service that is already ours must stay
+      // VISIBLE and un-tickable, or the admin cannot tell "not added yet" from
+      // "already added".
       pool_state: "all",
       availability: "all",
+      provider_category: providerCategory || undefined,
+      category_id: categoryId || undefined,
     }),
-    [search, page],
+    [search, page, providerCategory, categoryId],
   );
 
   const { data, isLoading } = usePoolCandidates(params, open);
   const { data: plans = [] } = useMarginPlanOptions();
+  // Sub-categories belong to a category. With the list filtered to one, every
+  // row shares the same options — which is why the filter is the honest place
+  // to read them from rather than guessing per row.
+  const { subCategoryOptions } = useProductSelectOptions(categoryId || undefined);
   const { data: catalogue } = useProductList({ per_page: 100 });
   const addProducts = useAddProductsFromSupplier();
 
   const rows = data?.data ?? [];
   const lastPage = data?.meta.last_page ?? 1;
+
+  const providerOptions = useMemo(
+    () => [
+      { value: NONE, label: t("allProviders") },
+      ...(facets?.provider_categories ?? []).map((entry) => ({
+        value: entry.provider_category,
+        label: `${entry.provider_category} (${entry.count})`,
+      })),
+    ],
+    [facets, t],
+  );
+
+  const categoryOptions = useMemo(
+    () => [
+      { value: NONE, label: t("allCategories") },
+      ...(facets?.categories ?? []).map((entry) => ({
+        value: String(entry.id),
+        label: `${entry.name ?? "—"} (${entry.count})`,
+      })),
+    ],
+    [facets, t],
+  );
 
   const componentOptions = useMemo(
     () =>
@@ -113,27 +150,23 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
     [catalogue],
   );
 
-  const toggle = (code: string, disabled: boolean) => {
+  const toggle = (row: { buyer_sku_code: string; name: string }, disabled: boolean) => {
     if (disabled) return;
+
+    const code = row.buyer_sku_code;
 
     setSelected((current) => {
       if (current.includes(code)) return current.filter((entry) => entry !== code);
 
-      // Single: checking a second row replaces the first, rather than refusing
-      // the click — the admin's intent is "this one, not that one".
-      const next = currentMode === "single" ? [code] : [...current, code];
+      setForms((existing) => (existing[code] ? existing : { ...existing, [code]: emptyForm(row.name) }));
 
-      setForms((forms) => {
-        if (forms[code]) return forms;
-        const row = rows.find((entry) => entry.buyer_sku_code === code);
-        return { ...forms, [code]: emptyForm(row?.name ?? code, code) };
-      });
-
-      return next;
+      // Single: ticking a second row REPLACES the first, rather than refusing
+      // the click — the admin means "this one, not that one".
+      return currentMode === "single" ? [code] : [...current, code];
     });
   };
 
-  const patch = (code: string, changes: Partial<DraftForm>) =>
+  const patch = (code: string, changes: Partial<RowForm>) =>
     setForms((current) => ({ ...current, [code]: { ...current[code], ...changes } }));
 
   const submit = (publish: boolean) =>
@@ -141,7 +174,7 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
       {
         publish,
         items: selected.map((code) => {
-          const form = forms[code] ?? emptyForm(code, code);
+          const form = forms[code] ?? emptyForm(code);
           const margins: Record<string, number | null> = {};
 
           for (const plan of plans) {
@@ -151,7 +184,8 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
           return {
             buyer_sku_code: code,
             name: form.name || undefined,
-            code: form.code || undefined,
+            sub_name: form.subName || undefined,
+            sub_category_id: form.subCategoryId || undefined,
             discount_type: form.discountType || undefined,
             discount_value: toNumber(form.discountValue) ?? undefined,
             point_percent: toNumber(form.points) ?? undefined,
@@ -179,14 +213,53 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-5xl">
         <DialogHeader>
           <DialogTitle>{t("addProductsTitle")}</DialogTitle>
           <DialogDescription>{t("addProductsSubtitle")}</DialogDescription>
         </DialogHeader>
 
-        {/* Mode first, because it decides how much may be ticked. */}
-        <Box className="flex items-center gap-2">
+        {/* Filters and mode, in one strip — the two things that decide which
+            rows are on screen and how many may be ticked. */}
+        <Box className="flex flex-wrap items-end gap-2">
+          <Box className="w-56">
+            <SelectField
+              id="add-provider-filter"
+              label={t("supplier")}
+              options={providerOptions}
+              value={providerCategory || NONE}
+              onChange={(next) => {
+                setProviderCategory(next === NONE ? "" : next);
+                setPage(1);
+              }}
+            />
+          </Box>
+          <Box className="w-56">
+            <SelectField
+              id="add-category-filter"
+              label={t("ourCategory")}
+              options={categoryOptions}
+              value={categoryId || NONE}
+              onChange={(next) => {
+                setCategoryId(next === NONE ? "" : next);
+                setPage(1);
+              }}
+            />
+          </Box>
+          <Box className="flex-1">
+            <Box className="relative">
+              <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
+              <Input
+                className="rounded-xl pl-8"
+                placeholder={t("searchServiceOrSku")}
+                value={search}
+                onChange={(event) => {
+                  setSearch(event.target.value);
+                  setPage(1);
+                }}
+              />
+            </Box>
+          </Box>
           {(["single", "bulk"] as AddMode[]).map((value) => (
             <Button
               key={value}
@@ -201,28 +274,9 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
               {t(value === "single" ? "single" : "bulk")}
             </Button>
           ))}
-          <Text
-            variant="small"
-            className="text-muted-foreground"
-          >
-            {t("selectedForDraft", { count: selected.length })}
-          </Text>
         </Box>
 
-        <Box className="relative">
-          <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            className="rounded-xl pl-8"
-            placeholder={t("searchServiceOrSku")}
-            value={search}
-            onChange={(event) => {
-              setSearch(event.target.value);
-              setPage(1);
-            }}
-          />
-        </Box>
-
-        <Box className="rounded-xl border border-border">
+        <Box className="overflow-x-auto rounded-xl border border-border">
           {isLoading && (
             <Text
               variant="muted"
@@ -241,62 +295,303 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
             </Text>
           )}
 
-          {!isLoading &&
-            rows.map((row) => {
-              const alreadyAdded = row.already_promoted || row.already_pooled;
-              const isSelected = selected.includes(row.buyer_sku_code);
+          {!isLoading && rows.length > 0 && (
+            <table className="w-full border-collapse text-left text-sm">
+              <thead>
+                <tr className="bg-muted/40">
+                  <th className="w-10 px-3 py-2" />
+                  <th className="px-3 py-2 font-medium">{t("colCodeSubCategory")}</th>
+                  <th className="px-3 py-2 font-medium">{t("colPointsDiscount")}</th>
+                  <th className="px-3 py-2 font-medium">{t("productName")}</th>
+                  <th className="px-3 py-2 font-medium">{t("price")}</th>
+                  <th className="w-24 px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((row) => {
+                  const alreadyAdded = row.already_promoted || row.already_pooled;
+                  const isSelected = selected.includes(row.buyer_sku_code);
+                  const form = forms[row.buyer_sku_code] ?? emptyForm(row.name);
+                  // Without a category filter the sub-category list is unknown,
+                  // so the control says so instead of offering the wrong set.
+                  const subCategoryDisabled = !categoryId;
 
-              return (
-                <Box
-                  key={row.id}
-                  as="button"
-                  type="button"
-                  onClick={() => toggle(row.buyer_sku_code, alreadyAdded)}
-                  className={`flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left last:border-b-0 ${
-                    alreadyAdded ? "cursor-not-allowed opacity-50" : "hover:bg-muted/50"
-                  }`}
-                >
-                  <Box
-                    className={`flex size-4 shrink-0 items-center justify-center rounded border ${
-                      isSelected ? "border-primary bg-primary text-primary-foreground" : "border-input"
-                    }`}
-                  >
-                    {isSelected && <Check className="size-3" />}
-                  </Box>
-                  <Box className="flex flex-1 flex-col">
-                    <Text
-                      as="span"
-                      className="font-medium"
-                    >
-                      {row.name}
-                    </Text>
-                    <Text
-                      as="span"
-                      variant="small"
-                      className="text-muted-foreground"
-                    >
-                      {row.buyer_sku_code} · {row.mapped_category_name ?? row.provider_category}
-                      {alreadyAdded ? ` · ${t("alreadyAdded")}` : ""}
-                    </Text>
-                  </Box>
-                  <Text
-                    as="span"
-                    variant="small"
-                    className="tabular-nums"
-                  >
-                    {rupiah(row.cost)}
-                  </Text>
-                </Box>
-              );
-            })}
+                  return (
+                    <>
+                      <tr
+                        key={row.id}
+                        className={alreadyAdded ? "opacity-50" : ""}
+                      >
+                        <td className="px-3 py-3 align-top">
+                          <Checkbox
+                            checked={isSelected}
+                            disabled={alreadyAdded}
+                            aria-label={`Select ${row.buyer_sku_code}`}
+                            onCheckedChange={() => toggle(row, alreadyAdded)}
+                          />
+                        </td>
+
+                        <td className="px-3 py-3 align-top">
+                          <Text className="font-medium">{row.buyer_sku_code}</Text>
+                          <SelectField
+                            id={`${row.buyer_sku_code}-sub-category`}
+                            label=""
+                            options={subCategoryOptions}
+                            value={form.subCategoryId}
+                            disabled={!isSelected || subCategoryDisabled}
+                            emptyLabel={subCategoryDisabled ? t("chooseCategoryFirst") : t("noSubCategory")}
+                            onChange={(value) => patch(row.buyer_sku_code, { subCategoryId: value })}
+                          />
+                        </td>
+
+                        <td className="px-3 py-3 align-top">
+                          <Box className="flex flex-col gap-2">
+                            <Box className="flex items-center gap-2">
+                              <Input
+                                className="w-20 rounded-xl tabular-nums"
+                                inputMode="numeric"
+                                aria-label={`${row.buyer_sku_code} points`}
+                                disabled={!isSelected}
+                                value={form.points}
+                                onChange={(event) => patch(row.buyer_sku_code, { points: event.target.value })}
+                              />
+                              <Input
+                                className="w-20 rounded-xl tabular-nums"
+                                inputMode="numeric"
+                                aria-label={`${row.buyer_sku_code} bonus`}
+                                disabled={!isSelected}
+                                value={form.pointsFlat}
+                                onChange={(event) => patch(row.buyer_sku_code, { pointsFlat: event.target.value })}
+                              />
+                            </Box>
+                            <Box className="flex items-center gap-2">
+                              <SelectField
+                                id={`${row.buyer_sku_code}-discount-type`}
+                                label=""
+                                options={[
+                                  { value: NONE, label: t("noDiscount") },
+                                  { value: "percent", label: t("discountPercentOption") },
+                                  { value: "fixed", label: t("discountFixedOption") },
+                                ]}
+                                value={form.discountType || NONE}
+                                disabled={!isSelected}
+                                onChange={(next) =>
+                                  patch(row.buyer_sku_code, {
+                                    discountType: (next === NONE ? "" : next) as RowForm["discountType"],
+                                  })
+                                }
+                              />
+                              <Input
+                                className="w-20 rounded-xl tabular-nums"
+                                inputMode="numeric"
+                                aria-label={`${row.buyer_sku_code} discount`}
+                                disabled={!isSelected || !form.discountType}
+                                value={form.discountValue}
+                                onChange={(event) => patch(row.buyer_sku_code, { discountValue: event.target.value })}
+                              />
+                            </Box>
+                          </Box>
+                        </td>
+
+                        <td className="px-3 py-3 align-top">
+                          <Box className="flex flex-col gap-2">
+                            <Input
+                              className="rounded-xl"
+                              aria-label={`${row.buyer_sku_code} name`}
+                              disabled={!isSelected}
+                              value={form.name}
+                              onChange={(event) => patch(row.buyer_sku_code, { name: event.target.value })}
+                            />
+                            <Input
+                              className="rounded-xl"
+                              placeholder={t("subName")}
+                              aria-label={`${row.buyer_sku_code} sub name`}
+                              disabled={!isSelected}
+                              value={form.subName}
+                              onChange={(event) => patch(row.buyer_sku_code, { subName: event.target.value })}
+                            />
+                          </Box>
+                        </td>
+
+                        <td className="px-3 py-3 align-top">
+                          <Text
+                            variant="small"
+                            className="text-muted-foreground"
+                          >
+                            {t("cost")}: {rupiah(row.cost)}
+                          </Text>
+                          <Box className="mt-1 flex flex-col gap-1">
+                            {plans.map((plan) => {
+                              const margin = toNumber(form.margins[plan.value] ?? "");
+                              const price = margin === null ? row.cost : Math.ceil(row.cost * (1 + margin / 100));
+
+                              return (
+                                <Box
+                                  key={plan.value}
+                                  className="flex items-center gap-2"
+                                >
+                                  <Text
+                                    variant="small"
+                                    className="w-20 shrink-0"
+                                  >
+                                    {plan.label}
+                                  </Text>
+                                  <Input
+                                    className="w-16 rounded-xl tabular-nums"
+                                    inputMode="decimal"
+                                    aria-label={`${row.buyer_sku_code} ${plan.label} margin`}
+                                    disabled={!isSelected}
+                                    value={form.margins[plan.value] ?? ""}
+                                    onChange={(event) =>
+                                      patch(row.buyer_sku_code, {
+                                        margins: { ...form.margins, [plan.value]: event.target.value },
+                                      })
+                                    }
+                                  />
+                                  <Badge variant="secondary">{rupiah(price)}</Badge>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </td>
+
+                        <td className="px-3 py-3 align-top">
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="rounded-xl"
+                            disabled={!isSelected}
+                            onClick={() => setExpanded(expanded === row.buyer_sku_code ? null : row.buyer_sku_code)}
+                          >
+                            <SlidersHorizontal className="size-4" />
+                            {t("detail")}
+                            {form.mix.length > 0 ? ` (${form.mix.length})` : ""}
+                          </Button>
+                        </td>
+                      </tr>
+
+                      {/* Detail: the fields that are per-product by nature. Mix
+                          cannot be filled for many rows at once, which is
+                          exactly why it lives here and not in the grid. */}
+                      {expanded === row.buyer_sku_code && (
+                        <tr key={`${row.id}-detail`}>
+                          <td
+                            colSpan={6}
+                            className="border-t border-border bg-muted/20 px-3 py-3"
+                          >
+                            <Box className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                              <Box className="flex items-center gap-2">
+                                <Text
+                                  variant="small"
+                                  className="w-28 shrink-0"
+                                >
+                                  {t("lowerLimit")}
+                                </Text>
+                                <Input
+                                  className="rounded-xl tabular-nums"
+                                  inputMode="numeric"
+                                  aria-label={`${row.buyer_sku_code} price min`}
+                                  value={form.priceMin}
+                                  onChange={(event) => patch(row.buyer_sku_code, { priceMin: event.target.value })}
+                                />
+                                <Text
+                                  variant="small"
+                                  className="w-28 shrink-0"
+                                >
+                                  {t("upperLimit")}
+                                </Text>
+                                <Input
+                                  className="rounded-xl tabular-nums"
+                                  inputMode="numeric"
+                                  aria-label={`${row.buyer_sku_code} price max`}
+                                  value={form.priceMax}
+                                  onChange={(event) => patch(row.buyer_sku_code, { priceMax: event.target.value })}
+                                />
+                              </Box>
+                            </Box>
+
+                            <Box className="mt-3 flex flex-col gap-2">
+                              <Box className="flex items-center justify-between">
+                                <Text className="font-medium">{t("tabProductMix")}</Text>
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  size="sm"
+                                  className="rounded-xl"
+                                  onClick={() =>
+                                    patch(row.buyer_sku_code, {
+                                      mix: [...form.mix, { productId: "", quantity: "1" }],
+                                    })
+                                  }
+                                >
+                                  <Plus className="size-4" />{t("addMix")}
+                                </Button>
+                              </Box>
+
+                              {form.mix.map((line, index) => (
+                                <Box
+                                  key={index}
+                                  className="flex items-end gap-2"
+                                >
+                                  <Box className="w-72">
+                                    <SelectField
+                                      id={`${row.buyer_sku_code}-mix-${index}`}
+                                      label={t("mainProduct")}
+                                      options={componentOptions}
+                                      value={line.productId}
+                                      onChange={(value) =>
+                                        patch(row.buyer_sku_code, {
+                                          mix: form.mix.map((entry, i) =>
+                                            i === index ? { ...entry, productId: value } : entry,
+                                          ),
+                                        })
+                                      }
+                                    />
+                                  </Box>
+                                  <Input
+                                    className="w-20 rounded-xl"
+                                    inputMode="numeric"
+                                    aria-label={`${row.buyer_sku_code} mix ${index + 1} quantity`}
+                                    value={line.quantity}
+                                    onChange={(event) =>
+                                      patch(row.buyer_sku_code, {
+                                        mix: form.mix.map((entry, i) =>
+                                          i === index ? { ...entry, quantity: event.target.value } : entry,
+                                        ),
+                                      })
+                                    }
+                                  />
+                                  <Button
+                                    type="button"
+                                    variant="ghost"
+                                    size="icon"
+                                    aria-label={`Remove mix ${index + 1}`}
+                                    className="rounded-xl"
+                                    onClick={() =>
+                                      patch(row.buyer_sku_code, {
+                                        mix: form.mix.filter((_, i) => i !== index),
+                                      })
+                                    }
+                                  >
+                                    <Minus className="size-4" />
+                                  </Button>
+                                </Box>
+                              ))}
+                            </Box>
+                          </td>
+                        </tr>
+                      )}
+                    </>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
         </Box>
 
-        {/* Pagination: the catalogue is hundreds of rows; an endless list is what
-            the old panel had, and it is what this replaces. */}
         <Box className="flex items-center justify-between">
-          <Text variant="small">
-            {t("pageOf", { page, last: lastPage })}
-          </Text>
+          <Text variant="small">{t("pageOf", { page, last: lastPage })}</Text>
           <Box className="flex items-center gap-2">
             <Button
               type="button"
@@ -321,207 +616,6 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
           </Box>
         </Box>
 
-        {selected.map((code) => {
-          const form = forms[code] ?? emptyForm(code, code);
-
-          return (
-            <Box
-              key={code}
-              className="flex flex-col gap-4 rounded-xl border border-border p-4"
-            >
-              <Text className="font-medium">{code}</Text>
-
-              <Box className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-name`}>{t("productName")}</Label>
-                  <Input
-                    id={`${code}-name`}
-                    className="rounded-xl"
-                    value={form.name}
-                    onChange={(event) => patch(code, { name: event.target.value })}
-                  />
-                </Box>
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-code`}>{t("productCode")}</Label>
-                  <Input
-                    id={`${code}-code`}
-                    className="rounded-xl"
-                    value={form.code}
-                    onChange={(event) => patch(code, { code: event.target.value })}
-                  />
-                </Box>
-              </Box>
-
-              <Box className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <SelectField
-                  id={`${code}-discount-type`}
-                  label={t("discount")}
-                  options={[
-                    { value: "none", label: t("noDiscount") },
-                    { value: "percent", label: t("discountPercentOption") },
-                    { value: "fixed", label: t("discountFixedOption") },
-                  ]}
-                  value={form.discountType || "none"}
-                  onChange={(next) =>
-                    patch(code, {
-                      discountType: (next === "none" ? "" : next) as DraftForm["discountType"],
-                    })
-                  }
-                />
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-discount-value`}>{t("discountValue")}</Label>
-                  <Input
-                    id={`${code}-discount-value`}
-                    className="rounded-xl tabular-nums"
-                    inputMode="numeric"
-                    disabled={!form.discountType}
-                    value={form.discountValue}
-                    onChange={(event) => patch(code, { discountValue: event.target.value })}
-                  />
-                </Box>
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-points`}>{t("points")}</Label>
-                  <Input
-                    id={`${code}-points`}
-                    className="rounded-xl tabular-nums"
-                    inputMode="numeric"
-                    value={form.points}
-                    onChange={(event) => patch(code, { points: event.target.value })}
-                  />
-                </Box>
-              </Box>
-
-              <Box className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-points-flat`}>{t("bonusPoints")}</Label>
-                  <Input
-                    id={`${code}-points-flat`}
-                    className="rounded-xl tabular-nums"
-                    inputMode="numeric"
-                    value={form.pointsFlat}
-                    onChange={(event) => patch(code, { pointsFlat: event.target.value })}
-                  />
-                </Box>
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-price-min`}>{t("lowerLimit")}</Label>
-                  <Input
-                    id={`${code}-price-min`}
-                    className="rounded-xl tabular-nums"
-                    inputMode="numeric"
-                    value={form.priceMin}
-                    onChange={(event) => patch(code, { priceMin: event.target.value })}
-                  />
-                </Box>
-                <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor={`${code}-price-max`}>{t("upperLimit")}</Label>
-                  <Input
-                    id={`${code}-price-max`}
-                    className="rounded-xl tabular-nums"
-                    inputMode="numeric"
-                    value={form.priceMax}
-                    onChange={(event) => patch(code, { priceMax: event.target.value })}
-                  />
-                </Box>
-              </Box>
-
-              {/* Margin per membership plan — the platform's own pricing axis. */}
-              <Box className="flex flex-col gap-2">
-                <Text className="font-medium">{t("tabPricingMargin")}</Text>
-                {plans.length === 0 && (
-                  <Text
-                    variant="small"
-                    className="text-muted-foreground"
-                  >
-                    {t("noPlans")}
-                  </Text>
-                )}
-                <Box className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-                  {plans.map((plan) => (
-                    <Box
-                      key={plan.value}
-                      className="flex flex-col gap-1.5"
-                    >
-                      <Label htmlFor={`${code}-margin-${plan.value}`}>{plan.label}</Label>
-                      <Input
-                        id={`${code}-margin-${plan.value}`}
-                        className="rounded-xl tabular-nums"
-                        inputMode="decimal"
-                        value={form.margins[plan.value] ?? ""}
-                        onChange={(event) =>
-                          patch(code, { margins: { ...form.margins, [plan.value]: event.target.value } })
-                        }
-                      />
-                    </Box>
-                  ))}
-                </Box>
-              </Box>
-
-              {/* Mix: components are products we ALREADY have, which is the one
-                  place the "cannot add twice" rule deliberately allows a
-                  repeat. */}
-              <Box className="flex flex-col gap-2">
-                <Box className="flex items-center justify-between">
-                  <Text className="font-medium">{t("tabProductMix")}</Text>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl"
-                    onClick={() => patch(code, { mix: [...form.mix, { productId: "", quantity: "1" }] })}
-                  >
-                    <Plus className="size-4" />{t("addMix")}
-                  </Button>
-                </Box>
-
-                {form.mix.map((line, index) => (
-                  <Box
-                    key={index}
-                    className="grid grid-cols-1 items-end gap-3 sm:grid-cols-[2fr_1fr_auto]"
-                  >
-                    <SelectField
-                      id={`${code}-mix-${index}`}
-                      label={t("mainProduct")}
-                      options={componentOptions}
-                      value={line.productId}
-                      onChange={(value) =>
-                        patch(code, {
-                          mix: form.mix.map((entry, i) => (i === index ? { ...entry, productId: value } : entry)),
-                        })
-                      }
-                    />
-                    <Box className="flex flex-col gap-1.5">
-                      <Label htmlFor={`${code}-mix-qty-${index}`}>{t("quantity")}</Label>
-                      <Input
-                        id={`${code}-mix-qty-${index}`}
-                        className="rounded-xl"
-                        inputMode="numeric"
-                        value={line.quantity}
-                        onChange={(event) =>
-                          patch(code, {
-                            mix: form.mix.map((entry, i) =>
-                              i === index ? { ...entry, quantity: event.target.value } : entry,
-                            ),
-                          })
-                        }
-                      />
-                    </Box>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      aria-label={`Remove mix ${index + 1}`}
-                      className="rounded-xl"
-                      onClick={() => patch(code, { mix: form.mix.filter((_, i) => i !== index) })}
-                    >
-                      <Minus className="size-4" />
-                    </Button>
-                  </Box>
-                ))}
-              </Box>
-            </Box>
-          );
-        })}
-
         <Box className="flex items-center justify-end gap-2">
           <Button
             variant="outline"
@@ -530,21 +624,21 @@ export function AddProductsDialog({ open, onOpenChange, mode }: AddProductsDialo
           >
             {t("cancel")}
           </Button>
-          {/* Draft first: it is the safe choice, and publish is the deliberate one. */}
+          {/* Draft first (the safe choice), publish second (the deliberate one). */}
           <Button
             variant="outline"
             className="rounded-xl"
             disabled={selected.length === 0 || addProducts.isPending}
             onClick={() => submit(false)}
           >
-            {t("saveDraft")}
+            {t("saveDraft")} ({selected.length})
           </Button>
           <Button
             className="rounded-xl"
             disabled={selected.length === 0 || addProducts.isPending}
             onClick={() => submit(true)}
           >
-            {t("publishNow")}
+            {t("publishNow")} ({selected.length})
           </Button>
         </Box>
       </DialogContent>

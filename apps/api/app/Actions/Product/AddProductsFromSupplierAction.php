@@ -148,7 +148,13 @@ class AddProductsFromSupplierAction
             }
 
             try {
-                $product = $this->creator->execute($mapping, null, null, $item['name'], $item['code']);
+                $product = $this->creator->execute(
+                    $mapping,
+                    null,
+                    $item['sub_category_id'],
+                    $item['name'],
+                    $item['code'],
+                );
 
                 $this->applyConfiguration($product, $item);
 
@@ -191,12 +197,13 @@ class AddProductsFromSupplierAction
      */
     private function applyConfiguration($product, array $item): void
     {
-        // The discount is the one field the margin action does not own: it is a
-        // plain column on the product, read by `PlanPrice`.
-        if ($item['discount_type'] !== null || $item['discount_value'] !== null) {
+        // The discount and the sub-name are plain columns the margin action does
+        // not own; everything else it writes goes through that one writer.
+        if ($item['discount_type'] !== null || $item['discount_value'] !== null || $item['sub_name'] !== null) {
             $product->update([
                 'discount_type' => $item['discount_type'],
                 'discount_value' => $item['discount_value'],
+                'sub_name' => $item['sub_name'],
             ]);
         }
 
