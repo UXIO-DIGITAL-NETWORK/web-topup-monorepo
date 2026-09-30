@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Storefront\Catalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -67,6 +68,17 @@ class Product extends Model
             return self::STATE_PUBLISHED;
         }
 
+        // A mix has no mapping of its own: it is live when every component of it
+        // is. Read from the LOADED relation only — this runs once per row in a
+        // list, so a query here would turn one page into N+1; `GetProductsAction`
+        // eager-loads it for that reason.
+        if ($this->status
+            && $this->relationLoaded('mixItems')
+            && $this->mixItems->isNotEmpty()
+            && $this->mixItems->every(fn (ProductMixItem $item) => $item->component !== null && Catalog::isSellable($item->component))) {
+            return self::STATE_PUBLISHED;
+        }
+
         return $this->isDraft() ? self::STATE_DRAFT : self::STATE_UNPUBLISHED;
     }
 
@@ -89,13 +101,18 @@ class Product extends Model
             return 'Produk sudah diarsipkan. Pulihkan terlebih dahulu.';
         }
 
-        // A mix has no mapping of its own: it is delivered by its components,
-        // and that multi-supplier fulfilment is not wired yet. Refusing to
-        // publish is the only safe answer until it is — a mix that went on sale
-        // would take money for an order the engine cannot place (and would, in
-        // fact, refuse at checkout).
         if ($this->isMix()) {
-            return 'Pemenuhan produk mix belum diaktifkan.';
+            $this->loadMissing('mixItems.component');
+
+            if ($this->mixItems->contains(fn (ProductMixItem $item) => $item->component === null || $item->component->trashed())) {
+                return 'Ada komponen mix yang sudah dihapus.';
+            }
+
+            if (! $this->mixItems->every(fn (ProductMixItem $item) => Catalog::isSellable($item->component))) {
+                return 'Semua komponen mix harus sudah tayang dulu sebelum mix-nya bisa ditayangkan.';
+            }
+
+            return null;
         }
 
         $mapping = $this->publishableMapping();

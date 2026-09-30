@@ -13,14 +13,14 @@ use Illuminate\Support\Facades\Schema;
  * supplier rejects two orders sharing an `idtrx`, so each one needs its own.
  *
  * `idtrx` is therefore per row and DISTINCT (the transaction's invoice number
- * plus a suffix), and this table is what the callback resolves against.
- * `transactions.supplier_trx_id`/`sn` stay as a summary of the FIRST/primary
- * order so the existing screens and reports keep working.
+ * plus a sequence), and this table is what the callback resolves against.
+ * `transactions.supplier_trx_id`/`sn` stay as a summary of the FIRST order so
+ * the existing screens and reports keep working.
  *
- * `unique(transaction_id, product_id)` because a component appears once per
- * transaction — a mix that wanted two of the same SKU expresses that as
- * `quantity`, which the fulfilment action turns into one order with qty folded
- * into the provider's own handling.
+ * `sequence` exists because a mix can ask for MORE THAN ONE of a component: a
+ * component with quantity 3 needs three supplier orders, and each one has to be
+ * addressable on its own — so the key is (transaction, component, sequence), not
+ * (transaction, component).
  */
 return new class extends Migration
 {
@@ -30,6 +30,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('transaction_id')->constrained('transactions')->cascadeOnDelete();
             $table->foreignId('product_id')->constrained('products')->restrictOnDelete();
+            $table->unsignedSmallInteger('sequence')->default(1);
             $table->foreignId('supplier_product_id')->nullable()->constrained('supplier_products')->nullOnDelete();
             $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->nullOnDelete();
 
@@ -47,7 +48,7 @@ return new class extends Migration
             $table->text('last_error')->nullable();
             $table->timestamps();
 
-            $table->unique(['transaction_id', 'product_id'], 'transaction_supplier_orders_unique');
+            $table->unique(['transaction_id', 'product_id', 'sequence'], 'transaction_supplier_orders_unique');
         });
     }
 

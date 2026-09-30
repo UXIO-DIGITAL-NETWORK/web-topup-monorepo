@@ -23,6 +23,7 @@ class TransactionSupplierOrder extends Model
     protected $casts = [
         'provider_status' => ProviderStatus::class,
         'attempts' => 'integer',
+        'sequence' => 'integer',
     ];
 
     public function transaction()

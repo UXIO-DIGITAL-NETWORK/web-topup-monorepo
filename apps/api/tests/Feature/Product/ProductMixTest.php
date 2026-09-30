@@ -5,7 +5,10 @@ namespace Tests\Feature\Product;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Role;
+use App\Models\Supplier;
+use App\Models\SupplierProduct;
 use App\Models\User;
+use App\Support\Storefront\Catalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
@@ -23,6 +26,8 @@ class ProductMixTest extends TestCase
 
     private Category $category;
 
+    private Supplier $uxiolabs;
+
     protected function setUp(): void
     {
         parent::setUp();
@@ -31,6 +36,7 @@ class ProductMixTest extends TestCase
         Sanctum::actingAs(User::factory()->create(['role_id' => $role->id]), ['access-api']);
 
         $this->category = Category::factory()->create();
+        $this->uxiolabs = Supplier::factory()->create(['name' => 'Uxiolabs']);
     }
 
     private function product(array $overrides = []): Product
@@ -138,11 +144,10 @@ class ProductMixTest extends TestCase
     }
 
     /**
-     * Until the multi-supplier fulfilment lands, a mix must not go on sale: it
-     * has no mapping of its own, so checkout would take the money and then fail
-     * to place anything.
+     * A mix is sellable through its components, so it cannot go on sale before
+     * they do: half a mix is not something the supplier can deliver.
      */
-    public function test_a_mix_cannot_be_published_yet(): void
+    public function test_a_mix_cannot_be_published_until_its_components_are_live(): void
     {
         $component = $this->product(['code' => 'ML5', 'price_modal' => 10000]);
         $mix = $this->product(['code' => 'MIX', 'price_modal' => 0]);
@@ -153,7 +158,27 @@ class ProductMixTest extends TestCase
 
         $this->postJson("/api/v1/products/{$mix->id}/publish")
             ->assertStatus(422)
-            ->assertJsonPath('message', 'Pemenuhan produk mix belum diaktifkan.');
+            ->assertJsonPath('message', 'Semua komponen mix harus sudah tayang dulu sebelum mix-nya bisa ditayangkan.');
+    }
+
+    public function test_a_mix_goes_live_once_every_component_is_live(): void
+    {
+        $component = $this->product(['code' => 'ML5', 'price_modal' => 10000]);
+        SupplierProduct::factory()->for($component)->for($this->uxiolabs)->create([
+            'buyer_sku_code' => 'ML5',
+            'is_active' => true,
+            'buyer_product_status' => true,
+        ]);
+        $this->postJson("/api/v1/products/{$component->id}/publish")->assertOk();
+
+        $mix = $this->product(['code' => 'MIX', 'price_modal' => 0]);
+        $this->postJson("/api/v1/products/{$mix->id}/mix", [
+            'items' => [['product_id' => $component->id, 'quantity' => 1]],
+        ])->assertOk();
+
+        $this->postJson("/api/v1/products/{$mix->id}/publish")->assertOk();
+
+        $this->assertSame(1, Catalog::sellableProducts(Product::query()->whereKey($mix->id))->count());
     }
 
     public function test_the_resource_reports_the_composition(): void
