@@ -7,14 +7,34 @@ berisi beberapa produk lain (**mix**) yang dikirim ke supplier terpisah.
 ## Alur produk sekarang
 
 Dulu menambah produk dua langkah: pilih SKU provider → masuk **pool** → promote
-jadi produk. Pool tidak ada lagi — pilihannya `supplier_products` dengan
+jadi produk. Pool tidak ada lagi — pool adalah `supplier_products` dengan
 `product_id = NULL`, dan tahap itu yang dihapus.
 
-| Pintu | Apa yang terjadi |
+Sekarang ada **satu modal** (`Add Products`) dengan dua mode:
+
+| Mode | Apa yang terjadi |
 |---|---|
-| **From Supplier** | `POST /v1/products/from-supplier` — tiap SKU provider langsung jadi **produk draft** (`status = false`, `published_at = null`) beserta mapping-nya. Belum tayang sampai admin mem-publish. |
-| **Manual** | `POST /v1/products` — produk tanpa provider. Dipetakan ke supplier **Internal System** dan dipenuhi admin lewat `POST /v1/transactions/{id}/manual-review`. |
-| **Bulk** | `POST /v1/products/bulk-create` — jalur lama, tidak berubah. |
+| **Single** | Satu produk. Memilih baris kedua menggantikan yang pertama. |
+| **Massal** | Banyak produk sekaligus. |
+
+Di dalamnya admin memilih layanan provider (berpaginasi, dengan pencarian), lalu
+mengisi tiap produk **lengkap di situ** — nama, kode, diskon, poin, batas harga,
+margin per plan, dan komposisi mix — lalu memilih **Publish** atau **Simpan
+sebagai draft**. Tidak ada lagi langkah "buat dulu, rapikan belakangan".
+
+Satu panggilan membawa semuanya: `POST /v1/products/from-supplier` menerima
+`items[]`, dan tiap barisnya dijalankan sebagai satu pipeline (buat draft → diskon
+→ margin → mix → publish) yang resilien — satu SKU gagal tidak menjatuhkan
+sisanya.
+
+**Layanan yang sudah menjadi produk kita tidak bisa dicentang ulang** (tidak
+double). Pengecualiannya mix: menyusun komposisi memang butuh produk yang sudah
+ada, jadi di bagian mix katalog lengkap tetap bisa dipilih sebagai komponen.
+
+**Tidak ada entri "Manual"** (produk tanpa supplier) di menu lagi. Perilaku
+API-nya tetap ada — `POST /v1/products` masih memetakan produk ke supplier
+Internal System dan dispatch supplier `is_system` tetap dilewati — jadi entri itu
+bisa dikembalikan tanpa perubahan backend.
 
 **Tidak ada tombol Delete.** Yang ada **Listis** (`POST /v1/products/{id}/publish`)
 dan **Unlistis** (`/unpublish`). Arsip tetap ada di server — `transactions.product_id`

@@ -4,6 +4,7 @@ import { toFk, toRowId, unwrapPaginated } from "@/lib/apiMappers";
 import type { ApiResponse, PaginatedResponse } from "@/types/api.type";
 import { PRICE_RANGE_OPTIONS } from "../data/select-options.data";
 import type {
+  AddProductsFromSupplierItem,
   AddProductsFromSupplierResult,
   BulkCreateProductsInput,
   BulkCreateProductsResult,
@@ -307,13 +308,26 @@ export const productsService = {
   // ── Add Products ▸ From Supplier (replaces the pool) ───────────────────────
 
   /**
-   * Provider SKUs become DRAFT products in one step. There is nothing to
-   * promote afterwards: what the admin picks shows up on the products page
-   * immediately, awaiting a name/price/margin decision.
+   * Create products from provider SKUs, configured, in one call.
+   *
+   * Each item may carry everything the modal collected; `publish` decides
+   * whether they go live or stay drafts. The whole set is one request so the
+   * products page has a single thing to wait for.
    */
-  addFromSupplier: async (buyerSkuCodes: string[]): Promise<AddProductsFromSupplierResult> => {
+  addFromSupplier: async (input: {
+    items: AddProductsFromSupplierItem[];
+    publish: boolean;
+  }): Promise<AddProductsFromSupplierResult> => {
     const response: ApiResponse<AddProductsFromSupplierResult> = await api.post(`${BASE}/from-supplier`, {
-      buyer_sku_codes: buyerSkuCodes,
+      items: input.items.map((item) => ({
+        ...item,
+        discount_value: item.discount_value ?? undefined,
+        mix_items: item.mix_items?.map((line) => ({
+          product_id: toFk(line.product_id),
+          quantity: Number(line.quantity),
+        })),
+      })),
+      publish: input.publish,
     });
 
     return response.data;

@@ -202,7 +202,7 @@ class ProductController extends Controller
     public function fromSupplier(AddProductsFromSupplierRequest $request, AddProductsFromSupplierAction $action)
     {
         return $this->successResponse(
-            $action->execute($request->skuCodes()),
+            $action->execute($request->items()),
             'Products added from supplier successfully',
             201
         );

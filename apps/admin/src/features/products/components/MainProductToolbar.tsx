@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "@tanstack/react-router";
 import { Archive, ChevronDown, Eye, ImageIcon, Plus, RefreshCcw, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,14 +30,14 @@ interface MainProductToolbarProps {
   price?: string;
   onPriceChange: (value: string | undefined) => void;
   onRefresh: () => void;
-  onAdd: () => void;
+  /** Add Products, in one modal: one product, or many. */
+  onAddSingle: () => void;
+  onAddBulk: () => void;
   selectedCount: number;
   onBulkUxiolabs: () => void;
   onBulkShowPrice: () => void;
   onPublishStateChange: (value?: string) => void;
   onBulkUnpublish: () => void;
-  /** Add Products ▸ From Supplier — provider SKUs land as draft products. */
-  onAddFromSupplier: () => void;
 }
 
 /**
@@ -49,9 +48,10 @@ interface MainProductToolbarProps {
  * Archive there any more: taking a product off sale is Unpublish — "Unlistis" —
  * and the row itself is never removed (order history resolves against it).
  *
- * "+ Add Main Products" offers three ways in: **From Supplier** (provider SKUs
- * become drafts straight away — this is what the pool stage used to be),
- * **Manual**, and **Bulk**.
+ * "+ Add Main Products" offers two ways in: **Single** (one product) and
+ * **Bulk** (many). Both open the same modal, where the data is filled in and the
+ * product is either published or left as a draft — there is no separate "add,
+ * then go and configure it" step, and no manual (supplier-less) entry.
  *
  * The add link derives its target from the current pathname rather than a
  * hardcoded absolute path, so the same component works under both the real
@@ -70,20 +70,19 @@ export function MainProductToolbar({
   price,
   onPriceChange,
   onRefresh,
-  onAdd,
+  onAddSingle,
+  onAddBulk,
   selectedCount,
   onBulkUxiolabs,
   onBulkShowPrice,
   onPublishStateChange,
   onBulkUnpublish,
-  onAddFromSupplier,
 }: MainProductToolbarProps) {
   const { t } = useTranslation("products");
   // The same source the product form, bulk-add and provider pool already read,
   // so every category select in this feature agrees on what exists.
   const { categoryOptions } = useProductSelectOptions();
 
-  const navigate = useNavigate();
   // Edit Logo (bulk) still waits on the product image endpoint (§5); it says so
   // rather than guessing a mutation.
   const announceDeferred = (message: string) => () => toast.info(message);
@@ -219,9 +218,8 @@ export function MainProductToolbar({
               align="end"
               className="rounded-2xl"
             >
-              <DropdownMenuItem onSelect={onAddFromSupplier}>{t("fromSupplier")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={onAdd}>{t("manual")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => navigate({ to: "/admin/products/main/add-bulk" })}>{t("bulk")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onAddSingle}>{t("single")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onAddBulk}>{t("bulk")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </Box>

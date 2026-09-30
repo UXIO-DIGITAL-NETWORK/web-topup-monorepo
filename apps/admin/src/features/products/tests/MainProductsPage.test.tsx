@@ -51,33 +51,33 @@ describe("MainProductsPage", () => {
     expect(screen.getByRole("button", { name: /Add Main Products/i })).toBeInTheDocument();
   });
 
-  it("'+ Add Main Products' opens a menu offering From Supplier, Manual and Bulk", async () => {
+  it("'+ Add Main Products' opens a menu offering Single and Bulk", async () => {
     const user = userEvent.setup();
     await renderRoute(LIST_PATH);
 
     await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
     const items = await screen.findAllByRole("menuitem");
-    expect(items.map((item) => item.textContent)).toEqual(["From Supplier", "Manual", "Bulk"]);
+    expect(items.map((item) => item.textContent)).toEqual(["Single", "Bulk"]);
   });
 
-  it("the Add menu's From Supplier entry opens the provider picker", async () => {
+  it("the Add menu's Single entry opens the add-products modal", async () => {
     const user = userEvent.setup();
     await renderRoute(LIST_PATH);
 
     await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
-    await user.click(await screen.findByRole("menuitem", { name: "From Supplier" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Single" }));
 
-    expect(await screen.findByRole("dialog", { name: "Add products from supplier" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Add products" })).toBeInTheDocument();
   });
 
-  it("the Add menu's Manual entry opens the Add Main Products modal", async () => {
+  it("the Add menu's Bulk entry opens the same modal", async () => {
     const user = userEvent.setup();
     await renderRoute(LIST_PATH);
 
     await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
-    await user.click(await screen.findByRole("menuitem", { name: "Manual" }));
+    await user.click(await screen.findByRole("menuitem", { name: "Bulk" }));
 
-    expect(await screen.findByRole("dialog", { name: "Add Main Products" })).toBeInTheDocument();
+    expect(await screen.findByRole("dialog", { name: "Add products" })).toBeInTheDocument();
   });
 
   it("shows the column headers", async () => {

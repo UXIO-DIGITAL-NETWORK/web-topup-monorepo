@@ -8,8 +8,7 @@ import { DeleteConfirmDialog } from "@/components/common/DeleteConfirmDialog";
 import { Heading } from "@/components/common/Heading";
 import { Text } from "@/components/common/Text";
 import { mainProductColumnsFor } from "../components/mainProductColumns";
-import { FromSupplierDialog } from "../components/FromSupplierDialog";
-import { MainProductFormDialog } from "../components/MainProductFormDialog";
+import { AddProductsDialog, type AddMode } from "../components/AddProductsDialog";
 import { MainProductToolbar } from "../components/MainProductToolbar";
 import {
   useUxiolabsUpdateProducts,
@@ -43,8 +42,8 @@ export default function MainProductsPage() {
   const [bulkUnpublishOpen, setBulkUnpublishOpen] = useState(false);
   const [bulkShowOpen, setBulkShowOpen] = useState(false);
   const [bulkUxiolabsOpen, setBulkUxiolabsOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
-  const [fromSupplierOpen, setFromSupplierOpen] = useState(false);
+  /** null = closed; the value is the mode the modal opens in. */
+  const [addMode, setAddMode] = useState<AddMode | null>(null);
 
   const params = useMemo(
     () => ({
@@ -100,7 +99,8 @@ export default function MainProductsPage() {
           price={price}
           onPriceChange={handlePriceChange}
           onRefresh={() => refetch()}
-          onAdd={() => setAddOpen(true)}
+          onAddSingle={() => setAddMode("single")}
+          onAddBulk={() => setAddMode("bulk")}
           selectedCount={selectedIds.length}
           onBulkUxiolabs={() => setBulkUxiolabsOpen(true)}
           onBulkShowPrice={() => setBulkShowOpen(true)}
@@ -110,7 +110,6 @@ export default function MainProductsPage() {
             setPage(1);
           }}
           onBulkUnpublish={() => setBulkUnpublishOpen(true)}
-          onAddFromSupplier={() => setFromSupplierOpen(true)}
         />
       </Box>
 
@@ -174,17 +173,16 @@ export default function MainProductsPage() {
         onConfirm={() => showProducts.mutate({ ids: selectedIds, hidden: false })}
       />
 
-      <MainProductFormDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
-      />
-
-      {/* Add Products ▸ From Supplier. Its own dialog rather than a route: the
-          point of removing the pool is that adding lands you back on this list. */}
-      <FromSupplierDialog
-        open={fromSupplierOpen}
-        onOpenChange={setFromSupplierOpen}
-      />
+      {/* Add Products — one modal for both modes, mounted per open so each
+          session starts clean. Editing an existing product still uses the row
+          menu's form. */}
+      {addMode !== null && (
+        <AddProductsDialog
+          open
+          onOpenChange={(next) => !next && setAddMode(null)}
+          mode={addMode}
+        />
+      )}
     </Box>
   );
 }
