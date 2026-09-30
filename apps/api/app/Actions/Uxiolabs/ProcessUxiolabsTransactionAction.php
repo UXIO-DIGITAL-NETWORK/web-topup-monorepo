@@ -24,10 +24,19 @@ class ProcessUxiolabsTransactionAction
         private readonly CreateActivityLogAction $logAction,
         private readonly CustomerNumberFormatter $customerNumberFormatter,
         private readonly SendUxiolabsStatusNotificationAction $announce,
+        private readonly ProcessMixTransactionAction $mixAction,
     ) {}
 
     public function execute(Transaction $transaction): Transaction
     {
+        // A mix is delivered by its components — one supplier order each — and
+        // has no mapping of its own to resolve. It takes a path of its own
+        // rather than bending this one, so the single-product behaviour below
+        // (which everything else depends on) stays exactly as it was.
+        if ($transaction->product?->isMix()) {
+            return $this->mixAction->execute($transaction);
+        }
+
         // Resolve the active supplier mapping for this product
         $supplierProduct = $transaction->product
             ->supplierProducts()

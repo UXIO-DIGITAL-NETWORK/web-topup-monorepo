@@ -1,6 +1,6 @@
 # Dokumentasi Website Topup
 
-Delapan dokumen. Tujuh yang pertama ditulis dari kode yang benar-benar ada di repo ini per 7 September 2026; yang kedelapan adalah catatan status pekerjaan.
+Sembilan dokumen. Enam yang pertama ditulis dari kode yang benar-benar ada di repo ini per 7 September 2026; 07 dan 08 adalah aturan zona dan catatan status pekerjaan; 09 mencatat perubahan manajemen produk (pool dihapus, produk manual, diskon, produk mix).
 
 Bisa dibaca di dua tempat: langsung di GitHub, atau sebagai halaman web di
 **<https://uxio-digital-network.github.io/web-topup-monorepo/>** — diagram alurnya
@@ -16,6 +16,7 @@ ikut terender di kedua tempat.
 | [06 — Referensi rute API](06-referensi-rute-api.md) | Peta 152 endpoint per grup rute. Dulu dilayani publik di `GET /` |
 | [07 — Zona: dapur, colokan, pendengar, hiasan](07-zona-dapur.md) | Bagian mana yang wajib sama di semua situs, mana yang bebas, dan di mana sebuah perubahan harus dikerjakan |
 | [08 — Rencana kerja & status](08-rencana-kerja.md) | Apa yang sudah dikerjakan, apa yang belum, cara mengujinya, dan cara menambah colokan |
+| [09 — Produk: tanpa pool, manual, diskon, produk mix](09-produk-dan-mix.md) | Bagaimana produk dibuat dan dijual sekarang, dan bagaimana satu transaksi mix dikirim ke supplier dalam beberapa bagian |
 
 **Versi HTML interaktif**: [`interaktif.html`](interaktif.html) — satu berkas mandiri (bisa dibuka lewat `file://`, tanpa server), berisi seluruh dokumen di halaman ini, plus sidebar dan pencarian (`/` atau `Ctrl+K`). Dibangun dari Markdown oleh [`build-interaktif.py`](build-interaktif.py); jalankan `python3 docs/build-interaktif.py` setelah mengubah dokumen.
 

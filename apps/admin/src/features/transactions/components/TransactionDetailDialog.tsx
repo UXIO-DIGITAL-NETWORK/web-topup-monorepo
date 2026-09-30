@@ -279,6 +279,23 @@ export function TransactionDetailDialog({ transactionId, open, onOpenChange }: T
               <Row label={t("providerStatusRaw")}>
                 <Value className="text-muted-foreground">{data.supplier.status ?? EM_DASH}</Value>
               </Row>
+              {/* Only for an order that arrived in PARTS. The rows above already
+                  describe the first supplier order, so a normal product would
+                  just see itself repeated — a mix is the case where one row
+                  cannot tell the truth. */}
+              {data.supplier.orders && data.supplier.orders.length > 1
+                ? data.supplier.orders.map((part, index) => (
+                    <Row
+                      key={`${part.code ?? "part"}-${index}`}
+                      label={`${t("supplierParts")} ${index + 1}`}
+                    >
+                      <Value className="text-muted-foreground">
+                        {part.name ?? part.code ?? EM_DASH} · {part.status ?? EM_DASH}
+                        {part.sn ? ` · ${part.sn}` : ""}
+                      </Value>
+                    </Row>
+                  ))
+                : null}
             </Section>
 
             <Section caption={t("capTiming")}>

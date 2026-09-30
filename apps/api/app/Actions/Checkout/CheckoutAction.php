@@ -32,6 +32,7 @@ use App\Support\Promo\PromoResolver;
 use App\Support\Stock\DailyStockLimit;
 use App\Support\Wallet\WalletLedger;
 use Exception;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -133,11 +134,46 @@ class CheckoutAction
         $sellingPrice = PlanPrice::for($product, $user);
 
         // ── 4. Supplier & margin guard ───────────────────────────────────────
+        // A mix has no supplier of its own — it is delivered by its components —
+        // so its cost is the ACCUMULATED component cost and its availability is
+        // the availability of every part. A normal product keeps the original
+        // single-mapping path exactly as it was.
         $activeSupplier = $product->supplierProducts->first();
-        if (! $activeSupplier) {
-            throw new Exception('Produk sedang tidak tersedia (tidak ada supplier aktif).');
+
+        /** @var Collection<int, array{product: Product, mapping: SupplierProduct}> $quotaTargets */
+        $quotaTargets = collect();
+
+        if ($product->isMix()) {
+            $items = $product->mixItems()->with('component')->get();
+
+            if ($items->isEmpty()) {
+                throw new Exception('Produk mix ini tidak punya komponen.');
+            }
+
+            foreach ($items as $item) {
+                $component = $item->component;
+                $mapping = $component?->supplierProducts()->where('is_active', true)->first();
+
+                // One unusable part means the mix cannot be delivered at all, so
+                // it is refused here rather than discovered at fulfilment.
+                if (! $component || $component->trashed() || ! $component->status || ! $mapping) {
+                    throw new Exception('Ada komponen mix yang sedang tidak tersedia.');
+                }
+
+                $quotaTargets->push(['product' => $component, 'mapping' => $mapping]);
+            }
+
+            $cost = (int) $items->sum(fn ($item) => $item->cost());
+        } else {
+            if (! $activeSupplier) {
+                throw new Exception('Produk sedang tidak tersedia (tidak ada supplier aktif).');
+            }
+
+            $quotaTargets->push(['product' => $product, 'mapping' => $activeSupplier]);
+            $cost = (int) $activeSupplier->price;
         }
-        $margin = $sellingPrice - $activeSupplier->price;
+
+        $margin = $sellingPrice - $cost;
         if ($margin < 0) {
             throw new Exception('Transaksi dibatalkan otomatis: harga modal supplier sedang naik.');
         }
@@ -147,9 +183,12 @@ class CheckoutAction
         // and has no availability probe. Checked here so an exhausted SKU fails
         // before the gateway is called, and again under a row lock inside the
         // write transaction, which is what actually stops two simultaneous
-        // orders from taking the same last slot.
-        if (DailyStockLimit::isExhausted($product, $activeSupplier)) {
-            throw new Exception(DailyStockLimit::EXHAUSTED_MESSAGE);
+        // orders from taking the same last slot. A mix checks every component,
+        // because each carries its own quota.
+        foreach ($quotaTargets as $target) {
+            if (DailyStockLimit::isExhausted($target['product'], $target['mapping'])) {
+                throw new Exception(DailyStockLimit::EXHAUSTED_MESSAGE);
+            }
         }
 
         // ── 4b. Promo (resolve only — validate + discount) ───────────────────
@@ -373,7 +412,7 @@ class CheckoutAction
         $transactionStatus = TransactionStatus::PENDING;
 
         DB::transaction(function () use (
-            $dto, $user, $product, $channel, $activeSupplier, $invoiceNumber, $referenceId,
+            $dto, $user, $product, $channel, $activeSupplier, $quotaTargets, $invoiceNumber, $referenceId,
             $targetNickname, $targetValues, $targetUid, $targetServer,
             $discount, $sellingPrice, $adminFee, $channelFee, $gatewayFee,
             $taxAmount, $taxPercent, $margin, $grossAmount, $callGateway, $gatewayInsideTx,
@@ -384,10 +423,18 @@ class CheckoutAction
             // the count, so two checkouts racing for the last slot serialise here
             // and the loser sees the winner's transaction row — which was inserted
             // in this same transaction, before either of them commits.
-            $lockedMapping = SupplierProduct::whereKey($activeSupplier->id)->lockForUpdate()->first();
+            //
+            // A mix locks EVERY component's mapping: each carries its own quota,
+            // and the same serialisation argument applies to each of them.
+            $lockedTargets = $quotaTargets->map(fn (array $target) => [
+                'product' => $target['product'],
+                'mapping' => SupplierProduct::whereKey($target['mapping']->id)->lockForUpdate()->first(),
+            ]);
 
-            if (DailyStockLimit::isExhausted($product, $lockedMapping)) {
-                throw new Exception(DailyStockLimit::EXHAUSTED_MESSAGE);
+            foreach ($lockedTargets as $target) {
+                if (DailyStockLimit::isExhausted($target['product'], $target['mapping'])) {
+                    throw new Exception(DailyStockLimit::EXHAUSTED_MESSAGE);
+                }
             }
 
             // Promo: lock the row so two concurrent redemptions cannot both slip
@@ -429,7 +476,10 @@ class CheckoutAction
                 'contact_email' => $dto->email,
                 'locale' => $dto->locale ?? $user?->locale ?? 'id',
                 'product_id' => $product->id,
-                'supplier_id' => $activeSupplier->supplier_id,
+                // A mix has no supplier of its own; the first component's stands
+                // in, so the column is never null for a sold order and the
+                // existing reports keep a supplier to group by.
+                'supplier_id' => $activeSupplier?->supplier_id ?? $quotaTargets->first()['mapping']->supplier_id,
                 'target_uid' => $targetUid,
                 'target_server' => $targetServer,
                 // The whole set, so a game with more identifiers than columns is

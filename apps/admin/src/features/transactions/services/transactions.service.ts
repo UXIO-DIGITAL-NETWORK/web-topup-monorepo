@@ -146,6 +146,22 @@ interface TransactionApiRow {
   provider_status?: string | null;
   payment_status?: string | null;
   payment_channel?: { id: number; name: string } | null;
+  /**
+   * One entry per supplier order placed. Present since mixes shipped: an
+   * ordinary product has exactly one, a mix has one per component — and the
+   * columns above describe only the first of them.
+   */
+  supplier_orders?: {
+    id: number;
+    product_code: string | null;
+    product_name: string | null;
+    buyer_sku_code: string;
+    idtrx: string;
+    supplier_trx_id: string | null;
+    supplier_status: string | null;
+    provider_status: string | null;
+    sn: string | null;
+  }[];
   created_at: string;
   updated_at: string;
 }
@@ -294,6 +310,12 @@ const toTransactionDetail = (row: TransactionDetailApiRow): TransactionDetail =>
     name: row.supplier?.name ?? undefined,
     trx_id: row.supplier_trx_id ?? undefined,
     status: row.supplier_status ?? undefined,
+    orders: (row.supplier_orders ?? []).map((order) => ({
+      code: order.product_code ?? undefined,
+      name: order.product_name ?? undefined,
+      status: order.provider_status ?? order.supplier_status ?? undefined,
+      sn: order.sn ?? undefined,
+    })),
   },
   created_at: row.created_at,
   updated_at: row.updated_at,

@@ -88,6 +88,25 @@ class ProductResource extends JsonResource
             'is_price_hidden' => (bool) $this->is_price_hidden,
             'price_min' => $this->price_min,
             'price_max' => $this->price_max,
+            // The product's own standing discount. Emitted always rather than
+            // behind `whenLoaded`: they are columns on this row, so there is no
+            // query to save, and the form needs them to show an existing cut.
+            'discount_type' => $this->discount_type,
+            'discount_value' => $this->discount_value !== null ? (int) $this->discount_value : null,
+            // The mix, only when it was loaded — same N+1 reasoning as the
+            // publish trio above (a transaction list embeds this per row).
+            $this->mergeWhen($this->resource->relationLoaded('mixItems'), fn () => [
+                'is_mix' => $this->mixItems->isNotEmpty(),
+                // `cost` per line so the admin can see where the accumulated
+                // `price_modal` came from, instead of a single number to trust.
+                'mix_items' => $this->mixItems->map(fn ($item) => [
+                    'product_id' => (int) $item->component_product_id,
+                    'name' => $item->component?->name,
+                    'code' => $item->component?->code,
+                    'cost' => (int) ($item->component?->price_modal ?? 0),
+                    'quantity' => (int) $item->quantity,
+                ])->values(),
+            ]),
             'category' => new CategoryResource($this->whenLoaded('category')),
             'sub_category' => new SubCategoryResource($this->whenLoaded('subCategory')),
             'created_at' => $this->created_at,

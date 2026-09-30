@@ -22,7 +22,7 @@ import { formatCurrency } from "@/utils/currency";
 import { PlanPriceCard } from "./PlanPriceCard";
 import { ProductMixBuilder } from "./ProductMixBuilder";
 import { NICKNAME_VALIDATION_OPTIONS, PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
-import { useCreateProduct, useProduct, useSetProductMargin, useUpdateProduct } from "../hooks/useProducts";
+import { useCreateProduct, useProduct, useSetProductMargin, useSetProductMix, useUpdateProduct } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { useMarginPlanOptions } from "../hooks/useProviderProducts";
 import { DESCRIPTION_MAX, productFormSchema, type ProductFormValues } from "../schemas/productForm.schema";
@@ -140,7 +140,12 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
           priceMax: existing.price_max != null ? String(existing.price_max) : "",
           discountType: existing.discount_type ?? "",
           discountValue: existing.discount_value != null ? String(existing.discount_value) : "",
-          productMix: [],
+          // The composition, so an edit shows what is stored instead of an empty
+          // builder that would clear it on save.
+          productMix: (existing.mix_items ?? []).map((item) => ({
+            mainProduct: String(item.product_id),
+            quantity: String(item.quantity),
+          })),
         }
       : undefined,
   });
@@ -154,6 +159,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
   const createProduct = useCreateProduct();
   const updateProduct = useUpdateProduct();
   const setMargin = useSetProductMargin();
+  const setMix = useSetProductMix();
   const isPending = createProduct.isPending || updateProduct.isPending || setMargin.isPending;
 
   // Live preview of what the typed margins sell at, so the admin is not asked
@@ -235,6 +241,25 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
           return;
         }
       }
+
+      // The mix travels LAST: saving it rewrites the product's cost and re-derives
+      // its prices, so the margins above have to be stored first for the repriced
+      // amounts to survive. An empty composition is how a mix is cleared.
+      try {
+        await setMix.mutateAsync({
+          id,
+          // The builder names the field `mainProduct`; the API calls it
+          // `product_id`. Mapped here rather than in the service so the form
+          // keeps the vocabulary the reference screen uses.
+          items: (values.productMix ?? []).map((row) => ({
+            product_id: row.mainProduct,
+            quantity: row.quantity,
+          })),
+        });
+      } catch {
+        return;
+      }
+
       onOpenChange(false);
     };
 

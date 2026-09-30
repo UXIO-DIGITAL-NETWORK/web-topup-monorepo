@@ -1,4 +1,10 @@
 {
+  "parts": {
+    "title": "Order parts",
+    "delivered": "Delivered",
+    "pending": "In progress",
+    "failed": "Failed"
+  },
   "heading": "WAITING FOR PAYMENT",
   "subtitle": "Please complete the payment using your selected method.",
   "timer": {

@@ -60,6 +60,7 @@
   "gatewayAmount": "Gateway Amount",
   "paidAt": "Paid At",
   "supplierTrxId": "Supplier Trx ID",
+  "supplierParts": "Part",
   "supplierTrxIdLower": "supplier transaction id",
   "providerStatusRaw": "Provider Status (raw)",
   "created": "Created",

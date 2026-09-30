@@ -121,6 +121,20 @@ export interface TransactionDetailSupplier {
   trx_id?: string;
   /** The provider's own vocabulary, not a TransactionStatus — render it as text. */
   status?: string;
+  /**
+   * One entry per supplier order. Empty for anything older than the mix
+   * feature; one entry for an ordinary product; several for a mix, which is
+   * the only way the dialog can show that an order arrived in parts.
+   */
+  orders?: TransactionSupplierPart[];
+}
+
+/** One delivered part of an order: its component, its verdict, its serial. */
+export interface TransactionSupplierPart {
+  code?: string;
+  name?: string;
+  status?: string;
+  sn?: string;
 }
 
 /**

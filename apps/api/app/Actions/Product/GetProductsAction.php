@@ -3,6 +3,7 @@
 namespace App\Actions\Product;
 
 use App\Models\Product;
+use App\Support\Storefront\Catalog;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
@@ -30,7 +31,7 @@ class GetProductsAction
         // tiers is data, and the frozen `price_vip/reseller/agent` columns are
         // no longer serialised at all. Eager-loaded with its plan so the table
         // can label each row without a query per product.
-        return Product::with(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan'])
+        return Product::with(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan', 'mixItems.component'])
             ->when($publishState !== null, fn ($query) => $this->scopeToState($query, $publishState))
             ->when($search, fn ($query) => $query->where(
                 fn ($query) => $query->where('name', 'like', "%{$search}%")->orWhere('code', 'like', "%{$search}%")
@@ -52,9 +53,12 @@ class GetProductsAction
      */
     private function scopeToState(Builder $query, string $state): Builder
     {
-        $live = fn (Builder $q) => $q
-            ->where('status', true)
-            ->whereHas('supplierProducts', fn (Builder $m) => $m->where('is_active', true));
+        // Delegated to `Catalog::sellableProducts()` rather than repeated here:
+        // that class IS the definition of "checkout would accept it", and a
+        // second copy of the rule is exactly how a badge and a filter drift
+        // apart — which now matters, because a mix is sellable through its
+        // components rather than through a mapping of its own.
+        $live = fn (Builder $q) => Catalog::sellableProducts($q);
 
         return match ($state) {
             Product::STATE_ARCHIVED => $query->onlyTrashed(),
