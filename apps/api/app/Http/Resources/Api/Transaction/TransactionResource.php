@@ -51,6 +51,24 @@ class TransactionResource extends JsonResource
             'proof' => $this->proof,
             'proof_url' => $this->proof ? Storage::disk('public')->url($this->proof) : null,
             'user' => new UserResource($this->whenLoaded('user')),
+            // One row per supplier order placed for this transaction: exactly
+            // one for an ordinary product, one per component for a mix. The
+            // columns above describe only the first, so anything showing a mix
+            // has to read this to be truthful about the parts.
+            'supplier_orders' => $this->whenLoaded('supplierOrders', fn () => $this->supplierOrders
+                ->map(fn ($order) => [
+                    'id' => (int) $order->id,
+                    'product_code' => $order->product?->code,
+                    'product_name' => $order->product?->name,
+                    'buyer_sku_code' => (string) $order->buyer_sku_code,
+                    'idtrx' => (string) $order->idtrx,
+                    'supplier_trx_id' => $order->supplier_trx_id,
+                    'supplier_status' => $order->supplier_status,
+                    'provider_status' => $order->provider_status?->value,
+                    'sn' => $order->sn,
+                    'last_error' => $order->last_error,
+                ])
+                ->values()),
             'product' => new ProductResource($this->whenLoaded('product')),
             'supplier' => new SupplierResource($this->whenLoaded('supplier')),
             // PaymentResource → TransactionResource only renders if payment.transaction is loaded;

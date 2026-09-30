@@ -45,6 +45,11 @@ class ShowInvoiceAction
                 'payment:id,transaction_id,payment_channel_id,reference_id,gross_amount,admin_fee,payment_data,status,paid_at,created_at',
                 'payment.paymentChannel:id,payment_type',
                 'refundRequest:id,transaction_id,status,method,amount,refunded_at',
+                // A mix is delivered piece by piece; the customer has to be able
+                // to see which part is where. Only the name is selected — no
+                // supplier id, no cost, same rules as the rest of this payload.
+                'supplierOrders:id,transaction_id,product_id,provider_status,sn',
+                'supplierOrders.product:id,name',
             ])
             ->first();
 
@@ -73,6 +78,18 @@ class ShowInvoiceAction
             'product' => [
                 'name' => $transaction->product?->name,
             ],
+
+            // What each part of the order is doing. A mix arrives in pieces, and
+            // showing the whole order as "menunggu" while one part is already
+            // delivered is exactly the kind of half-truth this projection is
+            // built field-by-field to avoid. Name + status + serial only.
+            'components' => $transaction->supplierOrders
+                ->map(fn ($order) => [
+                    'name' => $order->product?->name,
+                    'status' => $order->provider_status?->value,
+                    'sn' => $order->sn,
+                ])
+                ->values(),
 
             'target' => [
                 'uid' => $transaction->target_uid,
