@@ -56,6 +56,13 @@ export interface InvoiceModel {
     thumbnail_url: string | null;
   } | null;
   product: { name: string | null };
+  /**
+   * One entry per supplier order. Absent on an API that predates the mix
+   * feature, one entry for an ordinary product, several for a mix — where the
+   * order is delivered in parts and a single status line would be a half-truth.
+   * No supplier id and no cost: this endpoint is public.
+   */
+  components?: { name: string | null; status: string; sn: string | null }[];
   target: {
     uid: string | null;
     server: string | null;

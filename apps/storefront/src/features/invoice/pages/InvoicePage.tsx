@@ -1,6 +1,8 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Box } from "@/components/common/Box";
+import { Text } from "@/components/common/Text";
 import { Navbar } from "@/components/shared/Navbar";
 import { Footer } from "@/components/shared/Footer";
 import { useCheckoutStore } from "@/store/useCheckoutStore";
@@ -19,6 +21,7 @@ export default function InvoicePage(): React.JSX.Element {
     locale: string;
   };
   const navigate = useNavigate();
+  const { t } = useTranslation("invoice");
   const pendingOrder = useCheckoutStore((s) => s.pendingOrder);
 
   const { data: invoice } = useInvoiceQuery(invoiceNumber);
@@ -67,6 +70,42 @@ export default function InvoicePage(): React.JSX.Element {
           {/* Left column: order detail + instructions */}
           <Box className="flex flex-col gap-5">
             {order && <OrderDetailCard order={order} />}
+
+            {/* A mix arrives in parts, and the status block above can only say
+                "processing" for all of them. Shown only when there is more than
+                one part — a plain order would just be repeating itself. */}
+            {invoice && invoice.components && invoice.components.length > 1 && (
+              <Box className="rounded-2xl border border-[rgba(147,51,234,0.35)] bg-[#0D1117] px-4 py-3 flex flex-col gap-2">
+                <Text as="p" className="font-outfit font-bold text-[13px] text-white">
+                  {t("parts.title")}
+                </Text>
+                {invoice.components.map((part, index) => (
+                  <Box
+                    key={`${part.name ?? "part"}-${index}`}
+                    className="flex items-center justify-between gap-3"
+                  >
+                    <Text as="span" className="font-inter text-[13px] text-white/70 leading-snug">
+                      {part.name ?? "—"}
+                    </Text>
+                    <Text
+                      as="span"
+                      className={[
+                        "font-plex text-[12px] whitespace-nowrap",
+                        part.status === "DELIVERED" ? "text-emerald-400" : "",
+                        part.status === "REJECTED" || part.status === "UNDELIVERED" ? "text-rose-400" : "",
+                      ].join(" ")}
+                    >
+                      {part.sn ??
+                        (part.status === "DELIVERED"
+                          ? t("parts.delivered")
+                          : part.status === "REJECTED" || part.status === "UNDELIVERED"
+                            ? t("parts.failed")
+                            : t("parts.pending"))}
+                    </Text>
+                  </Box>
+                ))}
+              </Box>
+            )}
             <PaymentInstructionsCard />
           </Box>
 
