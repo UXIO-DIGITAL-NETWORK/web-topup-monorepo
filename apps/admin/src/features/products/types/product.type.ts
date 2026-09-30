@@ -17,6 +17,16 @@ export type ProductStatus = "active" | "inactive";
 export const PRODUCT_DISCOUNT_TYPES = ["percent", "fixed"] as const;
 export type ProductDiscountType = (typeof PRODUCT_DISCOUNT_TYPES)[number];
 
+/** One line of a product's mix: another product, and how many of it. */
+export interface ProductMixItem {
+  product_id: number;
+  name?: string | null;
+  code?: string | null;
+  /** That component's own cost, before the quantity is applied. */
+  cost: number;
+  quantity: number;
+}
+
 /**
  * Where a Main Product sits in its lifecycle — the API's `publish_state`.
  *
@@ -124,6 +134,15 @@ export interface Product {
    */
   discount_type?: ProductDiscountType | null;
   discount_value?: number | null;
+  /**
+   * The product's mix: the other products it is delivered by. Present only when
+   * the API loaded the relation (the detail endpoint does; a list does not).
+   *
+   * `variant.cost_price` is the ACCUMULATED cost for a mix, computed by the
+   * server — the components are listed so the admin can see where it came from.
+   */
+  is_mix?: boolean;
+  mix_items?: ProductMixItem[];
   variants: ProductVariant[];
   created_at: string;
   updated_at: string;

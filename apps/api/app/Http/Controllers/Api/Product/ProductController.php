@@ -12,14 +12,17 @@ use App\Actions\Product\ProductPriceControlAction;
 use App\Actions\Product\PublishProductAction;
 use App\Actions\Product\RestoreProductAction;
 use App\Actions\Product\SetProductMarginAction;
+use App\Actions\Product\SetProductMixAction;
 use App\Actions\Product\UnpublishProductAction;
 use App\Actions\Product\UpdateProductAction;
+use App\Exceptions\ProductDraftException;
 use App\Exceptions\SupplierProductPoolException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Product\AddProductsFromSupplierRequest;
 use App\Http\Requests\Product\BulkCreateProductsRequest;
 use App\Http\Requests\Product\BulkProductActionRequest;
 use App\Http\Requests\Product\SetProductMarginRequest;
+use App\Http\Requests\Product\SetProductMixRequest;
 use App\Http\Requests\Product\SetProductPriceLimitRequest;
 use App\Http\Requests\Product\StoreProductRequest;
 use App\Http\Requests\Product\UpdateProductRequest;
@@ -69,7 +72,7 @@ class ProductController extends Controller
     public function show(Product $product)
     {
         return $this->successResponse(
-            new ProductResource($product->load(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan'])),
+            new ProductResource($product->load(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan', 'mixItems.component'])),
             'Product retrieved successfully'
         );
     }
@@ -228,6 +231,26 @@ class ProductController extends Controller
         return $this->successResponse(
             new ProductResource($unpublished->load(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan'])),
             'Product unpublished successfully'
+        );
+    }
+
+    /**
+     * Set the product's mix — the components it sells together.
+     *
+     * The accumulated cost and the resulting sell prices are computed by the
+     * action, so the admin sees one number (cost) and the API decides the rest.
+     */
+    public function setMix(SetProductMixRequest $request, Product $product, SetProductMixAction $action)
+    {
+        try {
+            $mixed = $action->execute($product, $request->items());
+        } catch (ProductDraftException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        }
+
+        return $this->successResponse(
+            new ProductResource($mixed->load(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan', 'mixItems.component'])),
+            'Product mix updated successfully'
         );
     }
 }

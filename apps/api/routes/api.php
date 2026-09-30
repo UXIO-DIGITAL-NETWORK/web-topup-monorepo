@@ -503,6 +503,8 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:access-api', 'admin'
         Route::post('/{product}/publish', [ProductController::class, 'publish']);
         Route::post('/{product}/unpublish', [ProductController::class, 'unpublish']);
         Route::post('/{product}/profit-margin', [ProductController::class, 'setMargin']);
+        // The product's mix: which other products it sells together. Replace-in-place.
+        Route::post('/{product}/mix', [ProductController::class, 'setMix']);
         Route::post('/{product}/price-limit', [ProductController::class, 'setPriceLimit']);
         // withTrashed: the target is archived by definition, so the default
         // binding — which applies the soft-delete scope — would 404 every time.

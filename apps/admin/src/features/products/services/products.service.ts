@@ -61,6 +61,8 @@ interface ProductApiRow {
   price_max?: number | null;
   discount_type?: "percent" | "fixed" | null;
   discount_value?: number | null;
+  is_mix?: boolean;
+  mix_items?: { product_id: number; name: string | null; code: string | null; cost: number; quantity: number }[];
   category?: { id: number; name: string } | null;
   sub_category?: { id: number; name: string } | null;
   created_at: string;
@@ -116,6 +118,14 @@ const toProduct = (row: ProductApiRow): Product => ({
   price_max: row.price_max ?? null,
   discount_type: row.discount_type ?? null,
   discount_value: row.discount_value ?? null,
+  is_mix: Boolean(row.is_mix),
+  mix_items: (row.mix_items ?? []).map((item) => ({
+    product_id: item.product_id,
+    name: item.name,
+    code: item.code,
+    cost: item.cost,
+    quantity: item.quantity,
+  })),
   variants: [
     {
       id: toRowId(row.id),
@@ -307,6 +317,24 @@ export const productsService = {
     });
 
     return response.data;
+  },
+
+  /**
+   * Set the product's mix. Replace-in-place: the whole composition travels, so
+   * an empty array is how the admin clears it.
+   *
+   * The accumulated cost and the resulting prices are the server's answer — the
+   * response is the freshest product, which is why this returns it.
+   */
+  setMix: async (id: string, items: { product_id: string; quantity: string }[]): Promise<Product> => {
+    const response: ApiResponse<ProductApiRow> = await api.post(`${BASE}/${toFk(id)}/mix`, {
+      items: items.map((item) => ({
+        product_id: toFk(item.product_id),
+        quantity: Number(item.quantity),
+      })),
+    });
+
+    return toProduct(response.data);
   },
 
   /** Listis — put ONE product back on the storefront. */

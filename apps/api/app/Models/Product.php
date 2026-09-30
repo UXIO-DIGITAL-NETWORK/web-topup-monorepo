@@ -89,6 +89,15 @@ class Product extends Model
             return 'Produk sudah diarsipkan. Pulihkan terlebih dahulu.';
         }
 
+        // A mix has no mapping of its own: it is delivered by its components,
+        // and that multi-supplier fulfilment is not wired yet. Refusing to
+        // publish is the only safe answer until it is — a mix that went on sale
+        // would take money for an order the engine cannot place (and would, in
+        // fact, refuse at checkout).
+        if ($this->isMix()) {
+            return 'Pemenuhan produk mix belum diaktifkan.';
+        }
+
         $mapping = $this->publishableMapping();
 
         if ($mapping === null) {
@@ -126,5 +135,29 @@ class Product extends Model
     public function supplierProducts()
     {
         return $this->hasMany(SupplierProduct::class);
+    }
+
+    /**
+     * The products this one sells together — its mix. Empty for a normal
+     * product, which is why `isMix()` reads the collection rather than a flag.
+     */
+    public function mixItems()
+    {
+        return $this->hasMany(ProductMixItem::class);
+    }
+
+    /** The components themselves, with the quantity each contributes. */
+    public function components()
+    {
+        return $this->belongsToMany(Product::class, 'product_mix_items', 'product_id', 'component_product_id')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function isMix(): bool
+    {
+        return $this->relationLoaded('mixItems')
+            ? $this->mixItems->isNotEmpty()
+            : $this->mixItems()->exists();
     }
 }

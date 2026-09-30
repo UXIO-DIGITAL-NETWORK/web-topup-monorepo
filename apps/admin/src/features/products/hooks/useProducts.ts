@@ -228,6 +228,27 @@ export const useUxiolabsUpdateProducts = () => {
   });
 };
 
+/**
+ * Save a product's mix.
+ *
+ * The server owns the arithmetic: it accumulates the components' costs into the
+ * product's cost and re-derives the sell prices, so the caller only sends the
+ * composition. Both the products list and the provider list are invalidated —
+ * the accumulated cost is visible in both.
+ */
+export const useSetProductMix = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, items }: { id: string; items: { product_id: string; quantity: string }[] }) =>
+      productsService.setMix(id, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (error) => toast.error(apiErrorMessage(error) ?? "Failed to update the product mix"),
+  });
+};
+
 /** Re-price one product from the Main Products form. */
 export const useSetProductMargin = () => {
   const { t } = useTranslation("products");
