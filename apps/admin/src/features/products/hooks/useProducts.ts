@@ -63,6 +63,36 @@ export const useBulkCreateProducts = () => {
   });
 };
 
+/**
+ * Add Products ▸ From Supplier. Creates DRAFT products straight away — the pool
+ * stage this replaced is gone — so the products list gains rows and the provider
+ * candidates lose them. Both are invalidated for that reason.
+ */
+export const useAddProductsFromSupplier = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (buyerSkuCodes: string[]) => productsService.addFromSupplier(buyerSkuCodes),
+    onSuccess: (result) => {
+      invalidateProductAndPool(queryClient);
+
+      const skipped = result.skipped.length;
+
+      if (skipped > 0) {
+        toast.warning(`${result.created} added, ${skipped} skipped`, {
+          description: result.skipped[0]?.reason,
+        });
+        return;
+      }
+
+      toast.success(
+        result.created === 1 ? "Product draft created" : `${result.created} product drafts created`,
+      );
+    },
+    onError: () => toast.error("Failed to add products from supplier"),
+  });
+};
+
 /** Add Main Products (§4.6). Same shape as `useCreateCategory`. */
 export const useCreateProduct = () => {
   const { t } = useTranslation("products");

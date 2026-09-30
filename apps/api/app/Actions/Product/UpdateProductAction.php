@@ -18,6 +18,7 @@ class UpdateProductAction
         private CreateActivityLogAction $activityLogAction,
         private ImageOptimizer $images,
         private WriteProductPricesAction $writePrices,
+        private MapProductToInternalSupplierAction $mapToInternal,
     ) {}
 
     public function execute(Product $product, UpdateProductDTO $dto): Product
@@ -66,6 +67,11 @@ class UpdateProductAction
         // other plans from them would invent prices nobody asked for. Those tiers
         // are priced on the per-plan margin screen.
         $this->writePrices->forDefaultPlan($product, $dto->priceMember);
+
+        // A manual product keeps its cost on the Internal System mapping, and the
+        // checkout margin guard reads the cost from there — so it has to follow
+        // the form. Provider-mapped products are skipped (see sync()).
+        $this->mapToInternal->sync($product);
 
         $this->activityLogAction->execute(new CreateActivityLogDTO(
             userId: Auth::id(),

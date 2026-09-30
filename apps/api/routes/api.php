@@ -493,9 +493,15 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:access-api', 'admin'
         Route::post('/bulk/publish', [ProductController::class, 'bulkPublish']);
         Route::post('/bulk/uxiolabs-update', [ProductController::class, 'bulkUxiolabsUpdate']);
         Route::post('/bulk/delete', [ProductController::class, 'bulkDelete']);
+        // Add Products ▸ From Supplier: provider SKUs become draft products.
+        // Precedes the {product} binding for the same reason the bulk routes do.
+        Route::post('/from-supplier', [ProductController::class, 'fromSupplier']);
         Route::get('/{product}', [ProductController::class, 'show']);
         Route::put('/{product}', [ProductController::class, 'update']);
         Route::delete('/{product}', [ProductController::class, 'destroy']);
+        // Listis / Unlistis — the only lifecycle verbs on the products page.
+        Route::post('/{product}/publish', [ProductController::class, 'publish']);
+        Route::post('/{product}/unpublish', [ProductController::class, 'unpublish']);
         Route::post('/{product}/profit-margin', [ProductController::class, 'setMargin']);
         Route::post('/{product}/price-limit', [ProductController::class, 'setPriceLimit']);
         // withTrashed: the target is archived by definition, so the default

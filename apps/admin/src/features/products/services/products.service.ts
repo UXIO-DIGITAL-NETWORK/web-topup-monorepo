@@ -4,6 +4,7 @@ import { toFk, toRowId, unwrapPaginated } from "@/lib/apiMappers";
 import type { ApiResponse, PaginatedResponse } from "@/types/api.type";
 import { PRICE_RANGE_OPTIONS } from "../data/select-options.data";
 import type {
+  AddProductsFromSupplierResult,
   BulkCreateProductsInput,
   BulkCreateProductsResult,
   BulkPublishResult,
@@ -58,6 +59,8 @@ interface ProductApiRow {
   is_price_hidden?: boolean;
   price_min?: number | null;
   price_max?: number | null;
+  discount_type?: "percent" | "fixed" | null;
+  discount_value?: number | null;
   category?: { id: number; name: string } | null;
   sub_category?: { id: number; name: string } | null;
   created_at: string;
@@ -111,6 +114,8 @@ const toProduct = (row: ProductApiRow): Product => ({
   is_price_hidden: Boolean(row.is_price_hidden),
   price_min: row.price_min ?? null,
   price_max: row.price_max ?? null,
+  discount_type: row.discount_type ?? null,
+  discount_value: row.discount_value ?? null,
   variants: [
     {
       id: toRowId(row.id),
@@ -169,6 +174,15 @@ const toFormData = (input: Partial<ProductInput>, method?: "PUT"): FormData => {
   // previous override in place and make the form unable to clear it.
   if (input.point_percent !== undefined) form.append("point_percent", input.point_percent?.toString() ?? "");
   if (input.point_flat !== undefined) form.append("point_flat", input.point_flat?.toString() ?? "");
+
+  // The discount is two fields that only mean anything together, so clearing
+  // one clears both. Empty strings read as null on the API side — "no discount"
+  // — rather than as a value of 0.
+  if (input.discount_type !== undefined || input.discount_value !== undefined) {
+    const discountType = input.discount_type ?? null;
+    form.append("discount_type", discountType ?? "");
+    form.append("discount_value", discountType === null ? "" : String(input.discount_value ?? 0));
+  }
 
   // The API requires all five prices on every write. A product created from
   // the priceless Add form sends zeroes; an edit resends the variant it has.
@@ -278,6 +292,35 @@ export const productsService = {
 
   bulkDelete: async (ids: string[]): Promise<void> => {
     await api.post(`${BASE}/bulk/delete`, { ids: ids.map(toFk) });
+  },
+
+  // ── Add Products ▸ From Supplier (replaces the pool) ───────────────────────
+
+  /**
+   * Provider SKUs become DRAFT products in one step. There is nothing to
+   * promote afterwards: what the admin picks shows up on the products page
+   * immediately, awaiting a name/price/margin decision.
+   */
+  addFromSupplier: async (buyerSkuCodes: string[]): Promise<AddProductsFromSupplierResult> => {
+    const response: ApiResponse<AddProductsFromSupplierResult> = await api.post(`${BASE}/from-supplier`, {
+      buyer_sku_codes: buyerSkuCodes,
+    });
+
+    return response.data;
+  },
+
+  /** Listis — put ONE product back on the storefront. */
+  publish: async (id: string): Promise<Product> => {
+    const response: ApiResponse<ProductApiRow> = await api.post(`${BASE}/${toFk(id)}/publish`);
+
+    return toProduct(response.data);
+  },
+
+  /** Unlistis — take ONE product off the storefront. Never deletes it. */
+  unpublish: async (id: string): Promise<Product> => {
+    const response: ApiResponse<ProductApiRow> = await api.post(`${BASE}/${toFk(id)}/unpublish`);
+
+    return toProduct(response.data);
   },
 
   // ── Add Product (Bulk) ─────────────────────────────────────────────────────

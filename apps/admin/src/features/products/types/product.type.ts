@@ -11,6 +11,13 @@
 export type ProductStatus = "active" | "inactive";
 
 /**
+ * How a product's own discount is expressed: a percentage of the plan price, or
+ * rupiah off it. Mirrors the API's `products.discount_type`.
+ */
+export const PRODUCT_DISCOUNT_TYPES = ["percent", "fixed"] as const;
+export type ProductDiscountType = (typeof PRODUCT_DISCOUNT_TYPES)[number];
+
+/**
  * Where a Main Product sits in its lifecycle — the API's `publish_state`.
  *
  * `status` alone could never answer this. A product is only live when an active
@@ -106,6 +113,17 @@ export interface Product {
   is_price_hidden?: boolean;
   price_min?: number | null;
   price_max?: number | null;
+  /**
+   * A standing price cut that belongs to the product itself — neither a flash
+   * sale (time-boxed) nor a promo code (typed at checkout). `null` type means no
+   * discount, which is not the same as a value of 0.
+   *
+   * `discount_value` is a percentage when the type is `percent`, rupiah off when
+   * it is `fixed`. The server applies it in `PlanPrice`, so the number shown here
+   * is only ever a description of what the API already charges.
+   */
+  discount_type?: ProductDiscountType | null;
+  discount_value?: number | null;
   variants: ProductVariant[];
   created_at: string;
   updated_at: string;
@@ -504,6 +522,16 @@ export interface BulkCreateProductsInput {
 export interface BulkCreateProductsResult {
   created: number;
   skipped: { code: string; reason: string }[];
+}
+
+/**
+ * Add Products ▸ From Supplier. Whatever is picked becomes a DRAFT product
+ * immediately — the pool stage this replaced is gone — so the count is of
+ * products created, not rows staged.
+ */
+export interface AddProductsFromSupplierResult {
+  created: number;
+  skipped: { buyer_sku_code: string; reason: string }[];
 }
 
 /* ── Price Change Log ───────────────────────────────────────────────────────── */
