@@ -29,13 +29,16 @@ describe("MainProductsPage", () => {
     expect(screen.queryByText(/lorem ipsum/i)).not.toBeInTheDocument();
   });
 
-  it("shows both tabs, with the Provider link staying inside the preview route", async () => {
+  it("shows the two remaining tabs, and no Provider tab", async () => {
     await renderRoute(LIST_PATH);
 
     expect(await screen.findByRole("tab", { name: "Main Products" })).toBeInTheDocument();
-    const providerTab = await screen.findByRole("tab", { name: "Product Provider" });
-    expect(providerTab).toBeInTheDocument();
-    expect(providerTab).toHaveAttribute("href", "/admin/products-preview/provider");
+    const priceLogTab = await screen.findByRole("tab", { name: "Price Change Log" });
+    // The preview base is still honoured for the tab that remains.
+    expect(priceLogTab).toHaveAttribute("href", "/admin/products-preview/price-log");
+
+    // The pool's tab is gone: picking from a provider happens on this list now.
+    expect(screen.queryByRole("tab", { name: "Product Provider" })).not.toBeInTheDocument();
   });
 
   it("shows the toolbar: search, category filter, price filter, refresh and Add", async () => {
@@ -48,13 +51,23 @@ describe("MainProductsPage", () => {
     expect(screen.getByRole("button", { name: /Add Main Products/i })).toBeInTheDocument();
   });
 
-  it("'+ Add Main Products' opens a menu offering Manual and Bulk", async () => {
+  it("'+ Add Main Products' opens a menu offering From Supplier, Manual and Bulk", async () => {
     const user = userEvent.setup();
     await renderRoute(LIST_PATH);
 
     await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
     const items = await screen.findAllByRole("menuitem");
-    expect(items.map((item) => item.textContent)).toEqual(["Manual", "Bulk"]);
+    expect(items.map((item) => item.textContent)).toEqual(["From Supplier", "Manual", "Bulk"]);
+  });
+
+  it("the Add menu's From Supplier entry opens the provider picker", async () => {
+    const user = userEvent.setup();
+    await renderRoute(LIST_PATH);
+
+    await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
+    await user.click(await screen.findByRole("menuitem", { name: "From Supplier" }));
+
+    expect(await screen.findByRole("dialog", { name: "Add products from supplier" })).toBeInTheDocument();
   });
 
   it("the Add menu's Manual entry opens the Add Main Products modal", async () => {
@@ -176,7 +189,6 @@ describe("MainProductsPage", () => {
       "Set Price Limit",
       "Unpublish",
       "Edit Product",
-      "Archive",
     ]);
   });
 

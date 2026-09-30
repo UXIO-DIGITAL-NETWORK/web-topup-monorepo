@@ -221,5 +221,16 @@
   "unavailableUpstream": "Tidak tersedia di penyedia",
   "chooseCategoryFirst": "Pilih kategori terlebih dahulu",
   "colProviderCategoryHeader": "Kategori Penyedia",
-  "pointsPercent": "Poin (%)"
+  "pointsPercent": "Poin (%)",
+  "loading": "Memuat…",
+  "fromSupplier": "Dari Supplier",
+  "fromSupplierTitle": "Tambah produk dari supplier",
+  "fromSupplierSubtitle": "Pilih layanan provider untuk ditambahkan ke katalog. Produk dibuat sebagai DRAFT — isi nama, harga, dan margin, lalu publish bila sudah siap.",
+  "selectedForDraft": "{{count}} dipilih",
+  "addSelected": "Tambahkan yang dipilih",
+  "discount": "Diskon",
+  "discountHint": "Potongan harga tetap untuk produk ini, diterapkan di atas harga plan. Kosongkan tipe untuk tanpa diskon.",
+  "noDiscount": "Tanpa diskon",
+  "discountPercentOption": "Persen (%)",
+  "discountFixedOption": "Nominal (Rp)"
 }

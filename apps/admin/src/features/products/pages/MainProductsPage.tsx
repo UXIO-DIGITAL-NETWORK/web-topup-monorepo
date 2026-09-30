@@ -8,10 +8,10 @@ import { DeleteConfirmDialog } from "@/components/common/DeleteConfirmDialog";
 import { Heading } from "@/components/common/Heading";
 import { Text } from "@/components/common/Text";
 import { mainProductColumnsFor } from "../components/mainProductColumns";
+import { FromSupplierDialog } from "../components/FromSupplierDialog";
 import { MainProductFormDialog } from "../components/MainProductFormDialog";
 import { MainProductToolbar } from "../components/MainProductToolbar";
 import {
-  useDeleteProducts,
   useUxiolabsUpdateProducts,
   useProductList,
   useSetProductPublished,
@@ -40,11 +40,11 @@ export default function MainProductsPage() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [publishState, setPublishState] = useState<string | undefined>(undefined);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkUnpublishOpen, setBulkUnpublishOpen] = useState(false);
   const [bulkShowOpen, setBulkShowOpen] = useState(false);
   const [bulkUxiolabsOpen, setBulkUxiolabsOpen] = useState(false);
   const [addOpen, setAddOpen] = useState(false);
+  const [fromSupplierOpen, setFromSupplierOpen] = useState(false);
 
   const params = useMemo(
     () => ({
@@ -58,7 +58,6 @@ export default function MainProductsPage() {
     [search, categoryId, price, publishState, page, pageSize],
   );
   const { data, isLoading, isError, refetch } = useProductList(params);
-  const deleteProducts = useDeleteProducts();
   const setProductPublished = useSetProductPublished();
   const showProducts = useShowProducts();
   const uxiolabsUpdate = useUxiolabsUpdateProducts();
@@ -111,7 +110,7 @@ export default function MainProductsPage() {
             setPage(1);
           }}
           onBulkUnpublish={() => setBulkUnpublishOpen(true)}
-          onBulkDelete={() => setBulkDeleteOpen(true)}
+          onAddFromSupplier={() => setFromSupplierOpen(true)}
         />
       </Box>
 
@@ -134,22 +133,6 @@ export default function MainProductsPage() {
           onPageSizeChange={setPageSize}
         />
       </Box>
-
-      {/* Same dialog and same mutation as the row menu's Archive — only the set
-          of ids differs, so only the wording is count-aware. */}
-      <DeleteConfirmDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        icon={<Archive />}
-        confirmLabel={t("archive")}
-        title={selectedIds.length <= 1 ? "Archive this product?" : `Archive ${selectedIds.length} products?`}
-        description={
-          selectedIds.length <= 1
-            ? "It leaves the storefront and the catalogue, and its provider SKU returns to the pool. Past orders keep their details, and you can restore it from the Archived filter."
-            : `These ${selectedIds.length} products leave the storefront and the catalogue, and their provider SKUs return to the pool. Past orders keep their details, and you can restore them from the Archived filter.`
-        }
-        onConfirm={() => deleteProducts.mutate(selectedIds)}
-      />
 
       {/* Unpublishing is reversible, so the copy says what changes rather than
           warning it cannot be undone — but it still takes products off sale, so
@@ -194,6 +177,13 @@ export default function MainProductsPage() {
       <MainProductFormDialog
         open={addOpen}
         onOpenChange={setAddOpen}
+      />
+
+      {/* Add Products ▸ From Supplier. Its own dialog rather than a route: the
+          point of removing the pool is that adding lands you back on this list. */}
+      <FromSupplierDialog
+        open={fromSupplierOpen}
+        onOpenChange={setFromSupplierOpen}
       />
     </Box>
   );

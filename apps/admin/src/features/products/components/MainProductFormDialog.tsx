@@ -118,6 +118,8 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
       margins: {},
       priceMin: "",
       priceMax: "",
+      discountType: "",
+      discountValue: "",
       productMix: [],
     },
     values: existing
@@ -136,6 +138,8 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
           margins: savedMargins,
           priceMin: existing.price_min != null ? String(existing.price_min) : "",
           priceMax: existing.price_max != null ? String(existing.price_max) : "",
+          discountType: existing.discount_type ?? "",
+          discountValue: existing.discount_value != null ? String(existing.discount_value) : "",
           productMix: [],
         }
       : undefined,
@@ -186,6 +190,14 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
       // rather than 0 — 0 is the admin saying this product earns nothing.
       point_percent: values.points === "" || values.points === undefined ? null : Number(values.points),
       point_flat: values.pointsFlat === "" || values.pointsFlat === undefined ? null : Number(values.pointsFlat),
+      // The discount travels as a pair. A value without a type is meaningless,
+      // so clearing the type clears the value too — null, not 0, which the API
+      // reads as "no discount".
+      discount_type: values.discountType ? values.discountType : null,
+      discount_value:
+        values.discountType && values.discountValue !== "" && values.discountValue !== undefined
+          ? Number(values.discountValue)
+          : null,
     };
 
     // A plan the admin left blank is an explicit "use the pricing rules"; the
@@ -569,6 +581,49 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       className="text-muted-foreground"
                     >
                       0 = no limit
+                    </Text>
+                  </Box>
+                </Box>
+
+                {/* The product's own standing discount. Radix reserves the
+                    empty string for its placeholder, so "no discount" needs a
+                    sentinel value here and is mapped back to "" on change. */}
+                <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <Controller
+                    control={control}
+                    name="discountType"
+                    render={({ field }) => (
+                      <SelectField
+                        id="product-discount-type"
+                        label={t("discount")}
+                        tooltip={t("discountHint")}
+                        options={[
+                          { value: "none", label: t("noDiscount") },
+                          { value: "percent", label: t("discountPercentOption") },
+                          { value: "fixed", label: t("discountFixedOption") },
+                        ]}
+                        value={field.value || "none"}
+                        onChange={(next) => field.onChange(next === "none" ? "" : next)}
+                      />
+                    )}
+                  />
+                  <Box className="flex flex-col gap-1.5">
+                    <Label htmlFor="product-discount-value">
+                      {watch("discountType") === "percent" ? t("discountPercentOption") : t("discountFixedOption")}
+                    </Label>
+                    <Input
+                      id="product-discount-value"
+                      className="rounded-xl tabular-nums"
+                      inputMode="numeric"
+                      disabled={!watch("discountType")}
+                      placeholder={t("rpZero")}
+                      {...register("discountValue")}
+                    />
+                    <Text
+                      variant="small"
+                      className="text-muted-foreground"
+                    >
+                      {t("discountHint")}
                     </Text>
                   </Box>
                 </Box>
