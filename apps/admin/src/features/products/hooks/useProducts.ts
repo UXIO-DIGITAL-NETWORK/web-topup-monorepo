@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import { productsService, type ProductInput } from "../services/products.service";
 import type {
+  AddProductsFromSupplierItem,
   BulkCreateProductsInput,
   Product,
   ProductListParams,
@@ -64,30 +65,32 @@ export const useBulkCreateProducts = () => {
 };
 
 /**
- * Add Products ▸ From Supplier. Creates DRAFT products straight away — the pool
- * stage this replaced is gone — so the products list gains rows and the provider
- * candidates lose them. Both are invalidated for that reason.
+ * Add Products — create and configure in one call.
+ *
+ * The batch is per-row resilient, so a partial success is the normal outcome and
+ * the toast says what was skipped. Both lists are invalidated: the products list
+ * gains rows and the provider candidates change state.
  */
 export const useAddProductsFromSupplier = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: (buyerSkuCodes: string[]) => productsService.addFromSupplier(buyerSkuCodes),
-    onSuccess: (result) => {
+    mutationFn: (input: { items: AddProductsFromSupplierItem[]; publish: boolean }) =>
+      productsService.addFromSupplier(input),
+    onSuccess: (result, { publish }) => {
       invalidateProductAndPool(queryClient);
 
       const skipped = result.skipped.length;
+      const verb = publish ? "published" : "saved as draft";
 
       if (skipped > 0) {
-        toast.warning(`${result.created} added, ${skipped} skipped`, {
+        toast.warning(`${result.created} ${verb}, ${skipped} skipped`, {
           description: result.skipped[0]?.reason,
         });
         return;
       }
 
-      toast.success(
-        result.created === 1 ? "Product draft created" : `${result.created} product drafts created`,
-      );
+      toast.success(result.created === 1 ? `Product ${verb}` : `${result.created} products ${verb}`);
     },
     onError: () => toast.error("Failed to add products from supplier"),
   });

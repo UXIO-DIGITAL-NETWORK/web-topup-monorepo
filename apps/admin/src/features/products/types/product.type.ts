@@ -544,12 +544,28 @@ export interface BulkCreateProductsResult {
 }
 
 /**
- * Add Products ▸ From Supplier. Whatever is picked becomes a DRAFT product
- * immediately — the pool stage this replaced is gone — so the count is of
- * products created, not rows staged.
+ * One product's worth of data, as typed in the Add Products modal. The whole
+ * set travels in one request so a product is created and configured together.
  */
+export interface AddProductsFromSupplierItem {
+  buyer_sku_code: string;
+  name?: string;
+  code?: string;
+  discount_type?: ProductDiscountType;
+  discount_value?: number;
+  point_percent?: number;
+  point_flat?: number;
+  price_min?: number;
+  price_max?: number;
+  /** Margin percent keyed by membership plan id; null clears the override. */
+  margins?: Record<string, number | null>;
+  /** Components, referencing products we already have. */
+  mix_items?: { product_id: string; quantity: string }[];
+}
+
 export interface AddProductsFromSupplierResult {
   created: number;
+  published: number;
   skipped: { buyer_sku_code: string; reason: string }[];
 }
 
