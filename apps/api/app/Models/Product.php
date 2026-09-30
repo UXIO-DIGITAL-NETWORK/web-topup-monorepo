@@ -29,6 +29,7 @@ class Product extends Model
         'is_price_hidden' => 'boolean',
         'price_min' => 'integer',
         'price_max' => 'integer',
+        'discount_value' => 'integer',
         'published_at' => 'datetime',
     ];
 

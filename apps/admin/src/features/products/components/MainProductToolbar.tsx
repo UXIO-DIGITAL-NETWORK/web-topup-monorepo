@@ -37,14 +37,21 @@ interface MainProductToolbarProps {
   onBulkShowPrice: () => void;
   onPublishStateChange: (value?: string) => void;
   onBulkUnpublish: () => void;
-  onBulkDelete: () => void;
+  /** Add Products ▸ From Supplier — provider SKUs land as draft products. */
+  onAddFromSupplier: () => void;
 }
 
 /**
  * Toolbar for the Main Products list (product_requirements.md §4.6) — search,
  * a category filter, a status filter, a price filter, refresh, and "+ Add Main Products",
  * matching the reference left to right, with the selection action bar
- * (Uxiolabs / Logo / Unpublish / Archive) on its own right-aligned row below.
+ * (Uxiolabs / Logo / Unpublish) on its own right-aligned row below. There is no
+ * Archive there any more: taking a product off sale is Unpublish — "Unlistis" —
+ * and the row itself is never removed (order history resolves against it).
+ *
+ * "+ Add Main Products" offers three ways in: **From Supplier** (provider SKUs
+ * become drafts straight away — this is what the pool stage used to be),
+ * **Manual**, and **Bulk**.
  *
  * The add link derives its target from the current pathname rather than a
  * hardcoded absolute path, so the same component works under both the real
@@ -69,7 +76,7 @@ export function MainProductToolbar({
   onBulkShowPrice,
   onPublishStateChange,
   onBulkUnpublish,
-  onBulkDelete,
+  onAddFromSupplier,
 }: MainProductToolbarProps) {
   const { t } = useTranslation("products");
   // The same source the product form, bulk-add and provider pool already read,
@@ -212,6 +219,7 @@ export function MainProductToolbar({
               align="end"
               className="rounded-2xl"
             >
+              <DropdownMenuItem onSelect={onAddFromSupplier}>{t("fromSupplier")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={onAdd}>{t("manual")}</DropdownMenuItem>
               <DropdownMenuItem onSelect={() => navigate({ to: "/admin/products/main/add-bulk" })}>{t("bulk")}</DropdownMenuItem>
             </DropdownMenuContent>
@@ -235,7 +243,6 @@ export function MainProductToolbar({
               { label: t("uxiolabsUpdate"), icon: <RefreshCcw className="size-4" />, onSelect: onBulkUxiolabs },
               { label: t("showPrice"), icon: <Eye className="size-4" />, onSelect: onBulkShowPrice },
               { label: t("unpublish"), icon: <Archive className="size-4" />, onSelect: onBulkUnpublish },
-              { label: t("archive"), icon: <Archive className="size-4" />, destructive: true, onSelect: onBulkDelete },
             ]}
           />
         </Box>

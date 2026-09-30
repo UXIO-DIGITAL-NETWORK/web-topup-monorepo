@@ -38,6 +38,32 @@ class ProcessUxiolabsTransactionAction
             throw new Exception('Produk ini belum dipetakan ke supplier aktif.');
         }
 
+        // A product mapped to the platform's own supplier (a hand-made product)
+        // has nothing to send: an admin fulfils it through
+        // POST /v1/transactions/{id}/manual-review. Returning here — instead of
+        // calling the gateway — is what stops a manual product from being ordered
+        // at Uxiotopup under a SKU that does not exist there.
+        //
+        // PAID + QUEUED is the honest state: paid, not yet handed to anyone. It
+        // also downgrades the PROCESSING the job sets on the way in, which would
+        // otherwise claim we are still trying to send.
+        if ($supplierProduct->supplier?->is_system) {
+            $transaction->update([
+                'status' => TransactionStatus::PAID,
+                'provider_status' => ProviderStatus::QUEUED,
+            ]);
+
+            $this->logAction->execute(new CreateActivityLogDTO(
+                userId: null,
+                ipAddress: '127.0.0.1',
+                userAgent: 'System/ManualFulfilment',
+                message: "Order {$transaction->invoice_number} menunggu pemenuhan manual (supplier Internal System).",
+                isSystem: true,
+            ));
+
+            return $transaction;
+        }
+
         // target shape is data-driven per category (categories.order_form_fields);
         // uxiolabs expects "dataId|zoneId" (pipe), or just dataId when no zone.
         $target = $this->customerNumberFormatter->forTransaction($transaction);

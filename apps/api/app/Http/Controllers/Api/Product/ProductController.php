@@ -2,17 +2,21 @@
 
 namespace App\Http\Controllers\Api\Product;
 
+use App\Actions\Product\AddProductsFromSupplierAction;
 use App\Actions\Product\BulkCreateProductsAction;
 use App\Actions\Product\BulkProductAction;
 use App\Actions\Product\CreateProductAction;
 use App\Actions\Product\DeleteProductAction;
 use App\Actions\Product\GetProductsAction;
 use App\Actions\Product\ProductPriceControlAction;
+use App\Actions\Product\PublishProductAction;
 use App\Actions\Product\RestoreProductAction;
 use App\Actions\Product\SetProductMarginAction;
+use App\Actions\Product\UnpublishProductAction;
 use App\Actions\Product\UpdateProductAction;
 use App\Exceptions\SupplierProductPoolException;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Product\AddProductsFromSupplierRequest;
 use App\Http\Requests\Product\BulkCreateProductsRequest;
 use App\Http\Requests\Product\BulkProductActionRequest;
 use App\Http\Requests\Product\SetProductMarginRequest;
@@ -185,5 +189,45 @@ class ProductController extends Controller
         );
 
         return $this->successResponse($result, 'Products created successfully', 201);
+    }
+
+    /**
+     * Add Products ▸ From Supplier: provider SKUs become DRAFT products here and
+     * now. Replaces the pool stage — whatever the admin picks shows up on the
+     * products page immediately, unpublished, awaiting name/price/margin.
+     */
+    public function fromSupplier(AddProductsFromSupplierRequest $request, AddProductsFromSupplierAction $action)
+    {
+        return $this->successResponse(
+            $action->execute($request->skuCodes()),
+            'Products added from supplier successfully',
+            201
+        );
+    }
+
+    /** Listis — put a product back on the storefront. */
+    public function publish(Product $product, PublishProductAction $action)
+    {
+        try {
+            $published = $action->execute($product);
+        } catch (SupplierProductPoolException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        }
+
+        return $this->successResponse(
+            new ProductResource($published->load(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan'])),
+            'Product published successfully'
+        );
+    }
+
+    /** Unlistis — take a product off the storefront. Archived, never deleted. */
+    public function unpublish(Product $product, UnpublishProductAction $action)
+    {
+        $unpublished = $action->execute($product);
+
+        return $this->successResponse(
+            new ProductResource($unpublished->load(['category', 'subCategory', 'supplierProducts', 'planPrices.membershipPlan'])),
+            'Product unpublished successfully'
+        );
     }
 }
