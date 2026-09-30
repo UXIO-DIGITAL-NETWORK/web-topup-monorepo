@@ -33,7 +33,9 @@ class AddProductsFromSupplierRequest extends FormRequest
             'items' => ['required_without:buyer_sku_codes', 'array', 'min:1', 'max:50'],
             'items.*.buyer_sku_code' => ['required', 'string', 'max:255'],
             'items.*.name' => ['nullable', 'string', 'max:255'],
+            'items.*.sub_name' => ['nullable', 'string', 'max:255'],
             'items.*.code' => ['nullable', 'string', 'max:255'],
+            'items.*.sub_category_id' => ['nullable', 'integer', 'exists:sub_categories,id'],
             'items.*.discount_type' => ['nullable', 'in:percent,fixed'],
             'items.*.discount_value' => ['nullable', 'integer', 'min:0'],
             // Nullable on purpose: absent/blank means "use the global points
@@ -71,7 +73,9 @@ class AddProductsFromSupplierRequest extends FormRequest
                 return [
                     'buyer_sku_code' => (string) $item['buyer_sku_code'],
                     'name' => $item['name'] ?? null,
+                    'sub_name' => $item['sub_name'] ?? null,
                     'code' => $item['code'] ?? null,
+                    'sub_category_id' => isset($item['sub_category_id']) ? (int) $item['sub_category_id'] : null,
                     'discount_type' => $item['discount_type'] ?? null,
                     'discount_value' => isset($item['discount_value']) ? (int) $item['discount_value'] : null,
                     'point_percent' => isset($item['point_percent']) ? (float) $item['point_percent'] : null,
@@ -92,7 +96,9 @@ class AddProductsFromSupplierRequest extends FormRequest
         return array_map(fn ($code) => [
             'buyer_sku_code' => (string) $code,
             'name' => null,
+            'sub_name' => null,
             'code' => null,
+            'sub_category_id' => null,
             'discount_type' => null,
             'discount_value' => null,
             'point_percent' => null,

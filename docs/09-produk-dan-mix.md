@@ -18,9 +18,27 @@ Sekarang ada **satu modal** (`Add Products`) dengan dua mode:
 | **Massal** | Banyak produk sekaligus. |
 
 Di dalamnya admin memilih layanan provider (berpaginasi, dengan pencarian), lalu
-mengisi tiap produk **lengkap di situ** — nama, kode, diskon, poin, batas harga,
-margin per plan, dan komposisi mix — lalu memilih **Publish** atau **Simpan
-sebagai draft**. Tidak ada lagi langkah "buat dulu, rapikan belakangan".
+mengisi tiap produk **lengkap di situ** — nama, sub-nama, sub-kategori, diskon,
+poin, batas harga, margin per plan, dan komposisi mix — lalu memilih **Publish**
+atau **Simpan sebagai draft**. Tidak ada lagi langkah "buat dulu, rapikan
+belakangan".
+
+Bentuknya **tabel**, bukan form bertumpuk: satu baris per layanan provider, dan
+baris yang dicentang menjadi bisa diedit di tempat. Dua filter di atasnya —
+**provider** dan **kategori** (beserta jumlahnya, dari `GET /v1/uxiolabs/pool-facets`)
+— yang menentukan daftar mana yang tampil. Baris yang belum dicentang tetap
+terlihat tetapi inputnya nonaktif, sehingga **Modal** (harga supplier) bisa
+dibaca sebagai acuan tanpa sengaja terisi.
+
+**Harga diisi sebagai margin, harga jualnya ditampilkan.** Angka di samping input
+margin adalah hasil hitungan (`Modal × (1 + margin)`), bukan yang diketik admin —
+server tetap yang menghitung harga sebenarnya lewat `PricingService`, jadi yang
+terlihat di tabel adalah pratinjau. Alasannya: kalau harga modal supplier naik,
+harga jual ikut menyesuaikan tanpa ada yang perlu mengubah tabelnya.
+
+Field yang memang per produk — **mix** dan batas harga — dibuka lewat tombol
+**Detail** pada barisnya. Mix tidak bisa diisi massal, jadi menaruhnya di grid
+hanya akan membuat kolom yang selalu kosong untuk sebagian besar baris.
 
 Satu panggilan membawa semuanya: `POST /v1/products/from-supplier` menerima
 `items[]`, dan tiap barisnya dijalankan sebagai satu pipeline (buat draft → diskon

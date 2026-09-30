@@ -5,6 +5,7 @@ namespace Tests\Feature\Product;
 use App\Models\Category;
 use App\Models\Product;
 use App\Models\Role;
+use App\Models\SubCategory;
 use App\Models\Supplier;
 use App\Models\SupplierCategory;
 use App\Models\SupplierProduct;
@@ -227,6 +228,27 @@ class AddProductsFromSupplierTest extends TestCase
         $this->assertTrue($mix->isMix());
         // Accumulated from the component, not from the SKU the mix was made from.
         $this->assertSame(20000, (int) $mix->price_modal);
+    }
+
+    public function test_it_files_the_product_under_the_chosen_sub_category(): void
+    {
+        $this->fakePriceList([$this->serviceItem()]);
+
+        $subCategory = SubCategory::factory()->create(['category_id' => $this->category->id]);
+
+        $this->postJson('/api/v1/products/from-supplier', [
+            'items' => [[
+                'buyer_sku_code' => 'ML5',
+                'name' => 'Lima',
+                'sub_name' => 'Spesial',
+                'sub_category_id' => $subCategory->id,
+            ]],
+        ])->assertCreated();
+
+        $product = Product::where('code', 'ML5')->firstOrFail();
+
+        $this->assertSame($subCategory->id, $product->sub_category_id);
+        $this->assertSame('Spesial', $product->sub_name);
     }
 
     public function test_a_bad_entry_does_not_lose_the_good_ones_in_the_rich_shape(): void
