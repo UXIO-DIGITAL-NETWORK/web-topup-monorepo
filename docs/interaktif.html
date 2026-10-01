@@ -385,7 +385,7 @@ composer run test        # 1.016 test
 <hr>
 <h2 id="doc-03--spesifikasi-per-domain">Spesifikasi per domain<a class="anchor" href="#doc-03--spesifikasi-per-domain" aria-label="Tautan ke bagian ini">#</a></h2>
 <p>Empat dokumen lebih rinci ada di <code>apps/api/docs/api/</code>: <code>category-master-data-spec.md</code>, <code>cms-spec.md</code>, <code>supplier-product-spec.md</code>, <code>transactions-payments-spec.md</code>.</p>
-<p>Koleksi Postman: <code>apps/api/uxio-topup-api-v2.postman_collection.json</code>.</p></section>
+<p>Koleksi Postman: <code>apps/api/uxio-topup-api-v3.postman_collection.json</code> — memetakan <strong>semua</strong> rute di <code>routes/api.php</code> (426 endpoint), masing-masing dengan contoh request dan response. Uji cakupannya dengan <code>python3 apps/api/docs/scripts/postman_coverage.py</code>. Cara impor dan ganti peran ada di <code>apps/api/docs/postman.md</code>.</p></section>
 <section class="doc" id="doc-04" data-title="04 — Deployment"><h1 id="doc-04--deployment">Deployment<a class="anchor" href="#doc-04--deployment" aria-label="Tautan ke bagian ini">#</a></h1>
 <h2 id="doc-04--ringkasan">Ringkasan<a class="anchor" href="#doc-04--ringkasan" aria-label="Tautan ke bagian ini">#</a></h2>
 <p>Keempat aplikasi mendarat di <strong>satu server</strong>, di direktori bersebelahan. Sebelum monorepo, keempatnya di-clone terpisah di empat repo; sesudahnya satu repo jadi sumbernya — tetapi yang tinggal di server adalah <strong>hasil build</strong> (ketiga frontend) dan <strong>source</strong> (API, dependensinya dipasang di server), bukan pohon gitnya.</p>
