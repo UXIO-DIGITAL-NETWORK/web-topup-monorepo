@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Fragment, useMemo, useState } from "react";
+import { Fragment, useCallback, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
 import { ChevronLeft, ChevronRight, Minus, Plus, Search, SlidersHorizontal } from "lucide-react";
 
@@ -13,10 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { formatCurrency } from "@/utils/currency";
+import { computeRolePrice } from "../lib/computeRolePrice";
 import { usePoolCandidates, usePoolFacets } from "../hooks/useProviderPool";
-import { useMarginPlanOptions } from "../hooks/useProviderProducts";
+import { useMarginPlanOptions, usePricingRuleOptions } from "../hooks/useProviderProducts";
 import { useAddProductsFromSupplier, useProductList } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
+import type { PricingRuleOption } from "../services/provider.service";
 
 export type AddMode = "single" | "bulk";
 
@@ -76,9 +78,11 @@ const toNumber = (raw: string): number | null => {
  * visible beside the sell prices the admin's margins produce, which is the whole
  * reason a bulk screen is worth having.
  *
- * Prices are authored as a MARGIN; the resulting price is shown, never typed.
- * The server still owns the maths (`PricingService`) — what is displayed here is
- * a preview of it.
+ * Prices are authored as a MARGIN per membership plan. Leaving a margin empty
+ * means "follow the pricing rules" — the same contract the API writes — so the
+ * price shown is the rule's (`ceil(cost × (1 + %/100)) + flat`); typing a percent
+ * overrides the rule for that plan. What is displayed is a preview of what the
+ * server will compute.
  */
 export default function AddProductsPage({ mode = "single" }: AddProductsPageProps) {
   const { t } = useTranslation("products");
@@ -118,6 +122,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
   const { data, isLoading } = usePoolCandidates(params);
   const { data: plans = [] } = useMarginPlanOptions();
+  const { data: pricingRules = [] } = usePricingRuleOptions();
   // Sub-categories belong to a category. With the list filtered to one, every
   // row shares the same options — which is why the filter is the honest place
   // to read them from rather than guessing per row.
@@ -157,6 +162,39 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
         label: `${product.name} — ${product.code}`,
       })),
     [catalogue],
+  );
+
+  // Two plans can share a display name (the free and paid tiers are both
+  // "Basic"), so a name is disambiguated by its code only when it repeats.
+  const duplicateLabels = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const plan of plans) counts.set(plan.label, (counts.get(plan.label) ?? 0) + 1);
+    return counts;
+  }, [plans]);
+
+  const planLabel = (plan: (typeof plans)[number]) =>
+    (duplicateLabels.get(plan.label) ?? 0) > 1 ? `${plan.label} (${plan.code})` : plan.label;
+
+  /**
+   * The pricing rule a plan falls back to when its margin is left empty. The
+   * category is only known when the list is filtered to one, so a category rule
+   * is honoured then; plan-specific rules always beat the catch-all fallback.
+   */
+  const ruleForPlan = useCallback(
+    (planValue: string): PricingRuleOption | undefined => {
+      const planId = Number(planValue);
+      const catId = categoryId ? Number(categoryId) : null;
+      const find = (cat: number | null, plan: number | null) =>
+        pricingRules.find((rule) => rule.category_id === cat && rule.membership_plan_id === plan);
+
+      return (
+        (catId !== null ? find(catId, planId) : undefined) ??
+        find(null, planId) ??
+        (catId !== null ? find(catId, null) : undefined) ??
+        find(null, null)
+      );
+    },
+    [pricingRules, categoryId],
   );
 
   const selectMode = (value: AddMode) => {
@@ -253,7 +291,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
           <Box className="w-56">
             <SelectField
               id="add-category-filter"
-              label={t("ourCategory")}
+              label={t("category")}
               tooltip={t("tipOurCategory")}
               options={categoryOptions}
               value={categoryId || NONE}
@@ -337,25 +375,25 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
               <thead>
                 <tr className="bg-muted/40">
                   <th className="w-10 px-3 py-2" />
-                  <th className="px-3 py-2 font-medium">
+                  <th className="min-w-44 px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
                       {t("colCodeSubCategory")}
                       <InfoTooltip content={t("tipColCodeSubCategory")} />
                     </Box>
                   </th>
-                  <th className="px-3 py-2 font-medium">
+                  <th className="min-w-72 px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
                       {t("colPointsDiscount")}
                       <InfoTooltip content={t("tipColPointsDiscount")} />
                     </Box>
                   </th>
-                  <th className="px-3 py-2 font-medium">
+                  <th className="min-w-64 px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
                       {t("productName")}
                       <InfoTooltip content={t("tipProductName")} />
                     </Box>
                   </th>
-                  <th className="px-3 py-2 font-medium">
+                  <th className="min-w-72 px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
                       {t("price")}
                       <InfoTooltip content={t("tipPriceColumn")} />
@@ -387,8 +425,8 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                         </td>
 
                         <td className="px-3 py-3 align-top">
-                          <Box className="flex flex-col gap-2">
-                            <Box className="flex flex-col gap-1">
+                          <Box className="flex flex-col gap-3">
+                            <Box className="flex flex-col gap-1.5">
                               <Box className="flex items-center gap-1.5">
                                 <Text
                                   as="span"
@@ -415,87 +453,81 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                         </td>
 
                         <td className="px-3 py-3 align-top">
-                          <Box className="flex flex-col gap-3">
-                            <Box className="flex items-start gap-3">
-                              <Box className="flex flex-col gap-1">
-                                <FieldLabel
-                                  htmlFor={`${code}-points`}
-                                  tooltip={t("tipPoints")}
-                                >
-                                  {t("pointsPercent")}
-                                </FieldLabel>
-                                <Input
-                                  id={`${code}-points`}
-                                  className="w-24 rounded-xl tabular-nums"
-                                  inputMode="numeric"
-                                  aria-label={`${code} points`}
-                                  disabled={!isSelected}
-                                  value={form.points}
-                                  onChange={(event) => patch(code, { points: event.target.value })}
-                                />
-                              </Box>
-                              <Box className="flex flex-col gap-1">
-                                <FieldLabel
-                                  htmlFor={`${code}-bonus`}
-                                  tooltip={t("tipBonusPoints")}
-                                >
-                                  {t("bonusPoints")}
-                                </FieldLabel>
-                                <Input
-                                  id={`${code}-bonus`}
-                                  className="w-24 rounded-xl tabular-nums"
-                                  inputMode="numeric"
-                                  aria-label={`${code} bonus`}
-                                  disabled={!isSelected}
-                                  value={form.pointsFlat}
-                                  onChange={(event) => patch(code, { pointsFlat: event.target.value })}
-                                />
-                              </Box>
+                          <Box className="grid grid-cols-2 gap-3">
+                            <Box className="flex flex-col gap-1.5">
+                              <FieldLabel
+                                htmlFor={`${code}-points`}
+                                tooltip={t("tipPoints")}
+                              >
+                                {t("pointsPercent")}
+                              </FieldLabel>
+                              <Input
+                                id={`${code}-points`}
+                                className="rounded-xl tabular-nums"
+                                inputMode="numeric"
+                                aria-label={`${code} points`}
+                                disabled={!isSelected}
+                                value={form.points}
+                                onChange={(event) => patch(code, { points: event.target.value })}
+                              />
                             </Box>
-                            <Box className="flex items-start gap-3">
-                              <Box className="w-40">
-                                <SelectField
-                                  id={`${code}-discount-type`}
-                                  label={t("discount")}
-                                  tooltip={t("discountHint")}
-                                  options={[
-                                    { value: NONE, label: t("noDiscount") },
-                                    { value: "percent", label: t("discountPercentOption") },
-                                    { value: "fixed", label: t("discountFixedOption") },
-                                  ]}
-                                  value={form.discountType || NONE}
-                                  disabled={!isSelected}
-                                  onChange={(next) =>
-                                    patch(code, {
-                                      discountType: (next === NONE ? "" : next) as RowForm["discountType"],
-                                    })
-                                  }
-                                />
-                              </Box>
-                              <Box className="flex flex-col gap-1">
-                                <FieldLabel
-                                  htmlFor={`${code}-discount-value`}
-                                  tooltip={t("tipDiscountValue")}
-                                >
-                                  {t("discountValue")}
-                                </FieldLabel>
-                                <Input
-                                  id={`${code}-discount-value`}
-                                  className="w-24 rounded-xl tabular-nums"
-                                  inputMode="numeric"
-                                  aria-label={`${code} discount`}
-                                  disabled={!isSelected || !form.discountType}
-                                  value={form.discountValue}
-                                  onChange={(event) => patch(code, { discountValue: event.target.value })}
-                                />
-                              </Box>
+                            <Box className="flex flex-col gap-1.5">
+                              <FieldLabel
+                                htmlFor={`${code}-bonus`}
+                                tooltip={t("tipBonusPoints")}
+                              >
+                                {t("bonusPoints")}
+                              </FieldLabel>
+                              <Input
+                                id={`${code}-bonus`}
+                                className="rounded-xl tabular-nums"
+                                inputMode="numeric"
+                                aria-label={`${code} bonus`}
+                                disabled={!isSelected}
+                                value={form.pointsFlat}
+                                onChange={(event) => patch(code, { pointsFlat: event.target.value })}
+                              />
+                            </Box>
+                            <SelectField
+                              id={`${code}-discount-type`}
+                              label={t("discount")}
+                              tooltip={t("discountHint")}
+                              options={[
+                                { value: NONE, label: t("noDiscount") },
+                                { value: "percent", label: t("discountPercentOption") },
+                                { value: "fixed", label: t("discountFixedOption") },
+                              ]}
+                              value={form.discountType || NONE}
+                              disabled={!isSelected}
+                              onChange={(next) =>
+                                patch(code, {
+                                  discountType: (next === NONE ? "" : next) as RowForm["discountType"],
+                                })
+                              }
+                            />
+                            <Box className="flex flex-col gap-1.5">
+                              <FieldLabel
+                                htmlFor={`${code}-discount-value`}
+                                tooltip={t("tipDiscountValue")}
+                              >
+                                {t("discountValue")}
+                              </FieldLabel>
+                              <Input
+                                id={`${code}-discount-value`}
+                                className="rounded-xl tabular-nums"
+                                inputMode="numeric"
+                                aria-label={`${code} discount`}
+                                disabled={!isSelected || !form.discountType}
+                                value={form.discountValue}
+                                onChange={(event) => patch(code, { discountValue: event.target.value })}
+                              />
                             </Box>
                           </Box>
                         </td>
 
                         <td className="px-3 py-3 align-top">
                           <Box className="flex flex-col gap-3">
-                            <Box className="flex flex-col gap-1">
+                            <Box className="flex flex-col gap-1.5">
                               <FieldLabel
                                 htmlFor={`${code}-name`}
                                 tooltip={t("tipProductName")}
@@ -511,7 +543,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                 onChange={(event) => patch(code, { name: event.target.value })}
                               />
                             </Box>
-                            <Box className="flex flex-col gap-1">
+                            <Box className="flex flex-col gap-1.5">
                               <FieldLabel
                                 htmlFor={`${code}-sub-name`}
                                 tooltip={t("tipSubName")}
@@ -533,15 +565,17 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
                         <td className="px-3 py-3 align-top">
                           <Box className="flex flex-col gap-3">
-                            <Box className="flex items-center gap-1.5">
-                              <Text
-                                as="span"
-                                variant="small"
-                                className="font-medium"
-                              >
-                                {t("cost")}
-                              </Text>
-                              <InfoTooltip content={t("tipCost")} />
+                            <Box className="flex items-center justify-between gap-2 border-b border-border pb-2">
+                              <Box className="flex items-center gap-1.5">
+                                <Text
+                                  as="span"
+                                  variant="small"
+                                  className="font-medium"
+                                >
+                                  {t("cost")}
+                                </Text>
+                                <InfoTooltip content={t("tipCost")} />
+                              </Box>
                               <Text
                                 as="span"
                                 variant="small"
@@ -550,26 +584,40 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                 {rupiah(row.cost)}
                               </Text>
                             </Box>
-                            {plans.map((plan) => {
-                              const margin = toNumber(form.margins[plan.value] ?? "");
-                              const price = margin === null ? row.cost : Math.ceil(row.cost * (1 + margin / 100));
 
-                              return (
-                                <Box
-                                  key={plan.value}
-                                  className="flex flex-col gap-1"
-                                >
-                                  <FieldLabel
-                                    htmlFor={`${code}-margin-${plan.value}`}
-                                    tooltip={t("tipMargin")}
+                            <Box className="flex flex-col gap-2">
+                              {plans.map((plan) => {
+                                const rule = ruleForPlan(plan.value);
+                                const margin = toNumber(form.margins[plan.value] ?? "");
+                                const auto = margin === null;
+                                // Empty margin = follow the rule; typed = the
+                                // admin's own percent (no flat, matching the API).
+                                const price = auto
+                                  ? rule
+                                    ? computeRolePrice(row.cost, rule.markup_percent, rule.markup_flat)
+                                    : row.cost
+                                  : computeRolePrice(row.cost, margin, 0);
+
+                                return (
+                                  <Box
+                                    key={plan.value}
+                                    className="grid grid-cols-[minmax(0,1fr)_4.5rem_auto] items-center gap-x-2 gap-y-1"
                                   >
-                                    {plan.label} (%)
-                                  </FieldLabel>
-                                  <Box className="flex items-center gap-2">
+                                    <Box className="flex min-w-0 items-center gap-1.5">
+                                      <Text
+                                        as="span"
+                                        variant="small"
+                                        className="truncate"
+                                      >
+                                        {planLabel(plan)} (%)
+                                      </Text>
+                                      <InfoTooltip content={t("tipMargin")} />
+                                    </Box>
                                     <Input
                                       id={`${code}-margin-${plan.value}`}
-                                      className="w-20 rounded-xl tabular-nums"
+                                      className="rounded-lg px-2 text-right tabular-nums"
                                       inputMode="decimal"
+                                      placeholder={rule ? `${rule.markup_percent}%` : t("pricingRules")}
                                       aria-label={`${code} ${plan.label} margin`}
                                       disabled={!isSelected}
                                       value={form.margins[plan.value] ?? ""}
@@ -579,11 +627,17 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         })
                                       }
                                     />
-                                    <Badge variant="secondary">{rupiah(price)}</Badge>
+                                    <Badge
+                                      variant={auto ? "outline" : "secondary"}
+                                      className="justify-self-end tabular-nums"
+                                      title={auto ? t("priceFollowsRules") : undefined}
+                                    >
+                                      {rupiah(price)}
+                                    </Badge>
                                   </Box>
-                                </Box>
-                              );
-                            })}
+                                );
+                              })}
+                            </Box>
                           </Box>
                         </td>
 
@@ -613,7 +667,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                             className="border-t border-border bg-muted/20 px-3 py-3"
                           >
                             <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                              <Box className="flex flex-col gap-1">
+                              <Box className="flex flex-col gap-1.5">
                                 <FieldLabel
                                   htmlFor={`${code}-price-min`}
                                   tooltip={t("tipLowerLimit")}
@@ -629,7 +683,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                   onChange={(event) => patch(code, { priceMin: event.target.value })}
                                 />
                               </Box>
-                              <Box className="flex flex-col gap-1">
+                              <Box className="flex flex-col gap-1.5">
                                 <FieldLabel
                                   htmlFor={`${code}-price-max`}
                                   tooltip={t("tipUpperLimit")}
@@ -685,7 +739,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       }
                                     />
                                   </Box>
-                                  <Box className="flex flex-col gap-1">
+                                  <Box className="flex flex-col gap-1.5">
                                     <FieldLabel
                                       htmlFor={`${code}-mix-qty-${index}`}
                                       tooltip={t("tipQuantity")}
