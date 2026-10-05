@@ -2,6 +2,7 @@ import type { TFunction } from "i18next";
 import type { ColumnDef } from "@tanstack/react-table";
 
 import { Box } from "@/components/common/Box";
+import { InfoTooltip } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { formatCurrency } from "@/utils/currency";
@@ -128,9 +129,24 @@ export const mainProductColumnsFor = (t: TFunction<"products">): ColumnDef<Produ
     id: "status",
     header: t("status"),
     cell: ({ row }) => (
-      <Box className="flex flex-col items-start gap-1">
+      <Box className="flex max-w-56 flex-col items-start gap-1">
         <ProductStatusBadge state={row.original.publish_state} />
-        <ProductAvailabilityBadge isAvailable={row.original.is_available} />
+        <Box className="flex items-center gap-1.5">
+          <ProductAvailabilityBadge isAvailable={row.original.is_available} />
+          {/* Availability is the provider's own flag: when a SKU is switched off
+              upstream the product cannot be sold, so say why rather than leaving
+              the admin to guess from a bare "Unavailable". */}
+          {!row.original.is_available && <InfoTooltip content={t("providerInactiveHint")} />}
+        </Box>
+        {!row.original.is_available && (
+          <Text
+            as="span"
+            variant="small"
+            className="text-muted-foreground"
+          >
+            {t("providerInactive")}
+          </Text>
+        )}
       </Box>
     ),
   },
