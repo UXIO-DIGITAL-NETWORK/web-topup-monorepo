@@ -48,6 +48,18 @@ export const useAddUxiolabsProduct = () => {
 export const useMarginPlanOptions = () =>
   useQuery({ queryKey: ["membership-plans", "margin-options"], queryFn: providerService.planOptions });
 
+/**
+ * The pricing rules, for the Add Products price preview. Long `staleTime`: a
+ * rule changes only when an admin edits Pricing Rules, and the preview only
+ * needs it to show what an empty margin falls back to.
+ */
+export const usePricingRuleOptions = () =>
+  useQuery({
+    queryKey: ["pricing-rules", "list"],
+    queryFn: providerService.pricingRules,
+    staleTime: 5 * 60 * 1000,
+  });
+
 export const useProviderProductList = (params: ProviderProductListParams) =>
   useQuery({
     queryKey: ["supplier-products", "list", params],

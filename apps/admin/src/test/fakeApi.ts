@@ -727,6 +727,13 @@ const SEEDS: Record<string, () => Row[]> = {
     { id: 2, code: "platinum", name: { id: "Platinum", en: "Platinum" }, price: 150000, duration_days: null, is_active: true, is_default: false, sort_order: 2 },
     { id: 3, code: "gold", name: { id: "Gold", en: "Gold" }, price: 300000, duration_days: null, is_active: true, is_default: false, sort_order: 3 },
   ],
+  // Markup rules driving the price an empty margin falls back to. A null plan
+  // is the global fallback; a plan-keyed rule overrides it. Read by the Add
+  // Products preview (the pricing page test mocks pricingService.list).
+  "pricing-rules": () => [
+    { id: 1, category_id: null, membership_plan_id: null, markup_percent: 20, markup_flat: 0, category: null, membership_plan: null },
+    { id: 2, category_id: null, membership_plan_id: 1, markup_percent: 25, markup_flat: 0, category: null, membership_plan: null },
+  ],
   "article-categories": () =>
     ["promo", "mobile-legend", "free-fire"].map((key, index) => ({
       id: index + 1,
@@ -1376,6 +1383,12 @@ export function createFakeApi() {
             price_agent: Math.ceil(cost * 1.05),
           },
         });
+      }
+
+      // Pricing rules are a plain (non-paginated) collection — answer it whole
+      // so `response.data` stays the array the service maps.
+      if (url === "/v1/pricing-rules") {
+        return envelope(store["pricing-rules"] ?? []);
       }
 
       const [collection, id] = parsePath(url);

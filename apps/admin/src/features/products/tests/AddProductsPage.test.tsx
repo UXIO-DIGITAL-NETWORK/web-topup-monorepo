@@ -39,7 +39,7 @@ describe("AddProductsPage", () => {
     expect(screen.getByRole("button", { name: "Bulk" })).toBeInTheDocument();
     // Provider and category, the pair the reference puts above the table.
     expect(screen.getByLabelText("Supplier")).toBeInTheDocument();
-    expect(screen.getByLabelText("Our category")).toBeInTheDocument();
+    expect(screen.getByLabelText("Category")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Save as draft (0)" })).toBeInTheDocument();
   });
 
@@ -115,10 +115,19 @@ describe("AddProductsPage", () => {
     await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
 
     const margin = screen.getAllByLabelText(/VAL120 .* margin/)[0];
-    await user.type(margin, "20");
+    await user.type(margin, "50");
 
-    // Cost is 15.000; a 20% margin sells at 18.000.
-    expect(screen.getByText("Rp 18.000")).toBeInTheDocument();
+    // Cost is 15.000; a 50% margin sells at 22.500 (no rule produces this).
+    expect(screen.getByText("Rp 22.500")).toBeInTheDocument();
+  });
+
+  /** An empty margin is "follow the pricing rules", so the rule price shows. */
+  it("follows the pricing rules when a margin is left empty", async () => {
+    await openPage();
+    await screen.findByText("VAL120");
+
+    // Global rule 20% over cost (15.000) → 18.000, shown without typing.
+    expect(screen.getAllByText("Rp 18.000").length).toBeGreaterThan(0);
   });
 
   it("saves as a draft when asked, and publishes when asked", async () => {
