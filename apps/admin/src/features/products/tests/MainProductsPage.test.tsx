@@ -60,24 +60,27 @@ describe("MainProductsPage", () => {
     expect(items.map((item) => item.textContent)).toEqual(["Single", "Bulk"]);
   });
 
-  it("the Add menu's Single entry opens the add-products modal", async () => {
+  it("the Add menu's Single entry opens the add-products page", async () => {
     const user = userEvent.setup();
-    await renderRoute(LIST_PATH);
+    const { router } = await renderRoute(LIST_PATH);
 
     await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
     await user.click(await screen.findByRole("menuitem", { name: "Single" }));
 
-    expect(await screen.findByRole("dialog", { name: "Add products" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Add products" })).toBeInTheDocument();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/admin/products-preview/main/add");
   });
 
-  it("the Add menu's Bulk entry opens the same modal", async () => {
+  it("the Add menu's Bulk entry opens the same page in bulk mode", async () => {
     const user = userEvent.setup();
-    await renderRoute(LIST_PATH);
+    const { router } = await renderRoute(LIST_PATH);
 
     await user.click(await screen.findByRole("button", { name: /Add Main Products/i }));
     await user.click(await screen.findByRole("menuitem", { name: "Bulk" }));
 
-    expect(await screen.findByRole("dialog", { name: "Add products" })).toBeInTheDocument();
+    expect(await screen.findByRole("heading", { name: "Add products" })).toBeInTheDocument();
+    expect(router.state.location.search).toMatchObject({ mode: "bulk" });
   });
 
   it("shows the column headers", async () => {

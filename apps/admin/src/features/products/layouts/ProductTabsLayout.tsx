@@ -49,7 +49,6 @@ export function ProductTabsLayout() {
   // dedicated Set Profit Margin / Set Price Limit pages.
   const onFormRoute =
     pathname.endsWith("/add") ||
-    pathname.endsWith("/add-bulk") ||
     pathname.endsWith("/edit") ||
     pathname.includes("/set-profit-margin") ||
     pathname.includes("/set-price-limit");
