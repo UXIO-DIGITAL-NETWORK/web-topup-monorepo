@@ -265,5 +265,18 @@
   "tipMix": "Gabungkan produk utama lain menjadi satu paket harga.",
   "tipMixProduct": "Produk utama yang ikut dalam paket campuran ini.",
   "tipQuantity": "Jumlah produk yang diikutkan dalam campuran.",
-  "priceFollowsRules": "Mengikuti Aturan Harga"
+  "priceFollowsRules": "Mengikuti Aturan Harga",
+  "sellPrice": "Harga Jual",
+  "configure": "Atur",
+  "stepData": "Data Produk",
+  "stepPricing": "Harga & Margin",
+  "stepLimits": "Batas Harga",
+  "stepMix": "Mix Produk",
+  "stepSummary": "{{done}} dari {{total}} langkah terisi",
+  "marginSimulationTitle": "Simulasi Margin vs Harga Modal",
+  "profit": "Keuntungan",
+  "mixSearchPlaceholder": "Cari produk mix…",
+  "mixNoResults": "Produk tidak ditemukan.",
+  "mixCostNote": "Modal terakumulasi (utama + mix)",
+  "tipLogo": "Gambar produk yang tampil di storefront. Otomatis dikonversi ke WebP."
 }

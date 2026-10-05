@@ -19,10 +19,12 @@ use Illuminate\Support\Facades\DB;
  * Three things this owns, in this order:
  *
  *  1. **The composition** (replace-in-place, one row per component).
- *  2. **The accumulated cost**: `products.price_modal` becomes the sum of the
- *     components' costs times their quantities. That column is what the whole
- *     pricing path reads, so writing it here is what makes every downstream
- *     price, margin and guard agree without any of them knowing about mixes.
+ *  2. **The accumulated cost**: `products.price_modal` becomes the product's own
+ *     supplier cost (when it has one) PLUS the sum of the components' costs
+ *     times their quantities — the full price of what fulfilment will order.
+ *     That column is what the whole pricing path reads, so writing it here is
+ *     what makes every downstream price, margin and guard agree without any of
+ *     them knowing about mixes.
  *  3. **The sell prices**, recomputed from the NEW cost using the margin the
  *     product already sold at — so editing a mix moves the price with the cost
  *     instead of silently leaving the old margin behind.
@@ -57,6 +59,11 @@ class SetProductMixAction
             // implied by the price/cost pair that is on screen right now.
             $margins = $this->effectiveMargins($product, $oldCost);
 
+            // The product's own supplier SKU — not a component. A mix built from
+            // a provider SKU still orders that SKU, so it stays in the modal.
+            // Read before the delete; it does not depend on the mix rows.
+            $ownCost = $product->ownSupplierCost();
+
             $product->mixItems()->delete();
 
             foreach ($normalized as $row) {
@@ -71,34 +78,48 @@ class SetProductMixAction
             $product->load('mixItems.component');
 
             if ($product->mixItems->isEmpty()) {
-                // Cleared: the product goes back to being an ordinary one and the
-                // admin prices it by hand — nothing to accumulate.
+                // Cleared: the product goes back to being an ordinary one — its
+                // own cost, priced by the margin it was already selling at.
+                $this->reprice($product, $ownCost, $margins);
                 $this->log($product, 'Mix dikosongkan');
 
                 return $product->fresh(['mixItems.component']);
             }
 
-            $cost = (int) $product->mixItems->sum(fn ($item) => $item->cost());
+            // Own SKU + every component, which is what fulfilment will order and
+            // what the whole pricing path reads back as `price_modal`.
+            $cost = $ownCost + (int) $product->mixItems->sum(fn ($item) => $item->cost());
 
-            $product->update(['price_modal' => $cost]);
-
-            if ($cost > 0 && $product->planPrices()->exists()) {
-                $this->writePlanPrices->execute(
-                    $product,
-                    $this->pricing->computePlanPrices(
-                        $cost,
-                        $product->category_id !== null ? (int) $product->category_id : null,
-                        $margins,
-                        $product->price_min,
-                        $product->price_max,
-                    ),
-                );
-            }
+            $this->reprice($product, $cost, $margins);
 
             $this->log($product, 'Mix diset: '.count($normalized).' komponen, modal terakumulasi '.$cost);
 
             return $product->fresh(['mixItems.component']);
         });
+    }
+
+    /**
+     * Write the accumulated cost and re-derive the selling prices from it, at
+     * the margins the product was already selling at.
+     *
+     * @param  array<int,float>  $margins
+     */
+    private function reprice(Product $product, int $cost, array $margins): void
+    {
+        $product->update(['price_modal' => $cost]);
+
+        if ($cost > 0 && $product->planPrices()->exists()) {
+            $this->writePlanPrices->execute(
+                $product,
+                $this->pricing->computePlanPrices(
+                    $cost,
+                    $product->category_id !== null ? (int) $product->category_id : null,
+                    $margins,
+                    $product->price_min,
+                    $product->price_max,
+                ),
+            );
+        }
     }
 
     /**

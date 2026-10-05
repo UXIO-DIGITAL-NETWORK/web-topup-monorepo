@@ -10,7 +10,9 @@ use App\DTOs\Log\CreateActivityLogDTO;
 use App\Exceptions\ProductDraftException;
 use App\Models\SupplierCategory;
 use App\Models\SupplierProduct;
+use App\Services\ImageOptimizer;
 use App\Support\Uxiolabs\UxiolabsSupplier;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Throwable;
 
@@ -41,6 +43,7 @@ class AddProductsFromSupplierAction
         private readonly SetProductMixAction $mixAction,
         private readonly PublishProductAction $publishAction,
         private readonly CreateActivityLogAction $activityLogAction,
+        private readonly ImageOptimizer $images,
     ) {}
 
     /**
@@ -197,6 +200,12 @@ class AddProductsFromSupplierAction
      */
     private function applyConfiguration($product, array $item): void
     {
+        // The logo travels as a file with the row; stored through the same
+        // WebP optimiser every other image upload uses.
+        if (($item['logo'] ?? null) instanceof UploadedFile) {
+            $product->update(['logo' => $this->images->store($item['logo'], 'products/logos')]);
+        }
+
         // The discount and the sub-name are plain columns the margin action does
         // not own; everything else it writes goes through that one writer.
         if ($item['discount_type'] !== null || $item['discount_value'] !== null || $item['sub_name'] !== null) {

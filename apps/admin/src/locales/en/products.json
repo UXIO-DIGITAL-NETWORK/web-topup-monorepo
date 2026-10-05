@@ -265,5 +265,18 @@
   "tipMix": "Combine other main products into one bundled price.",
   "tipMixProduct": "The main product included in this bundle.",
   "tipQuantity": "How many of the product the bundle includes.",
-  "priceFollowsRules": "Following the Pricing Rules"
+  "priceFollowsRules": "Following the Pricing Rules",
+  "sellPrice": "Sell Price",
+  "configure": "Configure",
+  "stepData": "Product Data",
+  "stepPricing": "Pricing & Margin",
+  "stepLimits": "Price Limits",
+  "stepMix": "Product Mix",
+  "stepSummary": "{{done}} of {{total}} steps filled",
+  "marginSimulationTitle": "Margin simulation vs cost",
+  "profit": "Profit",
+  "mixSearchPlaceholder": "Search mix product…",
+  "mixNoResults": "No product found.",
+  "mixCostNote": "Accumulated cost (main + mix)",
+  "tipLogo": "The product image shown on the storefront. Automatically converted to WebP."
 }

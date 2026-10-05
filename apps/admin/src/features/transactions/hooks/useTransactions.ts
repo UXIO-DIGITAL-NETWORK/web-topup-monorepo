@@ -131,6 +131,24 @@ export const useResendCallback = () => {
   });
 };
 
+/** Rehit one sub-order of a mix — the per-row action on the detail screen. */
+export const useResendSupplierOrderCallback = () => {
+  const { t } = useTranslation("transactions");
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, orderId }: { id: string; orderId: string }) =>
+      transactionsService.resendSupplierOrder(id, orderId),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["transactions"] });
+      toast.success(t("callbackResent"));
+    },
+    onError: () => {
+      toast.error(t("callbackResendFailed"));
+    },
+  });
+};
+
 export const useRetryInvoice = () => {
   const { t } = useTranslation("transactions");
   const queryClient = useQueryClient();

@@ -195,4 +195,56 @@ describe("TransactionDetailDialog", () => {
     renderDialog();
     expect(screen.getByRole("link", { name: "View proof" })).toBeInTheDocument();
   });
+
+  it("lists every supplier order of a mix in the Item Transaksi table", () => {
+    vi.spyOn(hooks, "useResendSupplierOrderCallback").mockReturnValue({
+      mutate: vi.fn(),
+      isPending: false,
+    } as never);
+
+    mockDetail(
+      {},
+      {
+        ...detail,
+        invoice_status: "processing",
+        supplier: {
+          ...detail.supplier,
+          orders: [
+            {
+              id: "1",
+              code: "ML5",
+              name: "Mobile Legends 5 Diamond",
+              supplier: "Uxiolabs",
+              idtrx: "INV-1-42-1",
+              provider_status: "delivered",
+              sn: "SN-A",
+              created_at: "2026-07-01T14:56:37.000Z",
+              updated_at: "2026-07-01T14:57:00.000Z",
+              retried_by: "Randy",
+            },
+            {
+              id: "2",
+              code: "ML10",
+              name: "Mobile Legends 10 Diamond",
+              supplier: "Uxiolabs",
+              idtrx: "INV-1-43-1",
+              provider_status: "ordered",
+              created_at: "2026-07-01T14:56:37.000Z",
+              updated_at: "2026-07-01T14:56:40.000Z",
+            },
+          ],
+        },
+      },
+    );
+
+    renderDialog();
+
+    expect(screen.getByText("Transaction Items")).toBeInTheDocument();
+    expect(screen.getByText("INV-1-42-1")).toBeInTheDocument();
+    expect(screen.getByText("INV-1-43-1")).toBeInTheDocument();
+    expect(screen.getByText("SN-A")).toBeInTheDocument();
+    expect(screen.getByText("Randy")).toBeInTheDocument();
+    // One rehit action per part.
+    expect(screen.getAllByRole("button", { name: /Rehit/ }).length).toBe(2);
+  });
 });

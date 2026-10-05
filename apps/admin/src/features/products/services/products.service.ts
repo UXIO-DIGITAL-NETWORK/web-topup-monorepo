@@ -318,17 +318,47 @@ export const productsService = {
     items: AddProductsFromSupplierItem[];
     publish: boolean;
   }): Promise<AddProductsFromSupplierResult> => {
-    const response: ApiResponse<AddProductsFromSupplierResult> = await api.post(`${BASE}/from-supplier`, {
-      items: input.items.map((item) => ({
-        ...item,
-        discount_value: item.discount_value ?? undefined,
-        mix_items: item.mix_items?.map((line) => ({
-          product_id: toFk(line.product_id),
-          quantity: Number(line.quantity),
-        })),
-      })),
-      publish: input.publish,
+    // Multipart, not JSON: each row may carry a logo file, and a file cannot
+    // live in a JSON body. Nested keys (`items[0][margins][5]`) are what Laravel
+    // parses back into the same array shape the request validates.
+    const form = new FormData();
+
+    input.items.forEach((item, index) => {
+      const put = (key: string, value: string | number | undefined | null) => {
+        if (value === undefined || value === null || value === "") return;
+        form.append(`items[${index}][${key}]`, String(value));
+      };
+
+      put("buyer_sku_code", item.buyer_sku_code);
+      put("name", item.name);
+      put("sub_name", item.sub_name);
+      put("sub_category_id", item.sub_category_id ? toFk(item.sub_category_id) : undefined);
+      put("discount_type", item.discount_type);
+      put("discount_value", item.discount_value);
+      put("point_percent", item.point_percent);
+      put("point_flat", item.point_flat);
+      put("price_min", item.price_min);
+      put("price_max", item.price_max);
+      // Per item, not top-level: the API reads `items.*.publish`.
+      put("publish", input.publish ? 1 : 0);
+
+      // Every plan travels, including the empty ones: an empty string is how a
+      // plan is told "no override, follow the rules" (the request reads "" as
+      // null). Omitting it would leave whatever override was there.
+      for (const planId of Object.keys(item.margins ?? {})) {
+        const percent = item.margins?.[planId];
+        form.append(`items[${index}][margins][${planId}]`, percent === null ? "" : String(percent));
+      }
+
+      (item.mix_items ?? []).forEach((line, lineIndex) => {
+        form.append(`items[${index}][mix_items][${lineIndex}][product_id]`, String(toFk(line.product_id)));
+        form.append(`items[${index}][mix_items][${lineIndex}][quantity]`, String(Number(line.quantity)));
+      });
+
+      if (item.logo instanceof File) form.append(`items[${index}][logo]`, item.logo);
     });
+
+    const response: ApiResponse<AddProductsFromSupplierResult> = await api.post(`${BASE}/from-supplier`, form);
 
     return response.data;
   },

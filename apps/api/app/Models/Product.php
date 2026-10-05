@@ -64,22 +64,50 @@ class Product extends Model
             return self::STATE_ARCHIVED;
         }
 
-        if ($this->status && $this->supplierProducts->contains(fn ($mapping) => (bool) $mapping->is_active)) {
-            return self::STATE_PUBLISHED;
+        $hasActiveMapping = $this->supplierProducts->contains(fn ($mapping) => (bool) $mapping->is_active);
+
+        // A mix is live when every component of it is AND — when the product
+        // still carries its own supplier SKU, because a mix created from a
+        // provider SKU orders that SKU too — that SKU is live as well.
+        //
+        // Checked BEFORE the plain mapping branch below: `hasActiveMapping`
+        // alone would call a from-provider mix live while one of its components
+        // is switched off, which is exactly the half-deliverable it must not
+        // advertise. Read from the LOADED relation only — this runs once per row
+        // in a list, so a query here would turn one page into N+1;
+        // `GetProductsAction` eager-loads it for that reason.
+        if ($this->relationLoaded('mixItems') && $this->mixItems->isNotEmpty()) {
+            $componentsLive = $this->mixItems->every(fn (ProductMixItem $item) => $item->component !== null && Catalog::isSellable($item->component));
+            $ownLive = $this->supplierProducts->isEmpty() || $hasActiveMapping;
+
+            if ($this->status && $componentsLive && $ownLive) {
+                return self::STATE_PUBLISHED;
+            }
+
+            return $this->isDraft() ? self::STATE_DRAFT : self::STATE_UNPUBLISHED;
         }
 
-        // A mix has no mapping of its own: it is live when every component of it
-        // is. Read from the LOADED relation only — this runs once per row in a
-        // list, so a query here would turn one page into N+1; `GetProductsAction`
-        // eager-loads it for that reason.
-        if ($this->status
-            && $this->relationLoaded('mixItems')
-            && $this->mixItems->isNotEmpty()
-            && $this->mixItems->every(fn (ProductMixItem $item) => $item->component !== null && Catalog::isSellable($item->component))) {
+        if ($this->status && $hasActiveMapping) {
             return self::STATE_PUBLISHED;
         }
 
         return $this->isDraft() ? self::STATE_DRAFT : self::STATE_UNPUBLISHED;
+    }
+
+    /**
+     * The cost of the product's OWN supplier SKU — not its components'.
+     *
+     * A mix made from a provider SKU still has that mapping, and that SKU is
+     * ordered alongside the components, so its cost belongs in the accumulated
+     * modal. Zero for a hand-made bundle with no supplier of its own.
+     *
+     * Prefers an active mapping (the one fulfilment will actually use) and only
+     * falls back to an inactive one, which is the state a draft is in before its
+     * first publish.
+     */
+    public function ownSupplierCost(): int
+    {
+        return (int) ($this->supplierProducts()->orderByDesc('is_active')->orderBy('id')->value('price') ?? 0);
     }
 
     /**
@@ -110,6 +138,16 @@ class Product extends Model
 
             if (! $this->mixItems->every(fn (ProductMixItem $item) => Catalog::isSellable($item->component))) {
                 return 'Semua komponen mix harus sudah tayang dulu sebelum mix-nya bisa ditayangkan.';
+            }
+
+            // A mix created from a provider SKU orders that SKU too, so the SKU
+            // has to be alive at the provider. Only the provider's own flag is
+            // checked — publishing is what activates the mapping, so requiring an
+            // active one here would make publishing impossible.
+            $ownMapping = $this->publishableMapping();
+
+            if ($ownMapping !== null && ! $ownMapping->buyer_product_status) {
+                return 'SKU utama mix sedang nonaktif di provider.';
             }
 
             return null;

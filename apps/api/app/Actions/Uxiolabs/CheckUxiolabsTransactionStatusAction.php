@@ -9,8 +9,11 @@ use App\Contracts\SupplierGateway;
 use App\Enums\ProviderStatus;
 use App\Enums\TransactionStatus;
 use App\Models\Transaction;
+use App\Models\TransactionSupplierOrder;
 use App\Traits\MapsUxiolabsStatus;
 use Exception;
+use Illuminate\Support\Facades\Auth;
+use InvalidArgumentException;
 
 class CheckUxiolabsTransactionStatusAction
 {
@@ -133,6 +136,61 @@ class CheckUxiolabsTransactionStatusAction
         // Same terminal side effects as the single-order path, and for the same
         // reason: once the row is terminal the callback's guard skips it, so
         // this is the last chance for the refund or the receipt.
+        if ($fresh->status === TransactionStatus::FAILED_PROVIDER) {
+            $this->refundAction->execute($fresh);
+        }
+
+        if ($fresh->status === TransactionStatus::COMPLETED) {
+            $this->receiptAction->execute($fresh);
+            $this->pointsAction->execute($fresh);
+        }
+
+        $this->announce->statusChanged($fresh, $oldStatus, $fresh->status, $source);
+
+        return $fresh;
+    }
+
+    /**
+     * Ask the supplier about ONE sub-order, then re-derive the parent — the
+     * per-item "Rehit" an operator presses on a stuck part.
+     *
+     * Scoped to a single sub-order on purpose: the section-level resend re-asks
+     * every open part, which is heavy when only one is suspect. The retry is
+     * stamped on the row so the detail screen can show who went looking.
+     */
+    public function pollOrder(
+        TransactionSupplierOrder $order,
+        string $source = SendUxiolabsStatusNotificationAction::SOURCE_MANUAL,
+    ): Transaction {
+        if ($order->isTerminal()) {
+            throw new InvalidArgumentException('Sub-order ini sudah selesai; tidak ada yang perlu dicek.');
+        }
+
+        if (! $order->supplier_trx_id) {
+            throw new InvalidArgumentException('Sub-order ini belum punya ID di supplier — menunggu callback.');
+        }
+
+        $transaction = $order->transaction;
+        $oldStatus = $transaction->status;
+
+        $response = $this->uxiolabsService->checkTransactionStatus($order->supplier_trx_id);
+        $componentStatus = $this->mapUxiolabsStatus($response['status'] ?? 'pending');
+        $sn = (string) ($response['keterangan'] ?? '');
+
+        $order->update([
+            'sn' => $sn !== '' ? $sn : $order->sn,
+            'supplier_status' => $response['status'] ?? $order->supplier_status,
+            'provider_status' => match ($componentStatus) {
+                TransactionStatus::COMPLETED => ProviderStatus::DELIVERED,
+                TransactionStatus::FAILED_PROVIDER => ProviderStatus::REJECTED,
+                default => ProviderStatus::ORDERED,
+            },
+            'retried_by_user_id' => Auth::id(),
+            'retried_at' => now(),
+        ]);
+
+        $fresh = $this->deriveStatus->execute($transaction);
+
         if ($fresh->status === TransactionStatus::FAILED_PROVIDER) {
             $this->refundAction->execute($fresh);
         }

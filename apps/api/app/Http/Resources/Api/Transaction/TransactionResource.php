@@ -66,7 +66,16 @@ class TransactionResource extends JsonResource
                     'supplier_status' => $order->supplier_status,
                     'provider_status' => $order->provider_status?->value,
                     'sn' => $order->sn,
+                    'attempts' => (int) $order->attempts,
+                    // The item table reads one row per part: its supplier, when
+                    // it was placed and last answered, and who re-hit it.
+                    'supplier_id' => $order->supplier_id !== null ? (int) $order->supplier_id : null,
+                    'supplier_name' => $order->supplier?->name,
+                    'retried_by' => $order->retriedBy?->name,
+                    'retried_at' => $order->retried_at,
                     'last_error' => $order->last_error,
+                    'created_at' => $order->created_at,
+                    'updated_at' => $order->updated_at,
                 ])
                 ->values()),
             'product' => new ProductResource($this->whenLoaded('product')),
