@@ -245,5 +245,21 @@
   "discountHint": "A standing price cut for this product, applied on top of the plan price. Leave the type empty for no discount.",
   "noDiscount": "No discount",
   "discountPercentOption": "Percent (%)",
-  "discountFixedOption": "Fixed (Rp)"
+  "discountFixedOption": "Fixed (Rp)",
+  "mode": "Mode",
+  "tipSupplier": "The provider the SKU comes from. Decides which rows appear below.",
+  "tipOurCategory": "The catalogue category (game) for this new product. Decides the Sub Category options.",
+  "tipSearchService": "Search provider services by name or SKU code.",
+  "tipMode": "Single adds one service; Bulk selects many at once. You can switch at any time.",
+  "tipColCodeSubCategory": "The provider's SKU code, and an optional sub category in your catalogue (pick Our category first).",
+  "tipColPointsDiscount": "Loyalty points and the discount that apply to each service.",
+  "tipDiscountValue": "The discount amount for the chosen type — a percentage of the price, or rupiah off.",
+  "tipPriceColumn": "The supplier cost and the selling price each membership plan's margin produces.",
+  "tipCost": "The supplier's cost — the base the selling price is calculated from.",
+  "tipMargin": "Margin (%) over cost for this plan. The selling price is derived from it automatically; leave empty to use the pricing rules.",
+  "tipLowerLimit": "The lowest selling price. Empty or 0 means no limit.",
+  "tipUpperLimit": "The highest selling price. Empty or 0 means no limit.",
+  "tipMix": "Combine other main products into one bundled price.",
+  "tipMixProduct": "The main product included in this bundle.",
+  "tipQuantity": "How many of the product the bundle includes."
 }

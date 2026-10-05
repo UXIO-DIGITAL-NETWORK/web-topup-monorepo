@@ -245,5 +245,21 @@
   "discountHint": "Potongan harga tetap untuk produk ini, diterapkan di atas harga plan. Kosongkan tipe untuk tanpa diskon.",
   "noDiscount": "Tanpa diskon",
   "discountPercentOption": "Persen (%)",
-  "discountFixedOption": "Nominal (Rp)"
+  "discountFixedOption": "Nominal (Rp)",
+  "mode": "Mode",
+  "tipSupplier": "Sumber layanan (provider) tempat SKU diambil. Menentukan daftar baris di bawah.",
+  "tipOurCategory": "Kategori (game) di katalogmu untuk produk baru ini. Menentukan pilihan Sub Kategori.",
+  "tipSearchService": "Cari layanan provider berdasarkan nama atau kode SKU.",
+  "tipMode": "Single menambah satu layanan; Massal memilih banyak sekaligus. Bisa diubah kapan saja.",
+  "tipColCodeSubCategory": "Kode SKU dari provider, dan sub kategori opsional di katalogmu (pilih Kategori kita dulu).",
+  "tipColPointsDiscount": "Poin loyalitas dan diskon yang berlaku untuk tiap layanan.",
+  "tipDiscountValue": "Besaran diskon sesuai tipe yang dipilih — persen dari harga, atau nominal Rupiah.",
+  "tipPriceColumn": "Modal dari supplier dan harga jual hasil margin tiap paket keanggotaan.",
+  "tipCost": "Harga modal dari supplier — acuan perhitungan harga jual.",
+  "tipMargin": "Margin (%) di atas modal untuk paket ini. Harga jual dihitung otomatis dari margin; kosongkan untuk memakai aturan harga.",
+  "tipLowerLimit": "Batas harga jual terendah. Kosong atau 0 berarti tanpa batas.",
+  "tipUpperLimit": "Batas harga jual tertinggi. Kosong atau 0 berarti tanpa batas.",
+  "tipMix": "Gabungkan produk utama lain menjadi satu paket harga.",
+  "tipMixProduct": "Produk utama yang ikut dalam paket campuran ini.",
+  "tipQuantity": "Jumlah produk yang diikutkan dalam campuran."
 }

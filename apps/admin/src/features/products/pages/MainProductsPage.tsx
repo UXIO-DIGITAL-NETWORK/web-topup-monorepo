@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Archive, Eye, RefreshCcw } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
@@ -8,7 +9,6 @@ import { DeleteConfirmDialog } from "@/components/common/DeleteConfirmDialog";
 import { Heading } from "@/components/common/Heading";
 import { Text } from "@/components/common/Text";
 import { mainProductColumnsFor } from "../components/mainProductColumns";
-import { AddProductsDialog, type AddMode } from "../components/AddProductsDialog";
 import { MainProductToolbar } from "../components/MainProductToolbar";
 import {
   useUxiolabsUpdateProducts,
@@ -31,6 +31,11 @@ const DEFAULT_PAGE_SIZE = 10;
  */
 export default function MainProductsPage() {
   const { t } = useTranslation("products");
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  // Real route and unauthenticated preview twin share this page; the add page
+  // lives under whichever base we were reached through.
+  const base = pathname.startsWith("/admin/products-preview") ? "/admin/products-preview" : "/admin/products";
   const [search, setSearch] = useState("");
   // A real category id now, not its name — see products.service `list()`.
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
@@ -42,8 +47,9 @@ export default function MainProductsPage() {
   const [bulkUnpublishOpen, setBulkUnpublishOpen] = useState(false);
   const [bulkShowOpen, setBulkShowOpen] = useState(false);
   const [bulkUxiolabsOpen, setBulkUxiolabsOpen] = useState(false);
-  /** null = closed; the value is the mode the modal opens in. */
-  const [addMode, setAddMode] = useState<AddMode | null>(null);
+
+  const goToAdd = (mode: "single" | "bulk") =>
+    navigate({ to: `${base}/main/add` as "/admin/products/main/add", search: { mode } });
 
   const params = useMemo(
     () => ({
@@ -99,8 +105,8 @@ export default function MainProductsPage() {
           price={price}
           onPriceChange={handlePriceChange}
           onRefresh={() => refetch()}
-          onAddSingle={() => setAddMode("single")}
-          onAddBulk={() => setAddMode("bulk")}
+          onAddSingle={() => goToAdd("single")}
+          onAddBulk={() => goToAdd("bulk")}
           selectedCount={selectedIds.length}
           onBulkUxiolabs={() => setBulkUxiolabsOpen(true)}
           onBulkShowPrice={() => setBulkShowOpen(true)}
@@ -172,17 +178,6 @@ export default function MainProductsPage() {
         description={t("bulkShowDescription")}
         onConfirm={() => showProducts.mutate({ ids: selectedIds, hidden: false })}
       />
-
-      {/* Add Products — one modal for both modes, mounted per open so each
-          session starts clean. Editing an existing product still uses the row
-          menu's form. */}
-      {addMode !== null && (
-        <AddProductsDialog
-          open
-          onOpenChange={(next) => !next && setAddMode(null)}
-          mode={addMode}
-        />
-      )}
     </Box>
   );
 }
