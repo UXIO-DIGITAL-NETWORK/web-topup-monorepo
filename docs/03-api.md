@@ -106,4 +106,5 @@ Delapan, didefinisikan di `AppServiceProvider`:
 
 Empat dokumen lebih rinci ada di `apps/api/docs/api/`: `category-master-data-spec.md`, `cms-spec.md`, `supplier-product-spec.md`, `transactions-payments-spec.md`.
 
-Koleksi Postman: `apps/api/uxio-topup-api-v2.postman_collection.json`.
+Koleksi Postman: `apps/api/uxio-topup-api-v3.postman_collection.json` — memetakan **semua** rute di `routes/api.php` (426 endpoint), masing-masing dengan contoh request dan response. Uji cakupannya dengan `python3 apps/api/docs/scripts/postman_coverage.py`. Cara impor dan ganti peran ada di `apps/api/docs/postman.md`.
+
