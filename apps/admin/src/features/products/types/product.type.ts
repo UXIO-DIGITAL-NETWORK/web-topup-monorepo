@@ -550,6 +550,8 @@ export interface BulkCreateProductsResult {
 export interface AddProductsFromSupplierItem {
   buyer_sku_code: string;
   name?: string;
+  sub_name?: string;
+  sub_category_id?: string;
   code?: string;
   discount_type?: ProductDiscountType;
   discount_value?: number;
@@ -561,6 +563,8 @@ export interface AddProductsFromSupplierItem {
   margins?: Record<string, number | null>;
   /** Components, referencing products we already have. */
   mix_items?: { product_id: string; quantity: string }[];
+  /** Optional logo, sent as multipart with the rest of the row. */
+  logo?: File | null;
 }
 
 export interface AddProductsFromSupplierResult {

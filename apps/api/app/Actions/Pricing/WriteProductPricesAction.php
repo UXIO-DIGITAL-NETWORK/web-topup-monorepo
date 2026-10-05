@@ -45,6 +45,14 @@ final class WriteProductPricesAction
      */
     public function fromCost(Product $product, int $cost, SupplierProduct $mapping, bool $overwriteManual = false): array
     {
+        // A mix's cost is its accumulated own-plus-components figure, not the
+        // mapping's price. A caller re-pricing a mapped mix from its own SKU's
+        // cost must not overwrite that with the own SKU alone — the accumulated
+        // `price_modal` is the source of truth for a mix.
+        if ($product->isMix()) {
+            $cost = (int) $product->price_modal;
+        }
+
         $legacy = $this->repricer->compute($cost, $product, $mapping);
 
         $this->forPlans($product, $this->repricer->computeForPlans($cost, $product, $mapping), $overwriteManual);

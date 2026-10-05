@@ -97,7 +97,10 @@ class SetSupplierProductMarginAction
                     $product->refresh();
                 }
 
-                $cost = (int) $supplierProduct->price;
+                // A mix is priced from its accumulated cost (own SKU + every
+                // component); re-pricing it from this one mapping's price would
+                // silently drop the components from the figure.
+                $cost = $product->isMix() ? (int) $product->price_modal : (int) $supplierProduct->price;
 
                 // The real prices, one per plan.
                 $this->writePlanPrices->execute(

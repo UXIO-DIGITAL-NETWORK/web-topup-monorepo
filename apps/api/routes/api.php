@@ -639,6 +639,7 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:access-api', 'admin'
     Route::post('/transactions/{transaction}/manual-review', [TransactionController::class, 'manualReview']);
     Route::post('/transactions/{transaction}/refund', [TransactionController::class, 'refund']);
     Route::post('/transactions/{transaction}/resend-callback', [TransactionController::class, 'resendCallback']);
+    Route::post('/transactions/{transaction}/supplier-orders/{order}/resend', [TransactionController::class, 'resendSupplierOrder']);
     Route::post('/transactions/{transaction}/resend-receipt', [TransactionController::class, 'resendReceipt']);
     Route::post('/transactions/{transaction}/retry', [TransactionController::class, 'retry']);
 

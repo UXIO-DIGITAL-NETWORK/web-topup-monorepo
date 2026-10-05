@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Actions\Transaction\AdminRefundTransactionAction;
 use App\Actions\Transaction\AdminResendCallbackAction;
 use App\Actions\Transaction\AdminResendReceiptAction;
+use App\Actions\Transaction\AdminResendSupplierOrderCallbackAction;
 use App\Actions\Transaction\AdminRetryTransactionAction;
 use App\Actions\Transaction\CreateTransactionAction;
 use App\Actions\Transaction\DeleteTransactionAction;
@@ -24,6 +25,7 @@ use App\Http\Requests\Transaction\UpdateTransactionRequest;
 use App\Http\Resources\Api\Refund\RefundRequestResource;
 use App\Http\Resources\Api\Transaction\TransactionResource;
 use App\Models\Transaction;
+use App\Models\TransactionSupplierOrder;
 use App\Support\Csv;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
@@ -41,7 +43,7 @@ class TransactionController extends Controller
      * implies `product`; it is what the admin renders as the order's "Game",
      * and ProductResource only emits `category` when it is loaded.
      */
-    private const RELATIONS = ['user', 'product.category', 'supplier', 'payment', 'paymentChannel', 'supplierOrders.product'];
+    private const RELATIONS = ['user', 'product.category', 'supplier', 'payment', 'paymentChannel', 'supplierOrders.product', 'supplierOrders.supplier', 'supplierOrders.retriedBy'];
 
     public function statusCounts(GetTransactionStatusCountsAction $action)
     {
@@ -158,6 +160,26 @@ class TransactionController extends Controller
         return $this->successResponse(
             new TransactionResource($transaction->load(self::RELATIONS)),
             'Callback resent successfully'
+        );
+    }
+
+    /** Rehit ONE sub-order of a mix — the per-item action on the detail screen. */
+    public function resendSupplierOrder(
+        Transaction $transaction,
+        TransactionSupplierOrder $order,
+        AdminResendSupplierOrderCallbackAction $action,
+    ) {
+        try {
+            $transaction = $action->execute($transaction, $order);
+        } catch (InvalidArgumentException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        } catch (RuntimeException $e) {
+            return $this->errorResponse($e->getMessage(), 422);
+        }
+
+        return $this->successResponse(
+            new TransactionResource($transaction->load(self::RELATIONS)),
+            'Sub-order callback resent successfully'
         );
     }
 

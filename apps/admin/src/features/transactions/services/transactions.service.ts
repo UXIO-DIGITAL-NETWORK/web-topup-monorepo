@@ -161,6 +161,14 @@ interface TransactionApiRow {
     supplier_status: string | null;
     provider_status: string | null;
     sn: string | null;
+    attempts?: number;
+    supplier_id?: number | null;
+    supplier_name?: string | null;
+    retried_by?: string | null;
+    retried_at?: string | null;
+    last_error?: string | null;
+    created_at?: string | null;
+    updated_at?: string | null;
   }[];
   created_at: string;
   updated_at: string;
@@ -311,10 +319,20 @@ const toTransactionDetail = (row: TransactionDetailApiRow): TransactionDetail =>
     trx_id: row.supplier_trx_id ?? undefined,
     status: row.supplier_status ?? undefined,
     orders: (row.supplier_orders ?? []).map((order) => ({
+      id: toRowId(order.id),
       code: order.product_code ?? undefined,
       name: order.product_name ?? undefined,
-      status: order.provider_status ?? order.supplier_status ?? undefined,
+      provider_status: (order.provider_status ?? undefined) as ProviderStatus | undefined,
+      status: order.supplier_status ?? undefined,
       sn: order.sn ?? undefined,
+      supplier: order.supplier_name ?? undefined,
+      idtrx: order.idtrx || undefined,
+      attempts: order.attempts ?? undefined,
+      last_error: order.last_error ?? undefined,
+      created_at: order.created_at ?? undefined,
+      updated_at: order.updated_at ?? undefined,
+      retried_by: order.retried_by ?? undefined,
+      retried_at: order.retried_at ?? undefined,
     })),
   },
   created_at: row.created_at,
@@ -467,6 +485,11 @@ export const transactionsService = {
 
   resendCallback: async (id: string): Promise<void> => {
     await api.post(`${BASE}/${id}/resend-callback`);
+  },
+
+  /** Rehit ONE sub-order of a mix with the supplier, from its row. */
+  resendSupplierOrder: async (id: string, orderId: string): Promise<void> => {
+    await api.post(`${BASE}/${id}/supplier-orders/${orderId}/resend`);
   },
 
   retryInvoice: async (id: string): Promise<void> => {

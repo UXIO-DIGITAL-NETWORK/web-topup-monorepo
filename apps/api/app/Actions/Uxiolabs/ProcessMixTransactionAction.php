@@ -20,12 +20,14 @@ use Exception;
 use Throwable;
 
 /**
- * Fulfils a MIX product: one paid order, one supplier order per component.
+ * Fulfils a MIX product: one paid order, one supplier order per component,
+ * plus the product's OWN provider SKU when it still carries one (a mix built
+ * from a provider SKU is delivered by that SKU as well).
  *
  * The single-product path (`ProcessUxiolabsTransactionAction`) places exactly
  * one order and keys it on the invoice number. That cannot carry a mix: the
  * supplier rejects a duplicate `idtrx`, and a mix needs several. So every order
- * here gets its own reference — `{invoice}-{componentId}-{sequence}` — which is
+ * here gets its own reference — `{invoice}-{productId}-{sequence}` — which is
  * also what the callback resolves against.
  *
  * The reference is derived, not counted: a retry after a lost response rebuilds
@@ -63,6 +65,17 @@ class ProcessMixTransactionAction
         $kontak = $transaction->user?->phone ?: $transaction->guest_contact ?: '0000000000';
 
         $placed = 0;
+
+        // The product's OWN provider SKU, when it still has one, is ordered too:
+        // a from-provider mix is delivered by that SKU AND its components, which
+        // is why its cost is part of the accumulated modal. A hand-made bundle
+        // has no mapping and starts at the components below.
+        $ownMapping = $transaction->product->supplierProducts()->where('is_active', true)->first();
+
+        if ($ownMapping) {
+            $order = $this->placeOne($transaction, (int) $transaction->product->getKey(), $ownMapping, 1, $target, $kontak);
+            $placed += $order->supplier_trx_id !== null ? 1 : 0;
+        }
 
         foreach ($components as $item) {
             $component = $item->component;
@@ -128,23 +141,23 @@ class ProcessMixTransactionAction
     }
 
     /**
-     * @param  array<string,mixed>  $mapping  the component's active supplier mapping
+     * @param  array<string,mixed>  $mapping  the product's active supplier mapping
      */
     private function placeOne(
         Transaction $transaction,
-        int $componentProductId,
+        int $productId,
         $mapping,
         int $sequence,
         string $target,
         string $kontak,
     ): TransactionSupplierOrder {
-        $idtrx = "{$transaction->invoice_number}-{$componentProductId}-{$sequence}";
+        $idtrx = "{$transaction->invoice_number}-{$productId}-{$sequence}";
 
         // First-or-create BEFORE the call, so the reference exists even if the
         // response is lost and a retry rebuilds the same one.
         $order = TransactionSupplierOrder::firstOrNew([
             'transaction_id' => $transaction->getKey(),
-            'product_id' => $componentProductId,
+            'product_id' => $productId,
             'sequence' => $sequence,
         ]);
 

@@ -172,5 +172,14 @@
   "tipPending": "Invoice paid but not yet processed by supplier",
   "tipProcessing": "Paid and handed to the supplier, awaiting fulfilment",
   "tipFailed": "Customer paid but the supplier could not fulfil the order",
-  "guest": "Guest"
+  "guest": "Guest",
+  "itemTable": "Transaction Items",
+  "colSupplier": "Supplier",
+  "colCallback": "Callback",
+  "colStatus": "Status",
+  "colSupSerial": "Supplier Serial No.",
+  "colCreated": "Created At",
+  "colSent": "Sent At",
+  "colRetriedBy": "Retried By",
+  "rehitCallback": "Rehit"
 }

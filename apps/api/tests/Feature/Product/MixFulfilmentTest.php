@@ -15,6 +15,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
 /**
@@ -127,6 +128,54 @@ class MixFulfilmentTest extends TestCase
         app(ProcessUxiolabsTransactionAction::class)->execute($transaction);
 
         $this->assertCount(3, $transaction->supplierOrders()->get());
+    }
+
+    /**
+     * A mix built from a provider SKU is delivered by that SKU AND its
+     * components, so the product's own mapping places an order too.
+     */
+    public function test_it_also_orders_the_products_own_sku_when_it_has_one(): void
+    {
+        $this->fakeOrder();
+
+        SupplierProduct::factory()->for($this->mix)->for($this->supplier)->create([
+            'buyer_sku_code' => 'MIX-OWN',
+            'is_active' => true,
+        ]);
+
+        $transaction = $this->transaction();
+        app(ProcessUxiolabsTransactionAction::class)->execute($transaction);
+
+        $orders = $transaction->supplierOrders()->get();
+
+        // Own SKU + the two components.
+        $this->assertCount(3, $orders);
+        $this->assertTrue(
+            $orders->contains(fn ($order) => (int) $order->product_id === (int) $this->mix->id),
+            'The mix product itself must appear as an order.',
+        );
+        // Still distinct references, or the supplier refuses the second call.
+        $this->assertCount(3, $orders->pluck('idtrx')->unique());
+    }
+
+    /**
+     * The detail screen lists one row per part, so the payload has to carry the
+     * supplier and the timestamps each row needs.
+     */
+    public function test_the_detail_payload_lists_each_sub_order_with_its_supplier(): void
+    {
+        $this->fakeOrder();
+        $transaction = $this->transaction();
+        app(ProcessUxiolabsTransactionAction::class)->execute($transaction);
+
+        $role = Role::factory()->create(['name' => 'Admin']);
+        Sanctum::actingAs(User::factory()->create(['role_id' => $role->id]), ['access-api']);
+
+        $this->getJson("/api/v1/transactions/{$transaction->id}")
+            ->assertOk()
+            ->assertJsonCount(2, 'data.supplier_orders')
+            ->assertJsonPath('data.supplier_orders.0.supplier_name', 'Uxiolabs')
+            ->assertJsonPath('data.supplier_orders.0.product_code', 'ML5');
     }
 
     public function test_a_callback_settles_one_component_and_the_parent_follows(): void
