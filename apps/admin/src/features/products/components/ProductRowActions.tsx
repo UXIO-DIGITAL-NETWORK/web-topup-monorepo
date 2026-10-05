@@ -22,11 +22,9 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
-  useDeleteProducts,
   useUxiolabsUpdateProducts,
   useRestoreProduct,
   useSetProductPublished,
@@ -42,8 +40,14 @@ interface ProductRowActionsProps {
 /**
  * Row menu for the Main Products list, in the reference's order. Each action is
  * wired: Uxiolabs Update / Show Price go through a confirm dialog, Set Price
- * Limit opens its page, and the lifecycle toggle / Edit / Delete are unchanged.
- * The single-row paths reuse the bulk hooks with a one-id selection.
+ * Limit opens its page, and the lifecycle toggle / Edit are unchanged. The
+ * single-row paths reuse the bulk hooks with a one-id selection.
+ *
+ * There is NO delete here. A product that stops selling is unpublished —
+ * "Unlistis" — not removed: order history resolves against `transactions.
+ * product_id` (a RESTRICT foreign key), so the row has to outlive its listing.
+ * The archive path still exists on the server for operators, and an archived
+ * row (reachable through the Archived filter) offers Restore.
  *
  * The two reversible items — publishing and price visibility — each read the
  * row's own state and offer the direction that would change something. A live
@@ -67,12 +71,10 @@ interface ProductRowActionsProps {
 export function ProductRowActions({ product }: ProductRowActionsProps) {
   const { t } = useTranslation("products");
   const navigate = useNavigate();
-  const [deleteOpen, setDeleteOpen] = useState(false);
   const [publishOpen, setPublishOpen] = useState(false);
   const [showOpen, setShowOpen] = useState(false);
   const [uxiolabsOpen, setUxiolabsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const deleteProducts = useDeleteProducts();
   const setProductPublished = useSetProductPublished();
   const restoreProduct = useRestoreProduct();
   const showProducts = useShowProducts();
@@ -145,16 +147,6 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
                 <Pencil />{t("editProduct")}</DropdownMenuItem>
             </Can>
           )}
-          {!isArchived && (
-            <Can permission="products.delete">
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                variant="destructive"
-                onSelect={() => setDeleteOpen(true)}
-              >
-                <Archive />{t("archive")}</DropdownMenuItem>
-            </Can>
-          )}
         </DropdownMenuContent>
       </DropdownMenu>
 
@@ -186,16 +178,6 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
           only the set of ids differs. The copy no longer claims the action
           cannot be undone, because it can: the row is kept so its order history
           keeps resolving, and Restore brings it back. */}
-      <DeleteConfirmDialog
-        open={deleteOpen}
-        onOpenChange={setDeleteOpen}
-        icon={<Archive />}
-        confirmLabel={t("archive")}
-        title={t("archiveProductTitle")}
-        description={t("archiveProductDescription")}
-        onConfirm={() => deleteProducts.mutate([product.id])}
-      />
-
       <DeleteConfirmDialog
         open={publishOpen}
         onOpenChange={setPublishOpen}

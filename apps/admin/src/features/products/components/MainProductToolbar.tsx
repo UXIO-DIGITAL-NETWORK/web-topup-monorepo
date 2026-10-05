@@ -1,5 +1,4 @@
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "@tanstack/react-router";
 import { Archive, ChevronDown, Eye, ImageIcon, Plus, RefreshCcw, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
@@ -31,20 +30,28 @@ interface MainProductToolbarProps {
   price?: string;
   onPriceChange: (value: string | undefined) => void;
   onRefresh: () => void;
-  onAdd: () => void;
+  /** Add Products, in one modal: one product, or many. */
+  onAddSingle: () => void;
+  onAddBulk: () => void;
   selectedCount: number;
   onBulkUxiolabs: () => void;
   onBulkShowPrice: () => void;
   onPublishStateChange: (value?: string) => void;
   onBulkUnpublish: () => void;
-  onBulkDelete: () => void;
 }
 
 /**
  * Toolbar for the Main Products list (product_requirements.md §4.6) — search,
  * a category filter, a status filter, a price filter, refresh, and "+ Add Main Products",
  * matching the reference left to right, with the selection action bar
- * (Uxiolabs / Logo / Unpublish / Archive) on its own right-aligned row below.
+ * (Uxiolabs / Logo / Unpublish) on its own right-aligned row below. There is no
+ * Archive there any more: taking a product off sale is Unpublish — "Unlistis" —
+ * and the row itself is never removed (order history resolves against it).
+ *
+ * "+ Add Main Products" offers two ways in: **Single** (one product) and
+ * **Bulk** (many). Both open the same modal, where the data is filled in and the
+ * product is either published or left as a draft — there is no separate "add,
+ * then go and configure it" step, and no manual (supplier-less) entry.
  *
  * The add link derives its target from the current pathname rather than a
  * hardcoded absolute path, so the same component works under both the real
@@ -63,20 +70,19 @@ export function MainProductToolbar({
   price,
   onPriceChange,
   onRefresh,
-  onAdd,
+  onAddSingle,
+  onAddBulk,
   selectedCount,
   onBulkUxiolabs,
   onBulkShowPrice,
   onPublishStateChange,
   onBulkUnpublish,
-  onBulkDelete,
 }: MainProductToolbarProps) {
   const { t } = useTranslation("products");
   // The same source the product form, bulk-add and provider pool already read,
   // so every category select in this feature agrees on what exists.
   const { categoryOptions } = useProductSelectOptions();
 
-  const navigate = useNavigate();
   // Edit Logo (bulk) still waits on the product image endpoint (§5); it says so
   // rather than guessing a mutation.
   const announceDeferred = (message: string) => () => toast.info(message);
@@ -212,8 +218,8 @@ export function MainProductToolbar({
               align="end"
               className="rounded-2xl"
             >
-              <DropdownMenuItem onSelect={onAdd}>{t("manual")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => navigate({ to: "/admin/products/main/add-bulk" })}>{t("bulk")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onAddSingle}>{t("single")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={onAddBulk}>{t("bulk")}</DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         </Box>
@@ -235,7 +241,6 @@ export function MainProductToolbar({
               { label: t("uxiolabsUpdate"), icon: <RefreshCcw className="size-4" />, onSelect: onBulkUxiolabs },
               { label: t("showPrice"), icon: <Eye className="size-4" />, onSelect: onBulkShowPrice },
               { label: t("unpublish"), icon: <Archive className="size-4" />, onSelect: onBulkUnpublish },
-              { label: t("archive"), icon: <Archive className="size-4" />, destructive: true, onSelect: onBulkDelete },
             ]}
           />
         </Box>

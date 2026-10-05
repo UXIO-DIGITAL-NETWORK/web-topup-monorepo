@@ -4,6 +4,8 @@ import { toFk, toRowId, unwrapPaginated } from "@/lib/apiMappers";
 import type { ApiResponse, PaginatedResponse } from "@/types/api.type";
 import { PRICE_RANGE_OPTIONS } from "../data/select-options.data";
 import type {
+  AddProductsFromSupplierItem,
+  AddProductsFromSupplierResult,
   BulkCreateProductsInput,
   BulkCreateProductsResult,
   BulkPublishResult,
@@ -58,6 +60,10 @@ interface ProductApiRow {
   is_price_hidden?: boolean;
   price_min?: number | null;
   price_max?: number | null;
+  discount_type?: "percent" | "fixed" | null;
+  discount_value?: number | null;
+  is_mix?: boolean;
+  mix_items?: { product_id: number; name: string | null; code: string | null; cost: number; quantity: number }[];
   category?: { id: number; name: string } | null;
   sub_category?: { id: number; name: string } | null;
   created_at: string;
@@ -111,6 +117,16 @@ const toProduct = (row: ProductApiRow): Product => ({
   is_price_hidden: Boolean(row.is_price_hidden),
   price_min: row.price_min ?? null,
   price_max: row.price_max ?? null,
+  discount_type: row.discount_type ?? null,
+  discount_value: row.discount_value ?? null,
+  is_mix: Boolean(row.is_mix),
+  mix_items: (row.mix_items ?? []).map((item) => ({
+    product_id: item.product_id,
+    name: item.name,
+    code: item.code,
+    cost: item.cost,
+    quantity: item.quantity,
+  })),
   variants: [
     {
       id: toRowId(row.id),
@@ -169,6 +185,15 @@ const toFormData = (input: Partial<ProductInput>, method?: "PUT"): FormData => {
   // previous override in place and make the form unable to clear it.
   if (input.point_percent !== undefined) form.append("point_percent", input.point_percent?.toString() ?? "");
   if (input.point_flat !== undefined) form.append("point_flat", input.point_flat?.toString() ?? "");
+
+  // The discount is two fields that only mean anything together, so clearing
+  // one clears both. Empty strings read as null on the API side — "no discount"
+  // — rather than as a value of 0.
+  if (input.discount_type !== undefined || input.discount_value !== undefined) {
+    const discountType = input.discount_type ?? null;
+    form.append("discount_type", discountType ?? "");
+    form.append("discount_value", discountType === null ? "" : String(input.discount_value ?? 0));
+  }
 
   // The API requires all five prices on every write. A product created from
   // the priceless Add form sends zeroes; an edit resends the variant it has.
@@ -278,6 +303,66 @@ export const productsService = {
 
   bulkDelete: async (ids: string[]): Promise<void> => {
     await api.post(`${BASE}/bulk/delete`, { ids: ids.map(toFk) });
+  },
+
+  // ── Add Products ▸ From Supplier (replaces the pool) ───────────────────────
+
+  /**
+   * Create products from provider SKUs, configured, in one call.
+   *
+   * Each item may carry everything the modal collected; `publish` decides
+   * whether they go live or stay drafts. The whole set is one request so the
+   * products page has a single thing to wait for.
+   */
+  addFromSupplier: async (input: {
+    items: AddProductsFromSupplierItem[];
+    publish: boolean;
+  }): Promise<AddProductsFromSupplierResult> => {
+    const response: ApiResponse<AddProductsFromSupplierResult> = await api.post(`${BASE}/from-supplier`, {
+      items: input.items.map((item) => ({
+        ...item,
+        discount_value: item.discount_value ?? undefined,
+        mix_items: item.mix_items?.map((line) => ({
+          product_id: toFk(line.product_id),
+          quantity: Number(line.quantity),
+        })),
+      })),
+      publish: input.publish,
+    });
+
+    return response.data;
+  },
+
+  /**
+   * Set the product's mix. Replace-in-place: the whole composition travels, so
+   * an empty array is how the admin clears it.
+   *
+   * The accumulated cost and the resulting prices are the server's answer — the
+   * response is the freshest product, which is why this returns it.
+   */
+  setMix: async (id: string, items: { product_id: string; quantity: string }[]): Promise<Product> => {
+    const response: ApiResponse<ProductApiRow> = await api.post(`${BASE}/${toFk(id)}/mix`, {
+      items: items.map((item) => ({
+        product_id: toFk(item.product_id),
+        quantity: Number(item.quantity),
+      })),
+    });
+
+    return toProduct(response.data);
+  },
+
+  /** Listis — put ONE product back on the storefront. */
+  publish: async (id: string): Promise<Product> => {
+    const response: ApiResponse<ProductApiRow> = await api.post(`${BASE}/${toFk(id)}/publish`);
+
+    return toProduct(response.data);
+  },
+
+  /** Unlistis — take ONE product off the storefront. Never deletes it. */
+  unpublish: async (id: string): Promise<Product> => {
+    const response: ApiResponse<ProductApiRow> = await api.post(`${BASE}/${toFk(id)}/unpublish`);
+
+    return toProduct(response.data);
   },
 
   // ── Add Product (Bulk) ─────────────────────────────────────────────────────

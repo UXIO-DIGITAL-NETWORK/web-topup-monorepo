@@ -22,6 +22,7 @@ class CheckUxiolabsTransactionStatusAction
         private readonly SendTransactionReceiptAction $receiptAction,
         private readonly GrantTransactionPointsAction $pointsAction,
         private readonly SendUxiolabsStatusNotificationAction $announce,
+        private readonly DeriveMixStatusAction $deriveStatus,
     ) {}
 
     /**
@@ -36,6 +37,12 @@ class CheckUxiolabsTransactionStatusAction
         $transaction = Transaction::where('invoice_number', $invoiceNumber)
             ->where('status', TransactionStatus::PROCESSING->value)
             ->firstOrFail();
+
+        // A mix is polled per component — the supplier knows each sub-order by
+        // its own id — and the parent verdict is derived from all of them.
+        if ($transaction->supplierOrders()->exists()) {
+            return $this->pollMix($transaction, $source);
+        }
 
         // /status only accepts uxiolabs's own invoice id. Without one (the
         // order response was lost mid-flight) there is nothing to poll — the
@@ -84,6 +91,58 @@ class CheckUxiolabsTransactionStatusAction
         // and until now it was the one path that told the channel nothing.
         // Deduped against the callback, which may be reporting the same move.
         $this->announce->statusChanged($fresh, $oldStatus, $newStatus, $source);
+
+        return $fresh;
+    }
+
+    /**
+     * Ask the supplier about every sub-order that is still open, then derive the
+     * parent's verdict from all of them.
+     *
+     * Components already settled are skipped: /status is a per-order lookup and
+     * re-asking about a delivered part would only re-report it.
+     */
+    private function pollMix(Transaction $transaction, string $source): Transaction
+    {
+        $oldStatus = $transaction->status;
+
+        foreach ($transaction->supplierOrders()->get() as $order) {
+            if ($order->isTerminal() || ! $order->supplier_trx_id) {
+                continue;
+            }
+
+            $response = $this->uxiolabsService->checkTransactionStatus($order->supplier_trx_id);
+            $componentStatus = $this->mapUxiolabsStatus($response['status'] ?? 'pending');
+            $sn = (string) ($response['keterangan'] ?? '');
+
+            $order->update([
+                'sn' => $sn !== '' ? $sn : $order->sn,
+                'supplier_status' => $response['status'] ?? $order->supplier_status,
+                'provider_status' => match ($componentStatus) {
+                    TransactionStatus::COMPLETED => ProviderStatus::DELIVERED,
+                    TransactionStatus::FAILED_PROVIDER => ProviderStatus::REJECTED,
+                    // Reaching here means /status answered for this sub-order by
+                    // its supplier id, so the supplier demonstrably has it.
+                    default => ProviderStatus::ORDERED,
+                },
+            ]);
+        }
+
+        $fresh = $this->deriveStatus->execute($transaction);
+
+        // Same terminal side effects as the single-order path, and for the same
+        // reason: once the row is terminal the callback's guard skips it, so
+        // this is the last chance for the refund or the receipt.
+        if ($fresh->status === TransactionStatus::FAILED_PROVIDER) {
+            $this->refundAction->execute($fresh);
+        }
+
+        if ($fresh->status === TransactionStatus::COMPLETED) {
+            $this->receiptAction->execute($fresh);
+            $this->pointsAction->execute($fresh);
+        }
+
+        $this->announce->statusChanged($fresh, $oldStatus, $fresh->status, $source);
 
         return $fresh;
     }

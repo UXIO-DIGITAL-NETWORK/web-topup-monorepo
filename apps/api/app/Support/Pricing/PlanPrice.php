@@ -30,13 +30,26 @@ final class PlanPrice
 
     public static function for(Product $product, ?User $user): int
     {
+        // The product's own standing discount first, then the flash sale. Both
+        // only ever lower, so the cheaper wins; the undiscounted figure stays
+        // available through `listFor()` as the strikethrough price.
         $listPrice = self::listPrice($product, $user);
+        $discounted = ProductDiscount::for($product, $listPrice);
         $salePrice = FlashSalePrice::forProduct((int) $product->getKey());
 
-        // A sale only ever lowers what the customer pays. Making this the single
-        // place the sale is applied is what keeps the homepage, the price list
-        // and the invoice agreeing — they all resolve through here.
-        return $salePrice !== null && $salePrice < $listPrice ? $salePrice : $listPrice;
+        // Making this the single place a promotion is applied is what keeps the
+        // homepage, the price list and the invoice agreeing — they all resolve
+        // through here.
+        return $salePrice !== null && $salePrice < $discounted ? $salePrice : $discounted;
+    }
+
+    /**
+     * The price with no promotion applied — the strikethrough figure the
+     * catalogue shows beside a discounted price.
+     */
+    public static function listFor(Product $product, ?User $user): int
+    {
+        return self::listPrice($product, $user);
     }
 
     /**

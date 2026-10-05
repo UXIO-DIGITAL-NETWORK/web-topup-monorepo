@@ -5,9 +5,22 @@ import { Box } from "@/components/common/Box";
 import { Link } from "@/components/common/Link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
+/**
+ * Two URL-driven tabs (product_requirements.md §4.6) — real nested routes, not
+ * client state, so the breadcrumb and back button reflect the active tab. Same
+ * pattern as `TransactionsLayout`, which also has two.
+ *
+ * There is no "Product Provider" tab any more. It existed to hold the pool —
+ * a staging list of picked SKUs waiting to be promoted — and the pool is gone:
+ * picking from a provider now creates a draft product on the Main Products tab
+ * directly. The provider routes still exist for operators who land on them by
+ * URL, but nothing in the panel points at them.
+ *
+ * Segments are `main`/`price-log` rather than the full label kebab, following
+ * the two-tab Transactions precedent (`automatic`/`manual`).
+ */
 const TAB_SEGMENTS = [
   { value: "main", labelKey: "tabMainProducts", segment: "main" },
-  { value: "provider", labelKey: "colProductProvider", segment: "provider" },
   { value: "price-log", labelKey: "tabPriceChangeLog", segment: "price-log" },
 ];
 
@@ -36,7 +49,6 @@ export function ProductTabsLayout() {
   // dedicated Set Profit Margin / Set Price Limit pages.
   const onFormRoute =
     pathname.endsWith("/add") ||
-    pathname.endsWith("/add-bulk") ||
     pathname.endsWith("/edit") ||
     pathname.includes("/set-profit-margin") ||
     pathname.includes("/set-price-limit");

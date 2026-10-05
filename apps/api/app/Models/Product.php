@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Support\Storefront\Catalog;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -29,6 +30,7 @@ class Product extends Model
         'is_price_hidden' => 'boolean',
         'price_min' => 'integer',
         'price_max' => 'integer',
+        'discount_value' => 'integer',
         'published_at' => 'datetime',
     ];
 
@@ -66,6 +68,17 @@ class Product extends Model
             return self::STATE_PUBLISHED;
         }
 
+        // A mix has no mapping of its own: it is live when every component of it
+        // is. Read from the LOADED relation only — this runs once per row in a
+        // list, so a query here would turn one page into N+1; `GetProductsAction`
+        // eager-loads it for that reason.
+        if ($this->status
+            && $this->relationLoaded('mixItems')
+            && $this->mixItems->isNotEmpty()
+            && $this->mixItems->every(fn (ProductMixItem $item) => $item->component !== null && Catalog::isSellable($item->component))) {
+            return self::STATE_PUBLISHED;
+        }
+
         return $this->isDraft() ? self::STATE_DRAFT : self::STATE_UNPUBLISHED;
     }
 
@@ -86,6 +99,20 @@ class Product extends Model
     {
         if ($this->trashed()) {
             return 'Produk sudah diarsipkan. Pulihkan terlebih dahulu.';
+        }
+
+        if ($this->isMix()) {
+            $this->loadMissing('mixItems.component');
+
+            if ($this->mixItems->contains(fn (ProductMixItem $item) => $item->component === null || $item->component->trashed())) {
+                return 'Ada komponen mix yang sudah dihapus.';
+            }
+
+            if (! $this->mixItems->every(fn (ProductMixItem $item) => Catalog::isSellable($item->component))) {
+                return 'Semua komponen mix harus sudah tayang dulu sebelum mix-nya bisa ditayangkan.';
+            }
+
+            return null;
         }
 
         $mapping = $this->publishableMapping();
@@ -125,5 +152,29 @@ class Product extends Model
     public function supplierProducts()
     {
         return $this->hasMany(SupplierProduct::class);
+    }
+
+    /**
+     * The products this one sells together — its mix. Empty for a normal
+     * product, which is why `isMix()` reads the collection rather than a flag.
+     */
+    public function mixItems()
+    {
+        return $this->hasMany(ProductMixItem::class);
+    }
+
+    /** The components themselves, with the quantity each contributes. */
+    public function components()
+    {
+        return $this->belongsToMany(Product::class, 'product_mix_items', 'product_id', 'component_product_id')
+            ->withPivot('quantity')
+            ->withTimestamps();
+    }
+
+    public function isMix(): bool
+    {
+        return $this->relationLoaded('mixItems')
+            ? $this->mixItems->isNotEmpty()
+            : $this->mixItems()->exists();
     }
 }

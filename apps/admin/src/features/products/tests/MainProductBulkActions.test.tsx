@@ -38,9 +38,12 @@ describe("Main Products bulk actions", () => {
     await selectTwoRows(user);
     await openBulkMenu(user, 2);
 
-    for (const name of ["Edit Logo", "Uxiotopup Update", "Show Price", "Unpublish", "Archive"]) {
+    for (const name of ["Edit Logo", "Uxiotopup Update", "Show Price", "Unpublish"]) {
       expect(await screen.findByRole("menuitem", { name })).toBeInTheDocument();
     }
+
+    // There is no Archive here: a product is unlisted, never removed.
+    expect(screen.queryByRole("menuitem", { name: "Archive" })).not.toBeInTheDocument();
   });
 
   it("unpublishes nothing until the confirmation is accepted", async () => {

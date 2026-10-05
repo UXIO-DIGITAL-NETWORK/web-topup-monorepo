@@ -11,6 +11,23 @@
 export type ProductStatus = "active" | "inactive";
 
 /**
+ * How a product's own discount is expressed: a percentage of the plan price, or
+ * rupiah off it. Mirrors the API's `products.discount_type`.
+ */
+export const PRODUCT_DISCOUNT_TYPES = ["percent", "fixed"] as const;
+export type ProductDiscountType = (typeof PRODUCT_DISCOUNT_TYPES)[number];
+
+/** One line of a product's mix: another product, and how many of it. */
+export interface ProductMixItem {
+  product_id: number;
+  name?: string | null;
+  code?: string | null;
+  /** That component's own cost, before the quantity is applied. */
+  cost: number;
+  quantity: number;
+}
+
+/**
  * Where a Main Product sits in its lifecycle — the API's `publish_state`.
  *
  * `status` alone could never answer this. A product is only live when an active
@@ -106,6 +123,26 @@ export interface Product {
   is_price_hidden?: boolean;
   price_min?: number | null;
   price_max?: number | null;
+  /**
+   * A standing price cut that belongs to the product itself — neither a flash
+   * sale (time-boxed) nor a promo code (typed at checkout). `null` type means no
+   * discount, which is not the same as a value of 0.
+   *
+   * `discount_value` is a percentage when the type is `percent`, rupiah off when
+   * it is `fixed`. The server applies it in `PlanPrice`, so the number shown here
+   * is only ever a description of what the API already charges.
+   */
+  discount_type?: ProductDiscountType | null;
+  discount_value?: number | null;
+  /**
+   * The product's mix: the other products it is delivered by. Present only when
+   * the API loaded the relation (the detail endpoint does; a list does not).
+   *
+   * `variant.cost_price` is the ACCUMULATED cost for a mix, computed by the
+   * server — the components are listed so the admin can see where it came from.
+   */
+  is_mix?: boolean;
+  mix_items?: ProductMixItem[];
   variants: ProductVariant[];
   created_at: string;
   updated_at: string;
@@ -504,6 +541,32 @@ export interface BulkCreateProductsInput {
 export interface BulkCreateProductsResult {
   created: number;
   skipped: { code: string; reason: string }[];
+}
+
+/**
+ * One product's worth of data, as typed in the Add Products modal. The whole
+ * set travels in one request so a product is created and configured together.
+ */
+export interface AddProductsFromSupplierItem {
+  buyer_sku_code: string;
+  name?: string;
+  code?: string;
+  discount_type?: ProductDiscountType;
+  discount_value?: number;
+  point_percent?: number;
+  point_flat?: number;
+  price_min?: number;
+  price_max?: number;
+  /** Margin percent keyed by membership plan id; null clears the override. */
+  margins?: Record<string, number | null>;
+  /** Components, referencing products we already have. */
+  mix_items?: { product_id: string; quantity: string }[];
+}
+
+export interface AddProductsFromSupplierResult {
+  created: number;
+  published: number;
+  skipped: { buyer_sku_code: string; reason: string }[];
 }
 
 /* ── Price Change Log ───────────────────────────────────────────────────────── */

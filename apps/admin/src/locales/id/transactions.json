@@ -60,6 +60,7 @@
   "gatewayAmount": "Nominal Gateway",
   "paidAt": "Dibayar Pada",
   "supplierTrxId": "ID Trx Supplier",
+  "supplierParts": "Bagian",
   "supplierTrxIdLower": "id transaksi supplier",
   "providerStatusRaw": "Status Provider (mentah)",
   "created": "Dibuat",

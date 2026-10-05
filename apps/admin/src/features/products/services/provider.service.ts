@@ -143,6 +143,16 @@ export interface MarginPlanOption {
   is_default: boolean;
 }
 
+/** A pricing rule, as the Add Products price preview needs it. */
+export interface PricingRuleOption {
+  /** null = every category. */
+  category_id: number | null;
+  /** null = every membership plan (the fallback every unpriced plan uses). */
+  membership_plan_id: number | null;
+  markup_percent: number;
+  markup_flat: number;
+}
+
 export const providerService = {
   /**
    * The membership plans a margin can be set for.
@@ -161,6 +171,25 @@ export const providerService = {
 
       return { value: String(plan.id), label, code: plan.code, is_default: Boolean(plan.is_default) };
     });
+  },
+
+  /**
+   * The markup rules the backend applies when a plan has no margin of its own —
+   * `price = ceil(cost × (1 + %/100)) + flat`. Fetched directly for the same
+   * reason as `planOptions` (one feature never reaches into another's service);
+   * used only to preview the price an empty margin falls back to.
+   */
+  pricingRules: async (): Promise<PricingRuleOption[]> => {
+    const response: ApiResponse<
+      { id: number; category_id: number | null; membership_plan_id: number | null; markup_percent: number | string; markup_flat: number | string }[]
+    > = await api.get(`${API_VERSION}/pricing-rules`);
+
+    return response.data.map((rule) => ({
+      category_id: rule.category_id ?? null,
+      membership_plan_id: rule.membership_plan_id ?? null,
+      markup_percent: Number(rule.markup_percent),
+      markup_flat: Number(rule.markup_flat),
+    }));
   },
 
   priceList: async (params: UxiolabsPriceListParams = {}): Promise<PaginatedResponse<UxiolabsPriceListItem>> => {

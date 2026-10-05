@@ -52,7 +52,7 @@ class GetTransactionsAction
         $sortDirection = strtolower($sortDir) === 'asc' ? 'asc' : 'desc';
 
         return Transaction::query()
-            ->with(['user', 'product.category', 'supplier', 'payment', 'paymentChannel'])
+            ->with(['user', 'product.category', 'supplier', 'payment', 'paymentChannel', 'supplierOrders.product'])
             ->when($status, fn ($q) => $q->where('status', $status))
             ->when($providerStatus, fn ($q) => $q->where('provider_status', $providerStatus))
             // 'NONE' is not a gateway state — it selects orders with no payment row

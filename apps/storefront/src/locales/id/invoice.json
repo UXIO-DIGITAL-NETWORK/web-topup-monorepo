@@ -1,4 +1,10 @@
 {
+  "parts": {
+    "title": "Bagian pesanan",
+    "delivered": "Terkirim",
+    "pending": "Sedang diproses",
+    "failed": "Gagal"
+  },
   "heading": "MENUNGGU PEMBAYARAN",
   "subtitle": "Silahkan melakukan pembayaran dengan metode yang Anda pilih.",
   "timer": {

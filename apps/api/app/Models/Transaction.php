@@ -66,6 +66,19 @@ class Transaction extends Model
         return $this->belongsTo(Supplier::class);
     }
 
+    /**
+     * The supplier orders placed for this transaction — one per component of a
+     * mix product, and exactly one for everything else.
+     *
+     * The columns on this table (`supplier_trx_id`, `sn`, `provider_status`)
+     * describe the FIRST of these, kept for the screens and reports that predate
+     * mixes. Anything that needs the whole truth reads this relation.
+     */
+    public function supplierOrders()
+    {
+        return $this->hasMany(TransactionSupplierOrder::class);
+    }
+
     public function payment()
     {
         return $this->hasOne(Payment::class);

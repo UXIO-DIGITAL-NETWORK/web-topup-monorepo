@@ -37,6 +37,20 @@ class PublishProductAction
             throw new SupplierProductPoolException($reason);
         }
 
+        // A mix has no mapping to activate — it is sellable through its
+        // components, and `publishBlockedReason()` has already established that
+        // every one of them is live. Publishing is then just this product's own
+        // switch, and `published_at` is stamped once, exactly as for a normal
+        // product (it is what separates "taken down" from "never live").
+        if ($product->isMix()) {
+            $product->update([
+                'status' => true,
+                'published_at' => $product->published_at ?? now(),
+            ]);
+
+            return $product->fresh(['supplierProducts', 'mixItems.component']);
+        }
+
         return $this->publishMapping->execute($product->publishableMapping());
     }
 }

@@ -24,6 +24,7 @@ use App\Http\Requests\Transaction\UpdateTransactionRequest;
 use App\Http\Resources\Api\Refund\RefundRequestResource;
 use App\Http\Resources\Api\Transaction\TransactionResource;
 use App\Models\Transaction;
+use App\Support\Csv;
 use App\Traits\ApiResponse;
 use Illuminate\Http\Request;
 use InvalidArgumentException;
@@ -40,7 +41,7 @@ class TransactionController extends Controller
      * implies `product`; it is what the admin renders as the order's "Game",
      * and ProductResource only emits `category` when it is loaded.
      */
-    private const RELATIONS = ['user', 'product.category', 'supplier', 'payment', 'paymentChannel'];
+    private const RELATIONS = ['user', 'product.category', 'supplier', 'payment', 'paymentChannel', 'supplierOrders.product'];
 
     public function statusCounts(GetTransactionStatusCountsAction $action)
     {
@@ -216,7 +217,9 @@ class TransactionController extends Controller
             // anything parsing this CSV by leading position keeps working.
             fputcsv($out, ['Invoice', 'Customer', 'Product', 'Status', 'Total', 'Margin', 'Created At', 'Provider Status', 'Payment Status']);
             foreach ($transactions as $t) {
-                fputcsv($out, [
+                // Csv::row wraps every cell so a customer-supplied name cannot
+                // start a formula in the operator's spreadsheet.
+                fputcsv($out, Csv::row([
                     $t->invoice_number,
                     $t->user?->name ?? $t->guest_contact ?? 'Guest',
                     $t->product?->name ?? '',
@@ -226,7 +229,7 @@ class TransactionController extends Controller
                     $t->created_at?->toDateTimeString(),
                     $t->provider_status?->value,
                     GatewayStatus::fromPayment($t->payment?->status)?->value,
-                ]);
+                ]));
             }
             fclose($out);
         }, 'transactions.csv', ['Content-Type' => 'text/csv']);

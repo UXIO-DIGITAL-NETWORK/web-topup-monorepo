@@ -17,6 +17,7 @@ class CreateProductAction
         private CreateActivityLogAction $activityLogAction,
         private ImageOptimizer $images,
         private WriteProductPricesAction $writePrices,
+        private MapProductToInternalSupplierAction $mapToInternal,
     ) {}
 
     public function execute(CreateProductDTO $dto): Product
@@ -54,6 +55,12 @@ class CreateProductAction
         // plan row at all, which the storefront can only serve by falling back to
         // `price_member` and warning about it.
         $this->writePrices->forDefaultPlan($product, $dto->priceMember);
+
+        // A product created by hand has no provider behind it. Without an active
+        // supplier mapping `Catalog::sellableProducts()` never serves it, so it
+        // is mapped to the platform's own supplier here — see
+        // MapProductToInternalSupplierAction.
+        $this->mapToInternal->execute($product);
 
         $this->activityLogAction->execute(new CreateActivityLogDTO(
             userId: Auth::id(),

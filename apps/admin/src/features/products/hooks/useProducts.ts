@@ -4,6 +4,7 @@ import { isAxiosError } from "axios";
 import { toast } from "sonner";
 import { productsService, type ProductInput } from "../services/products.service";
 import type {
+  AddProductsFromSupplierItem,
   BulkCreateProductsInput,
   Product,
   ProductListParams,
@@ -60,6 +61,38 @@ export const useBulkCreateProducts = () => {
       );
     },
     onError: () => toast.error(t("addProductsFailed")),
+  });
+};
+
+/**
+ * Add Products — create and configure in one call.
+ *
+ * The batch is per-row resilient, so a partial success is the normal outcome and
+ * the toast says what was skipped. Both lists are invalidated: the products list
+ * gains rows and the provider candidates change state.
+ */
+export const useAddProductsFromSupplier = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: { items: AddProductsFromSupplierItem[]; publish: boolean }) =>
+      productsService.addFromSupplier(input),
+    onSuccess: (result, { publish }) => {
+      invalidateProductAndPool(queryClient);
+
+      const skipped = result.skipped.length;
+      const verb = publish ? "published" : "saved as draft";
+
+      if (skipped > 0) {
+        toast.warning(`${result.created} ${verb}, ${skipped} skipped`, {
+          description: result.skipped[0]?.reason,
+        });
+        return;
+      }
+
+      toast.success(result.created === 1 ? `Product ${verb}` : `${result.created} products ${verb}`);
+    },
+    onError: () => toast.error("Failed to add products from supplier"),
   });
 };
 
@@ -195,6 +228,27 @@ export const useUxiolabsUpdateProducts = () => {
       toast.success(ids.length === 1 ? "Product updated from supplier" : `${ids.length} products updated from supplier`);
     },
     onError: () => toast.error(t("supplierUpdateFailed")),
+  });
+};
+
+/**
+ * Save a product's mix.
+ *
+ * The server owns the arithmetic: it accumulates the components' costs into the
+ * product's cost and re-derives the sell prices, so the caller only sends the
+ * composition. Both the products list and the provider list are invalidated —
+ * the accumulated cost is visible in both.
+ */
+export const useSetProductMix = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ id, items }: { id: string; items: { product_id: string; quantity: string }[] }) =>
+      productsService.setMix(id, items),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["products"] });
+    },
+    onError: (error) => toast.error(apiErrorMessage(error) ?? "Failed to update the product mix"),
   });
 };
 

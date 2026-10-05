@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useCallback, useMemo, useState } from "react";
+import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Archive, Eye, RefreshCcw } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
@@ -8,10 +9,8 @@ import { DeleteConfirmDialog } from "@/components/common/DeleteConfirmDialog";
 import { Heading } from "@/components/common/Heading";
 import { Text } from "@/components/common/Text";
 import { mainProductColumnsFor } from "../components/mainProductColumns";
-import { MainProductFormDialog } from "../components/MainProductFormDialog";
 import { MainProductToolbar } from "../components/MainProductToolbar";
 import {
-  useDeleteProducts,
   useUxiolabsUpdateProducts,
   useProductList,
   useSetProductPublished,
@@ -32,6 +31,11 @@ const DEFAULT_PAGE_SIZE = 10;
  */
 export default function MainProductsPage() {
   const { t } = useTranslation("products");
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  // Real route and unauthenticated preview twin share this page; the add page
+  // lives under whichever base we were reached through.
+  const base = pathname.startsWith("/admin/products-preview") ? "/admin/products-preview" : "/admin/products";
   const [search, setSearch] = useState("");
   // A real category id now, not its name — see products.service `list()`.
   const [categoryId, setCategoryId] = useState<string | undefined>(undefined);
@@ -40,11 +44,12 @@ export default function MainProductsPage() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [publishState, setPublishState] = useState<string | undefined>(undefined);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
   const [bulkUnpublishOpen, setBulkUnpublishOpen] = useState(false);
   const [bulkShowOpen, setBulkShowOpen] = useState(false);
   const [bulkUxiolabsOpen, setBulkUxiolabsOpen] = useState(false);
-  const [addOpen, setAddOpen] = useState(false);
+
+  const goToAdd = (mode: "single" | "bulk") =>
+    navigate({ to: `${base}/main/add` as "/admin/products/main/add", search: { mode } });
 
   const params = useMemo(
     () => ({
@@ -58,7 +63,6 @@ export default function MainProductsPage() {
     [search, categoryId, price, publishState, page, pageSize],
   );
   const { data, isLoading, isError, refetch } = useProductList(params);
-  const deleteProducts = useDeleteProducts();
   const setProductPublished = useSetProductPublished();
   const showProducts = useShowProducts();
   const uxiolabsUpdate = useUxiolabsUpdateProducts();
@@ -101,7 +105,8 @@ export default function MainProductsPage() {
           price={price}
           onPriceChange={handlePriceChange}
           onRefresh={() => refetch()}
-          onAdd={() => setAddOpen(true)}
+          onAddSingle={() => goToAdd("single")}
+          onAddBulk={() => goToAdd("bulk")}
           selectedCount={selectedIds.length}
           onBulkUxiolabs={() => setBulkUxiolabsOpen(true)}
           onBulkShowPrice={() => setBulkShowOpen(true)}
@@ -111,7 +116,6 @@ export default function MainProductsPage() {
             setPage(1);
           }}
           onBulkUnpublish={() => setBulkUnpublishOpen(true)}
-          onBulkDelete={() => setBulkDeleteOpen(true)}
         />
       </Box>
 
@@ -134,22 +138,6 @@ export default function MainProductsPage() {
           onPageSizeChange={setPageSize}
         />
       </Box>
-
-      {/* Same dialog and same mutation as the row menu's Archive — only the set
-          of ids differs, so only the wording is count-aware. */}
-      <DeleteConfirmDialog
-        open={bulkDeleteOpen}
-        onOpenChange={setBulkDeleteOpen}
-        icon={<Archive />}
-        confirmLabel={t("archive")}
-        title={selectedIds.length <= 1 ? "Archive this product?" : `Archive ${selectedIds.length} products?`}
-        description={
-          selectedIds.length <= 1
-            ? "It leaves the storefront and the catalogue, and its provider SKU returns to the pool. Past orders keep their details, and you can restore it from the Archived filter."
-            : `These ${selectedIds.length} products leave the storefront and the catalogue, and their provider SKUs return to the pool. Past orders keep their details, and you can restore them from the Archived filter.`
-        }
-        onConfirm={() => deleteProducts.mutate(selectedIds)}
-      />
 
       {/* Unpublishing is reversible, so the copy says what changes rather than
           warning it cannot be undone — but it still takes products off sale, so
@@ -189,11 +177,6 @@ export default function MainProductsPage() {
         title={selectedIds.length <= 1 ? "Show this price?" : `Show ${selectedIds.length} prices?`}
         description={t("bulkShowDescription")}
         onConfirm={() => showProducts.mutate({ ids: selectedIds, hidden: false })}
-      />
-
-      <MainProductFormDialog
-        open={addOpen}
-        onOpenChange={setAddOpen}
       />
     </Box>
   );
