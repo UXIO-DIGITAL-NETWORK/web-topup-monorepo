@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 
-import { renderRoute, screen } from "@/test/test-utils";
+import { renderRoute, screen, within } from "@/test/test-utils";
 import { productsService } from "../services/products.service";
 
 const LIST_PATH = "/admin/products-preview/main";
@@ -102,6 +102,30 @@ describe("AddProductsPage", () => {
     await user.click(await screen.findByRole("checkbox", { name: "Select VAL420" }));
 
     expect(screen.getByRole("button", { name: "Save as draft (2)" })).toBeInTheDocument();
+  });
+
+  /** Mix is a Single-only decision — too much to fill in for a bulk selection. */
+  it("offers product mix in Single mode", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    const row = (await screen.findByText("VAL120")).closest("tr") as HTMLElement;
+    await user.click(within(row).getByRole("button", { name: /Detail/ }));
+
+    expect(screen.getByRole("button", { name: /Add Mix/ })).toBeInTheDocument();
+  });
+
+  it("hides product mix in Bulk mode", async () => {
+    const user = userEvent.setup();
+    await openPage(`${ADD_PATH}?mode=bulk`);
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    const row = (await screen.findByText("VAL120")).closest("tr") as HTMLElement;
+    await user.click(within(row).getByRole("button", { name: /Detail/ }));
+
+    expect(screen.queryByRole("button", { name: /Add Mix/ })).not.toBeInTheDocument();
+    expect(screen.getByText("Product mix is only available in Single mode.")).toBeInTheDocument();
   });
 
   /**

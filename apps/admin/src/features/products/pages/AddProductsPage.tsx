@@ -199,8 +199,26 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
   const selectMode = (value: AddMode) => {
     setCurrentMode(value);
-    // Single keeps ONE row: the admin means "this one, not that one".
-    if (value === "single") setSelected((current) => current.slice(0, 1));
+    if (value === "single") {
+      // Single keeps ONE row: the admin means "this one, not that one".
+      setSelected((current) => current.slice(0, 1));
+      return;
+    }
+    // Mix is a Single-only decision; a Bulk selection must not carry any, or a
+    // staged composition would follow a mode the admin cannot edit it in.
+    setForms((current) => {
+      let changed = false;
+      const next: Record<string, RowForm> = {};
+      for (const [key, form] of Object.entries(current)) {
+        if (form.mix.length > 0) {
+          changed = true;
+          next[key] = { ...form, mix: [] };
+        } else {
+          next[key] = form;
+        }
+      }
+      return changed ? next : current;
+    });
   };
 
   const toggle = (row: { buyer_sku_code: string; name: string }, disabled: boolean) => {
@@ -244,9 +262,14 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
             price_min: toNumber(form.priceMin) ?? undefined,
             price_max: toNumber(form.priceMax) ?? undefined,
             margins,
-            mix_items: form.mix
-              .filter((line) => line.productId !== "")
-              .map((line) => ({ product_id: line.productId, quantity: line.quantity || "1" })),
+            // Mix is Single-only: never let a Bulk row carry components, even
+            // one staged before the mode switched.
+            mix_items:
+              currentMode === "single"
+                ? form.mix
+                    .filter((line) => line.productId !== "")
+                    .map((line) => ({ product_id: line.productId, quantity: line.quantity || "1" }))
+                : undefined,
           };
         }),
       },
@@ -705,74 +728,82 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                               <Box className="flex items-center justify-between">
                                 <Box className="flex items-center gap-1.5">
                                   <Text className="font-medium">{t("tabProductMix")}</Text>
-                                  <InfoTooltip content={t("tipMix")} />
+                                  <InfoTooltip content={currentMode === "single" ? t("tipMix") : t("mixSingleOnly")} />
                                 </Box>
-                                <Button
-                                  type="button"
-                                  variant="outline"
-                                  size="sm"
-                                  className="rounded-xl"
-                                  onClick={() => patch(code, { mix: [...form.mix, { productId: "", quantity: "1" }] })}
-                                >
-                                  <Plus className="size-4" />{t("addMix")}
-                                </Button>
-                              </Box>
-
-                              {form.mix.map((line, index) => (
-                                <Box
-                                  key={index}
-                                  className="flex flex-col gap-3 sm:flex-row sm:items-end"
-                                >
-                                  <Box className="w-72">
-                                    <SelectField
-                                      id={`${code}-mix-${index}`}
-                                      label={t("mainProduct")}
-                                      tooltip={t("tipMixProduct")}
-                                      options={componentOptions}
-                                      value={line.productId}
-                                      onChange={(value) =>
-                                        patch(code, {
-                                          mix: form.mix.map((entry, i) =>
-                                            i === index ? { ...entry, productId: value } : entry,
-                                          ),
-                                        })
-                                      }
-                                    />
-                                  </Box>
-                                  <Box className="flex flex-col gap-1.5">
-                                    <FieldLabel
-                                      htmlFor={`${code}-mix-qty-${index}`}
-                                      tooltip={t("tipQuantity")}
-                                    >
-                                      {t("quantity")}
-                                    </FieldLabel>
-                                    <Input
-                                      id={`${code}-mix-qty-${index}`}
-                                      className="w-20 rounded-xl"
-                                      inputMode="numeric"
-                                      aria-label={`${code} mix ${index + 1} quantity`}
-                                      value={line.quantity}
-                                      onChange={(event) =>
-                                        patch(code, {
-                                          mix: form.mix.map((entry, i) =>
-                                            i === index ? { ...entry, quantity: event.target.value } : entry,
-                                          ),
-                                        })
-                                      }
-                                    />
-                                  </Box>
+                                {currentMode === "single" && (
                                   <Button
                                     type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    aria-label={`Remove mix ${index + 1}`}
+                                    variant="outline"
+                                    size="sm"
                                     className="rounded-xl"
-                                    onClick={() => patch(code, { mix: form.mix.filter((_, i) => i !== index) })}
+                                    onClick={() => patch(code, { mix: [...form.mix, { productId: "", quantity: "1" }] })}
                                   >
-                                    <Minus className="size-4" />
+                                    <Plus className="size-4" />{t("addMix")}
                                   </Button>
+                                )}
+                              </Box>
+
+                              {currentMode === "bulk" ? (
+                                <Text variant="muted">{t("mixSingleOnly")}</Text>
+                              ) : form.mix.length === 0 ? (
+                                <Text variant="muted">{t("noProductMix")}</Text>
+                              ) : (
+                                <Box className="flex flex-col gap-3">
+                                  {form.mix.map((line, index) => (
+                                    <Box
+                                      key={index}
+                                      className="grid grid-cols-[minmax(0,1fr)_6rem_auto] items-end gap-3"
+                                    >
+                                      <SelectField
+                                        id={`${code}-mix-${index}`}
+                                        label={t("mainProduct")}
+                                        tooltip={t("tipMixProduct")}
+                                        options={componentOptions}
+                                        value={line.productId}
+                                        onChange={(value) =>
+                                          patch(code, {
+                                            mix: form.mix.map((entry, i) =>
+                                              i === index ? { ...entry, productId: value } : entry,
+                                            ),
+                                          })
+                                        }
+                                      />
+                                      <Box className="flex flex-col gap-1.5">
+                                        <FieldLabel
+                                          htmlFor={`${code}-mix-qty-${index}`}
+                                          tooltip={t("tipQuantity")}
+                                        >
+                                          {t("quantity")}
+                                        </FieldLabel>
+                                        <Input
+                                          id={`${code}-mix-qty-${index}`}
+                                          className="rounded-xl"
+                                          inputMode="numeric"
+                                          aria-label={`${code} mix ${index + 1} quantity`}
+                                          value={line.quantity}
+                                          onChange={(event) =>
+                                            patch(code, {
+                                              mix: form.mix.map((entry, i) =>
+                                                i === index ? { ...entry, quantity: event.target.value } : entry,
+                                              ),
+                                            })
+                                          }
+                                        />
+                                      </Box>
+                                      <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        aria-label={`Remove mix ${index + 1}`}
+                                        className="rounded-xl"
+                                        onClick={() => patch(code, { mix: form.mix.filter((_, i) => i !== index) })}
+                                      >
+                                        <Minus className="size-4" />
+                                      </Button>
+                                    </Box>
+                                  ))}
                                 </Box>
-                              ))}
+                              )}
                             </Box>
                           </td>
                         </tr>

@@ -141,6 +141,14 @@ describe("MainProductsPage", () => {
     expect(within(table).getAllByText("Draft").length).toBeGreaterThan(0);
   });
 
+  // The availability badge alone explains nothing; a provider-switched-off SKU
+  // says so, so the admin knows why the product cannot be sold.
+  it("explains a product the provider switched off", async () => {
+    await renderRoute(LIST_PATH);
+
+    expect((await screen.findAllByText("Inactive at provider")).length).toBeGreaterThan(0);
+  });
+
   it("counts the footer in products, not transactions", async () => {
     await renderRoute(LIST_PATH);
     expect(await screen.findByText(/of \d+ products/)).toBeInTheDocument();
