@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { Fragment, useCallback, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { Check, ChevronLeft, ChevronRight, Minus, Plus, Search, SlidersHorizontal } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, Check, Minus, Plus, Search, SlidersHorizontal } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
 import { FieldLabel, InfoTooltip } from "@/components/common/FieldLabel";
@@ -13,6 +13,14 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";
 import { computeRolePrice } from "../lib/computeRolePrice";
@@ -22,6 +30,7 @@ import { useAddProductsFromSupplier, useProductList } from "../hooks/useProducts
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { MarginSimulationCard, type MarginSimulationRow } from "../components/MarginSimulationCard";
 import { MixProductPicker, type MixProductOption } from "../components/MixProductPicker";
+import type { PoolSort } from "../types/product.type";
 import type { PricingRuleOption } from "../services/provider.service";
 
 export type AddMode = "single" | "bulk";
@@ -33,7 +42,15 @@ interface AddProductsPageProps {
 
 const PER_PAGE = 10;
 const NONE = "all";
+const PAGE_WINDOW = 2;
 const rupiah = (value: number) => formatCurrency(value, { fractionDigits: 0 });
+
+/** Small ± window of page numbers around the current page, clamped to [1, lastPage]. */
+function pageWindow(page: number, lastPage: number): number[] {
+  const start = Math.max(1, page - PAGE_WINDOW);
+  const end = Math.min(lastPage, page + PAGE_WINDOW);
+  return Array.from({ length: end - start + 1 }, (_, i) => start + i);
+}
 
 /** One row's editable data. Strings, because they are inputs. */
 interface RowForm {
@@ -116,6 +133,9 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
   const [page, setPage] = useState(1);
   const [providerCategory, setProviderCategory] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  // Server-backed: the API sorts the whole candidate universe by cost, not just
+  // the page on screen. Both price headers share it (see `toggleSort`).
+  const [sort, setSort] = useState<PoolSort | undefined>(undefined);
   const [selected, setSelected] = useState<string[]>([]);
   const [forms, setForms] = useState<Record<string, RowForm>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -134,8 +154,9 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
       availability: "all",
       provider_category: providerCategory || undefined,
       category_id: categoryId || undefined,
+      sort,
     }),
-    [search, page, providerCategory, categoryId],
+    [search, page, providerCategory, categoryId, sort],
   );
 
   const { data, isLoading } = usePoolCandidates(params);
@@ -254,6 +275,20 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
     });
   };
 
+  // Cost asc → cost desc → provider order. Both price headers share this one
+  // value, so the two columns never disagree about the order.
+  const toggleSort = () => {
+    setSort((current) => (current === "cost_asc" ? "cost_desc" : current === "cost_desc" ? undefined : "cost_asc"));
+    setPage(1);
+  };
+
+  const sortLabel =
+    sort === "cost_asc"
+      ? t("sortPriceAsc")
+      : sort === "cost_desc"
+        ? t("sortPriceDesc")
+        : t("sortPriceNone");
+
   const toggle = (row: { buyer_sku_code: string; name: string }, disabled: boolean) => {
     if (disabled) return;
 
@@ -269,8 +304,9 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
     setForms((existing) => (existing[code] ? existing : { ...existing, [code]: emptyForm(row.name) }));
     setSelected((current) => (currentMode === "single" ? [code] : [...current.filter((entry) => entry !== code), code]));
 
-    // Single means "this one": open its steps straight away, that is the guide.
-    if (currentMode === "single") setExpanded(code);
+    // Ticking a row opens its steps straight away — that is the guide, in both
+    // Single and Bulk. Opening them by hand would be a second, unneeded click.
+    setExpanded(code);
   };
 
   const patch = (code: string, changes: Partial<RowForm>) =>
@@ -322,7 +358,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
     );
 
   return (
-    <Box className="flex flex-col gap-6">
+    <Box className="flex h-full min-h-0 flex-col gap-6">
       {/* The page header is hidden on purpose — the breadcrumb already names the
           screen, and the table wants the vertical space. Kept for a11y/tests. */}
       <Heading
@@ -333,10 +369,10 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
         {t("addProductsTitle")}
       </Heading>
 
-      <Box className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-6">
+      <Box className="flex min-h-0 flex-1 flex-col gap-6 rounded-2xl border border-border bg-card p-6">
         {/* Filters and mode, in one strip — the two things that decide which
             rows are on screen and how many may be ticked. */}
-        <Box className="flex flex-wrap items-end gap-3">
+        <Box className="flex shrink-0 flex-wrap items-end gap-3">
           <Box className="w-56">
             <SelectField
               id="add-provider-filter"
@@ -413,7 +449,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
           </Box>
         </Box>
 
-        <Box className="overflow-x-auto rounded-xl border border-border">
+        <Box className="min-h-0 flex-1 overflow-auto rounded-xl border border-border">
           {isLoading && (
             <Text
               variant="muted"
@@ -435,27 +471,61 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
           {!isLoading && rows.length > 0 && (
             <table className="w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="bg-muted/40">
-                  <th className="w-10 px-3 py-2" />
-                  <th className="min-w-56 px-3 py-2 font-medium">
+                <tr>
+                  <th className="sticky top-0 z-10 w-10 bg-muted px-3 py-2" />
+                  <th className="sticky top-0 z-10 min-w-56 bg-muted px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
                       {t("colService")}
                       <InfoTooltip content={t("tipColCodeSubCategory")} />
                     </Box>
                   </th>
-                  <th className="min-w-40 px-3 py-2 font-medium">
+                  <th className="sticky top-0 z-10 min-w-40 bg-muted px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
-                      {t("cost")}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-2 h-8 gap-1 px-2 font-medium"
+                        aria-label={`${t("cost")}: ${sortLabel}`}
+                        title={sortLabel}
+                        onClick={toggleSort}
+                      >
+                        {t("cost")}
+                        {sort === "cost_asc" ? (
+                          <ArrowUp className="size-3.5" />
+                        ) : sort === "cost_desc" ? (
+                          <ArrowDown className="size-3.5" />
+                        ) : (
+                          <ArrowUpDown className="size-3.5 text-muted-foreground/50" />
+                        )}
+                      </Button>
                       <InfoTooltip content={t("tipCost")} />
                     </Box>
                   </th>
-                  <th className="min-w-40 px-3 py-2 font-medium">
+                  <th className="sticky top-0 z-10 min-w-40 bg-muted px-3 py-2 font-medium">
                     <Box className="flex items-center gap-1.5">
-                      {t("sellPrice")}
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="-ml-2 h-8 gap-1 px-2 font-medium"
+                        aria-label={`${t("sellPrice")}: ${sortLabel}`}
+                        title={sortLabel}
+                        onClick={toggleSort}
+                      >
+                        {t("sellPrice")}
+                        {sort === "cost_asc" ? (
+                          <ArrowUp className="size-3.5" />
+                        ) : sort === "cost_desc" ? (
+                          <ArrowDown className="size-3.5" />
+                        ) : (
+                          <ArrowUpDown className="size-3.5 text-muted-foreground/50" />
+                        )}
+                      </Button>
                       <InfoTooltip content={t("tipPriceColumn")} />
                     </Box>
                   </th>
-                  <th className="w-40 px-3 py-2" />
+                  <th className="sticky top-0 z-10 w-40 bg-muted px-3 py-2" />
                 </tr>
               </thead>
               <tbody>
@@ -1008,33 +1078,52 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
           )}
         </Box>
 
-        <Box className="flex items-center justify-between">
+        <Box className="flex shrink-0 flex-wrap items-center justify-between gap-3">
           <Text variant="small">{t("pageOf", { page, last: lastPage })}</Text>
-          <Box className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="rounded-xl"
-              disabled={page <= 1}
-              onClick={() => setPage((current) => Math.max(1, current - 1))}
-            >
-              <ChevronLeft className="size-4" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="rounded-xl"
-              disabled={page >= lastPage}
-              onClick={() => setPage((current) => current + 1)}
-            >
-              <ChevronRight className="size-4" />
-            </Button>
-          </Box>
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  href="#"
+                  aria-disabled={page <= 1}
+                  className={page <= 1 ? "pointer-events-none opacity-50" : undefined}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    if (page > 1) setPage(page - 1);
+                  }}
+                />
+              </PaginationItem>
+              {pageWindow(page, lastPage).map((pageNumber) => (
+                <PaginationItem key={pageNumber}>
+                  <PaginationLink
+                    href="#"
+                    isActive={pageNumber === page}
+                    className="tabular-nums"
+                    onClick={(event) => {
+                      event.preventDefault();
+                      setPage(pageNumber);
+                    }}
+                  >
+                    {pageNumber}
+                  </PaginationLink>
+                </PaginationItem>
+              ))}
+              <PaginationItem>
+                <PaginationNext
+                  href="#"
+                  aria-disabled={page >= lastPage}
+                  className={page >= lastPage ? "pointer-events-none opacity-50" : undefined}
+                  onClick={(event) => {
+                    event.preventDefault();
+                    if (page < lastPage) setPage(page + 1);
+                  }}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
         </Box>
 
-        <Box className="flex items-center justify-end gap-2">
+        <Box className="flex shrink-0 items-center justify-end gap-2">
           <Button
             variant="outline"
             className="rounded-xl"
