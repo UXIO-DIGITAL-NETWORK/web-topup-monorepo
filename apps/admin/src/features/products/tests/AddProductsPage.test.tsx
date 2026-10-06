@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 
-import { renderRoute, screen, within } from "@/test/test-utils";
+import { renderRoute, screen, waitFor, within } from "@/test/test-utils";
 import { productsService } from "../services/products.service";
 
 const LIST_PATH = "/admin/products-preview/main";
@@ -15,6 +15,10 @@ async function openPage(path: string = ADD_PATH) {
 }
 
 const rowOf = (code: string) => screen.getByText(code).closest("tr") as HTMLElement;
+
+/** True when `a`'s row is rendered above `b`'s in the document. */
+const appearsBefore = (a: string, b: string) =>
+  Boolean(screen.getByText(a).compareDocumentPosition(screen.getByText(b)) & Node.DOCUMENT_POSITION_FOLLOWING);
 
 describe("AddProductsPage", () => {
   afterEach(() => {
@@ -121,16 +125,61 @@ describe("AddProductsPage", () => {
     expect(screen.getByRole("button", { name: /Add Mix/ })).toBeInTheDocument();
   });
 
+  /** Ticking the box is the guide: the steps open on their own, in every mode. */
+  it("opens a row's steps as soon as its checkbox is ticked, in Bulk too", async () => {
+    const user = userEvent.setup();
+    await openPage(`${ADD_PATH}?mode=bulk`);
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+
+    // The row is VAL120's, and its steps are already open — no Configure click.
+    expect(within(rowOf("VAL120")).getByRole("button", { name: "Configure" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: /Product Data/ })).toBeInTheDocument();
+  });
+
   it("hides product mix in Bulk mode", async () => {
     const user = userEvent.setup();
     await openPage(`${ADD_PATH}?mode=bulk`);
 
     await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
-    await user.click(within(rowOf("VAL120")).getByRole("button", { name: "Configure" }));
+    // The checkbox already opened the steps; go straight to Product Mix.
     await user.click(screen.getByRole("button", { name: /Product Mix/ }));
 
     expect(screen.queryByRole("button", { name: /Add Mix/ })).not.toBeInTheDocument();
     expect(screen.getByText("Product mix is only available in Single mode.")).toBeInTheDocument();
+  });
+
+  /**
+   * The price headers share one server sort: cost asc → cost desc → provider
+   * order. The fixture feeds ML86 (20.000), VAL120 (15.000) and VAL420 (50.000).
+   */
+  it("sorts the services by cost, lowest then highest", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await screen.findByText("VAL120");
+
+    await user.click(screen.getByRole("button", { name: "Cost: Sort by price" }));
+    await waitFor(() => {
+      expect(appearsBefore("VAL120", "ML86")).toBe(true);
+      expect(appearsBefore("ML86", "VAL420")).toBe(true);
+    });
+
+    // Both price headers carry the shared state.
+    expect(screen.getByRole("button", { name: "Sell Price: Lowest price first" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Cost: Lowest price first" }));
+    await waitFor(() => {
+      expect(appearsBefore("VAL420", "ML86")).toBe(true);
+      expect(appearsBefore("ML86", "VAL120")).toBe(true);
+    });
+  });
+
+  it("shows numbered pagination with the current page marked", async () => {
+    await openPage();
+
+    const current = await screen.findByRole("link", { name: "1" });
+    expect(current).toHaveAttribute("aria-current", "page");
   });
 
   /**

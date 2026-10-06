@@ -4,6 +4,7 @@ import { Outlet, useLocation } from "@tanstack/react-router";
 import { Box } from "@/components/common/Box";
 import { Link } from "@/components/common/Link";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { cn } from "@/lib/utils";
 
 /**
  * Two URL-driven tabs (product_requirements.md §4.6) — real nested routes, not
@@ -52,9 +53,13 @@ export function ProductTabsLayout() {
     pathname.endsWith("/edit") ||
     pathname.includes("/set-profit-margin") ||
     pathname.includes("/set-price-limit");
+  // Only the Add Products page pins its own height (table scrolls inside the
+  // page instead of the page scrolling). Scoped to that one route so the other
+  // standalone pages keep scrolling normally.
+  const isAddProductsRoute = pathname.endsWith("/main/add");
 
   return (
-    <Box className="flex flex-col gap-6">
+    <Box className={cn("flex flex-col gap-6", isAddProductsRoute && "h-full min-h-0")}>
       {!onFormRoute && (
         <Tabs value={activeTab}>
           <TabsList variant="line">
