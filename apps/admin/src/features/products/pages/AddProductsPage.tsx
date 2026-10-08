@@ -23,13 +23,14 @@ import {
 } from "@/components/ui/pagination";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";
-import { computeRolePrice } from "../lib/computeRolePrice";
 import { usePoolCandidates, usePoolFacets } from "../hooks/useProviderPool";
 import { useMarginPlanOptions, usePricingRuleOptions } from "../hooks/useProviderProducts";
 import { useAddProductsFromSupplier, useProductList } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
+import { AddProductsReviewDialog } from "../components/AddProductsReviewDialog";
 import { MarginSimulationCard, type MarginSimulationRow } from "../components/MarginSimulationCard";
 import { MixProductPicker, type MixProductOption } from "../components/MixProductPicker";
+import { buildReviewItem, resolvePlanPrice, type SelectedMeta } from "../lib/reviewProducts";
 import type { PoolSort } from "../types/product.type";
 import type { PricingRuleOption } from "../services/provider.service";
 
@@ -139,6 +140,11 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
   const [selected, setSelected] = useState<string[]>([]);
   const [forms, setForms] = useState<Record<string, RowForm>>({});
   const [expanded, setExpanded] = useState<string | null>(null);
+  // The pool row is only on screen for the current page, so the cost and provider
+  // name are snapshotted at selection time — the review needs them after paging.
+  const [selectedMeta, setSelectedMeta] = useState<Record<string, SelectedMeta>>({});
+  // Which review the admin asked for, if any: { publish } opens the dialog; it is null when closed.
+  const [review, setReview] = useState<{ publish: boolean } | null>(null);
 
   const { data: facets } = usePoolFacets();
 
@@ -165,7 +171,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
   // Sub-categories belong to a category. With the list filtered to one, every
   // row shares the same options — which is why the filter is the honest place
   // to read them from rather than guessing per row.
-  const { subCategoryOptions } = useProductSelectOptions(categoryId || undefined);
+  const { categoryOptions: catalogueCategoryOptions, subCategoryOptions } = useProductSelectOptions(categoryId || undefined);
   const { data: catalogue } = useProductList({ per_page: 100 });
   const addProducts = useAddProductsFromSupplier();
 
@@ -289,7 +295,10 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
         ? t("sortPriceDesc")
         : t("sortPriceNone");
 
-  const toggle = (row: { buyer_sku_code: string; name: string }, disabled: boolean) => {
+  const toggle = (
+    row: { buyer_sku_code: string; name: string; cost: number; mapped_category_name: string | null },
+    disabled: boolean,
+  ) => {
     if (disabled) return;
 
     const code = row.buyer_sku_code;
@@ -297,11 +306,20 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
     if (alreadySelected) {
       setSelected((current) => current.filter((entry) => entry !== code));
+      setSelectedMeta((current) => {
+        const next = { ...current };
+        delete next[code];
+        return next;
+      });
       setExpanded((open) => (open === code ? null : open));
       return;
     }
 
     setForms((existing) => (existing[code] ? existing : { ...existing, [code]: emptyForm(row.name) }));
+    setSelectedMeta((current) => ({
+      ...current,
+      [code]: { cost: row.cost, providerName: row.name, mappedCategoryName: row.mapped_category_name ?? "" },
+    }));
     setSelected((current) => (currentMode === "single" ? [code] : [...current.filter((entry) => entry !== code), code]));
 
     // Ticking a row opens its steps straight away — that is the guide, in both
@@ -311,6 +329,48 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
   const patch = (code: string, changes: Partial<RowForm>) =>
     setForms((current) => ({ ...current, [code]: { ...current[code], ...changes } }));
+
+  // Sub-categories can only be chosen when the list is filtered to a category
+  // that actually has them — only then can a missing one block the confirm.
+  const subCategoryRequired = Boolean(categoryId) && subCategoryOptions.length > 0;
+
+  // The exact rows the dialog will show, assembled from the same pricing helper
+  // the table previews with, so nothing can drift between the two.
+  const reviewItems = useMemo(
+    () =>
+      selected.map((code) => {
+        const form = forms[code] ?? emptyForm(code);
+        return buildReviewItem({
+          buyerSkuCode: code,
+          form,
+          meta: selectedMeta[code],
+          plans,
+          ruleForPlan,
+          planLabel,
+          categoryName: catalogueCategoryOptions.find((option) => option.value === categoryId)?.label,
+          subCategoryName: subCategoryOptions.find((option) => option.value === form.subCategoryId)?.label,
+          mixOptions: mixProductOptions,
+          currentMode,
+          subCategoryRequired,
+        });
+      }),
+    [
+      selected,
+      forms,
+      selectedMeta,
+      plans,
+      ruleForPlan,
+      planLabel,
+      catalogueCategoryOptions,
+      categoryId,
+      subCategoryOptions,
+      mixProductOptions,
+      currentMode,
+      subCategoryRequired,
+    ],
+  );
+
+  const startReview = (publish: boolean) => setReview({ publish });
 
   const submit = (publish: boolean) =>
     addProducts.mutate(
@@ -352,6 +412,8 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
         onSuccess: () => {
           setSelected([]);
           setForms({});
+          setSelectedMeta({});
+          setReview(null);
           backToList();
         },
       },
@@ -555,26 +617,19 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
                   const defaultPlan = plans.find((plan) => plan.is_default) ?? plans[0];
                   const defaultPrice = defaultPlan
-                    ? (() => {
-                        const rule = ruleForPlan(defaultPlan.value);
-                        const margin = toNumber(form.margins[defaultPlan.value] ?? "");
-                        return margin === null
-                          ? rule
-                            ? computeRolePrice(accumulated, rule.markup_percent, rule.markup_flat)
-                            : accumulated
-                          : computeRolePrice(accumulated, margin, 0);
-                      })()
+                    ? resolvePlanPrice(
+                        accumulated,
+                        toNumber(form.margins[defaultPlan.value] ?? ""),
+                        ruleForPlan(defaultPlan.value),
+                      ).price
                     : accumulated;
 
                   const simulationRows: MarginSimulationRow[] = plans.map((plan) => {
-                    const rule = ruleForPlan(plan.value);
-                    const margin = toNumber(form.margins[plan.value] ?? "");
-                    const price =
-                      margin === null
-                        ? rule
-                          ? computeRolePrice(accumulated, rule.markup_percent, rule.markup_flat)
-                          : accumulated
-                        : computeRolePrice(accumulated, margin, 0);
+                    const price = resolvePlanPrice(
+                      accumulated,
+                      toNumber(form.margins[plan.value] ?? ""),
+                      ruleForPlan(plan.value),
+                    ).price;
                     return { key: plan.value, label: `${planLabel(plan)} (%)`, price };
                   });
 
@@ -1131,24 +1186,38 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
           >
             {t("cancel")}
           </Button>
-          {/* Draft first (the safe choice), publish second (the deliberate one). */}
+          {/* Draft first (the safe choice), publish second (the deliberate one).
+              Both open the review first — the dialog's confirm is what sends. */}
           <Button
             variant="outline"
             className="rounded-xl"
             disabled={selected.length === 0 || addProducts.isPending}
-            onClick={() => submit(false)}
+            onClick={() => startReview(false)}
           >
             {t("saveDraft")} ({selected.length})
           </Button>
           <Button
             className="rounded-xl"
             disabled={selected.length === 0 || addProducts.isPending}
-            onClick={() => submit(true)}
+            onClick={() => startReview(true)}
           >
             {t("publishNow")} ({selected.length})
           </Button>
         </Box>
       </Box>
+
+      <AddProductsReviewDialog
+        open={review !== null}
+        onOpenChange={(next) => {
+          if (!next) setReview(null);
+        }}
+        publish={review?.publish ?? false}
+        items={reviewItems}
+        isPending={addProducts.isPending}
+        onConfirm={() => {
+          if (review) submit(review.publish);
+        }}
+      />
     </Box>
   );
 }
