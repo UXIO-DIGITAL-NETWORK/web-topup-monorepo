@@ -241,6 +241,12 @@ describe("AddProductsPage", () => {
     await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
     await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
 
+    // The review step comes first — nothing reaches the API until it is confirmed.
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    expect(spy).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole("button", { name: "Yes, save as draft" }));
+
     expect(spy.mock.calls[0][0].publish).toBe(false);
     expect(spy.mock.calls[0][0].items[0].buyer_sku_code).toBe("VAL120");
   });
@@ -260,8 +266,52 @@ describe("AddProductsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Publish (1)" }));
 
+    const dialog = await screen.findByRole("dialog", { name: "Review before publishing" });
+    await user.click(within(dialog).getByRole("button", { name: "Yes, publish now" }));
+
     const payload = spy.mock.calls[0][0];
     expect(payload.publish).toBe(true);
     expect(payload.items[0].name).toBe("Valorant 120 Spesial");
+  });
+
+  it("shows each product's details in the review dialog before saving", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    expect(within(dialog).getAllByText("Valorant 120 Points").length).toBeGreaterThan(0);
+    // Cost 15.000 and the default plan's rule price (25% over cost) = 18.750.
+    expect(within(dialog).getAllByText(/Rp 15\.000/).length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByText("Rp 18.750").length).toBeGreaterThan(0);
+  });
+
+  it("lists every selected product as a card in bulk", async () => {
+    const user = userEvent.setup();
+    await openPage(`${ADD_PATH}?mode=bulk`);
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL420" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft (2)" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    expect(within(dialog).getByText("VAL120 · Valorant 120 Points")).toBeInTheDocument();
+    expect(within(dialog).getByText("VAL420 · Valorant 420 Points")).toBeInTheDocument();
+  });
+
+  it("blocks the confirm while a required field is empty", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.clear(screen.getByLabelText("VAL120 name"));
+
+    await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    expect(within(dialog).getByRole("button", { name: "Yes, save as draft" })).toBeDisabled();
+    expect(within(dialog).getByText("Product name is empty.")).toBeInTheDocument();
   });
 });
