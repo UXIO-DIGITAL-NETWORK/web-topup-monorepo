@@ -5,6 +5,8 @@ import { Text } from "@/components/common/Text";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";
+import { ReviewStatusIcon } from "./ReviewStatusIcon";
+import type { ReviewFieldStatus } from "../lib/reviewProducts";
 
 const rupiah = (value: number) => formatCurrency(value, { fractionDigits: 0 });
 
@@ -13,6 +15,8 @@ export interface MarginSimulationRow {
   key: string;
   label: string;
   price: number;
+  /** Where the price came from — a typed margin, the pricing rule, or cost. */
+  hint?: string;
 }
 
 interface MarginSimulationCardProps {
@@ -21,6 +25,8 @@ interface MarginSimulationCardProps {
   rows: MarginSimulationRow[];
   /** Where the cost came from, for a mix: main SKU + components. */
   breakdown?: { main: number; mix: number };
+  /** Readiness of the default plan's price, shown in the header when reviewing. */
+  status?: ReviewFieldStatus;
 }
 
 /**
@@ -32,7 +38,7 @@ interface MarginSimulationCardProps {
  * will write. Unlike `PlanPriceCard`, it measures against the ACCUMULATED cost —
  * the reason a mix shows the main SKU plus every component in one figure.
  */
-export function MarginSimulationCard({ cost, rows, breakdown }: MarginSimulationCardProps) {
+export function MarginSimulationCard({ cost, rows, breakdown, status }: MarginSimulationCardProps) {
   const { t } = useTranslation("products");
 
   return (
@@ -45,14 +51,17 @@ export function MarginSimulationCard({ cost, rows, breakdown }: MarginSimulation
         >
           {t("marginSimulationTitle")}
         </Text>
-        <Text
-          as="span"
-          variant="small"
-          className="tabular-nums text-muted-foreground"
-        >
-          {t("cost")}: {rupiah(cost)}
-          {breakdown ? ` (${rupiah(breakdown.main)} + ${rupiah(breakdown.mix)})` : ""}
-        </Text>
+        <Box className="flex items-center gap-2">
+          {status && <ReviewStatusIcon status={status} />}
+          <Text
+            as="span"
+            variant="small"
+            className="tabular-nums text-muted-foreground"
+          >
+            {t("cost")}: {rupiah(cost)}
+            {breakdown ? ` (${rupiah(breakdown.main)} + ${rupiah(breakdown.mix)})` : ""}
+          </Text>
+        </Box>
       </Box>
 
       {rows.length === 0 ? (
@@ -69,7 +78,18 @@ export function MarginSimulationCard({ cost, rows, breakdown }: MarginSimulation
               key={row.key}
               className="flex items-center justify-between gap-3 px-3 py-2"
             >
-              <Text as="span">{row.label}</Text>
+              <Box className="flex min-w-0 flex-col">
+                <Text as="span">{row.label}</Text>
+                {row.hint && (
+                  <Text
+                    as="span"
+                    variant="small"
+                    className="text-muted-foreground"
+                  >
+                    {row.hint}
+                  </Text>
+                )}
+              </Box>
               <Box className="flex items-center gap-2">
                 <Badge
                   variant="outline"

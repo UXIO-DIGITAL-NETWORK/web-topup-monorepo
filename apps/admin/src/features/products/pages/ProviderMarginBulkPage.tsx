@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { decimalOnly, digitsOnly } from "@/lib/numericInput";
 import { PlanPriceCard } from "../components/PlanPriceCard";
 import { ProductPriceCell } from "../components/ProductPriceCell";
 import { useBulkSetProviderMargin, useMarginPlanOptions, useProviderProductList } from "../hooks/useProviderProducts";
@@ -197,10 +198,9 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
                   </Label>
                   <Input
                     id={`margin-${plan.value}`}
-                    type="number"
-                    step="0.01"
+                    inputMode="decimal"
                     value={draft[plan.value] ?? ""}
-                    onChange={(e) => setValue(plan.value, e.target.value)}
+                    onChange={(e) => setValue(plan.value, decimalOnly(e.target.value))}
                     placeholder="0"
                   />
                 </Box>
@@ -212,10 +212,9 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               <Label htmlFor="price-min">{t("lowerLimit")}</Label>
               <Input
                 id="price-min"
-                type="number"
-                min="0"
+                inputMode="numeric"
                 value={draft.price_min ?? ""}
-                onChange={(e) => setValue("price_min", e.target.value)}
+                onChange={(e) => setValue("price_min", digitsOnly(e.target.value))}
                 placeholder={t("rpZero")}
               />
               <Text variant="small" className="text-muted-foreground">
@@ -226,10 +225,9 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               <Label htmlFor="price-max">{t("upperLimit")}</Label>
               <Input
                 id="price-max"
-                type="number"
-                min="0"
+                inputMode="numeric"
                 value={draft.price_max ?? ""}
-                onChange={(e) => setValue("price_max", e.target.value)}
+                onChange={(e) => setValue("price_max", digitsOnly(e.target.value))}
                 placeholder={t("rpZero")}
               />
               <Text variant="small" className="text-muted-foreground">
@@ -246,12 +244,9 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               <Label htmlFor="point-percent">{t("pointsPercent")}</Label>
               <Input
                 id="point-percent"
-                type="number"
-                step="0.01"
-                min="0"
-                max="100"
+                inputMode="decimal"
                 value={draft.point_percent ?? ""}
-                onChange={(e) => setValue("point_percent", e.target.value)}
+                onChange={(e) => setValue("point_percent", decimalOnly(e.target.value))}
                 placeholder={t("globalDefault")}
               />
               <Text variant="small" className="text-muted-foreground">
@@ -262,10 +257,9 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               <Label htmlFor="point-flat">{t("bonusPoints")}</Label>
               <Input
                 id="point-flat"
-                type="number"
-                min="0"
+                inputMode="numeric"
                 value={draft.point_flat ?? ""}
-                onChange={(e) => setValue("point_flat", e.target.value)}
+                onChange={(e) => setValue("point_flat", digitsOnly(e.target.value))}
                 placeholder={t("globalDefault")}
               />
               <Text variant="small" className="text-muted-foreground">
@@ -283,10 +277,9 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               <Label htmlFor="daily-order-limit">{t("dailyOrderLimit")}</Label>
               <Input
                 id="daily-order-limit"
-                type="number"
-                min="0"
+                inputMode="numeric"
                 value={draft.daily_order_limit ?? ""}
-                onChange={(e) => setValue("daily_order_limit", e.target.value)}
+                onChange={(e) => setValue("daily_order_limit", digitsOnly(e.target.value))}
                 placeholder={t("unlimited")}
               />
               <Text variant="small" className="text-muted-foreground">

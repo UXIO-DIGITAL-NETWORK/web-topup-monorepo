@@ -21,6 +21,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { decimalOnly, digitsOnly } from "@/lib/numericInput";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";
 import { usePoolCandidates, usePoolFacets } from "../hooks/useProviderPool";
@@ -799,7 +800,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         inputMode="numeric"
                                         aria-label={`${code} points`}
                                         value={form.points}
-                                        onChange={(event) => patch(code, { points: event.target.value })}
+                                        onChange={(event) => patch(code, { points: digitsOnly(event.target.value) })}
                                       />
                                     </Box>
                                     <Box className="flex flex-col gap-1.5">
@@ -815,7 +816,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         inputMode="numeric"
                                         aria-label={`${code} bonus`}
                                         value={form.pointsFlat}
-                                        onChange={(event) => patch(code, { pointsFlat: event.target.value })}
+                                        onChange={(event) => patch(code, { pointsFlat: digitsOnly(event.target.value) })}
                                       />
                                     </Box>
                                     <SelectField
@@ -848,7 +849,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         aria-label={`${code} discount`}
                                         disabled={!form.discountType}
                                         value={form.discountValue}
-                                        onChange={(event) => patch(code, { discountValue: event.target.value })}
+                                        onChange={(event) => patch(code, { discountValue: digitsOnly(event.target.value) })}
                                       />
                                     </Box>
                                     <Box className="sm:col-span-2 lg:col-span-3">
@@ -930,7 +931,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                                 value={form.margins[plan.value] ?? ""}
                                                 onChange={(event) =>
                                                   patch(code, {
-                                                    margins: { ...form.margins, [plan.value]: event.target.value },
+                                                    margins: { ...form.margins, [plan.value]: decimalOnly(event.target.value) },
                                                   })
                                                 }
                                               />
@@ -979,7 +980,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         inputMode="numeric"
                                         aria-label={`${code} price min`}
                                         value={form.priceMin}
-                                        onChange={(event) => patch(code, { priceMin: event.target.value })}
+                                        onChange={(event) => patch(code, { priceMin: digitsOnly(event.target.value) })}
                                       />
                                     </Box>
                                     <Box className="flex flex-col gap-1.5">
@@ -995,7 +996,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         inputMode="numeric"
                                         aria-label={`${code} price max`}
                                         value={form.priceMax}
-                                        onChange={(event) => patch(code, { priceMax: event.target.value })}
+                                        onChange={(event) => patch(code, { priceMax: digitsOnly(event.target.value) })}
                                       />
                                     </Box>
                                   </Box>
@@ -1088,7 +1089,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                                 onChange={(event) =>
                                                   patch(code, {
                                                     mix: form.mix.map((entry, i) =>
-                                                      i === index ? { ...entry, quantity: event.target.value } : entry,
+                                                      i === index ? { ...entry, quantity: digitsOnly(event.target.value) } : entry,
                                                     ),
                                                   })
                                                 }

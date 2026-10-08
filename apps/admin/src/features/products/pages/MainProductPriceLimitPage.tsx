@@ -8,6 +8,7 @@ import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { digitsOnly } from "@/lib/numericInput";
 import { ProductPriceCell } from "../components/ProductPriceCell";
 import { useProduct, useSetProductPriceLimit } from "../hooks/useProducts";
 import type { Product } from "../types/product.type";
@@ -81,12 +82,24 @@ function PriceLimitForm({ id, product }: { id: string; product: Product }) {
         <Box className="flex flex-col gap-4">
           <Box className="flex flex-col gap-1.5">
             <Label htmlFor="price-min">{t("lowerLimit")}</Label>
-            <Input id="price-min" type="number" value={min} onChange={(e) => setMin(e.target.value)} placeholder="0" />
+            <Input
+              id="price-min"
+              inputMode="numeric"
+              value={min}
+              onChange={(e) => setMin(digitsOnly(e.target.value))}
+              placeholder="0"
+            />
             <Text variant="small">0 = no limit</Text>
           </Box>
           <Box className="flex flex-col gap-1.5">
             <Label htmlFor="price-max">{t("upperLimit")}</Label>
-            <Input id="price-max" type="number" value={max} onChange={(e) => setMax(e.target.value)} placeholder="0" />
+            <Input
+              id="price-max"
+              inputMode="numeric"
+              value={max}
+              onChange={(e) => setMax(digitsOnly(e.target.value))}
+              placeholder="0"
+            />
             <Text variant="small">0 = no limit</Text>
           </Box>
         </Box>

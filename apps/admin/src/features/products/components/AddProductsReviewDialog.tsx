@@ -11,21 +11,25 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";
 import { MarginSimulationCard } from "./MarginSimulationCard";
-import type { ReviewItem, ReviewPlanPrice } from "../lib/reviewProducts";
+import { ReviewStatusIcon } from "./ReviewStatusIcon";
+import type { ReviewFieldStatus, ReviewItem, ReviewPlanPrice } from "../lib/reviewProducts";
 
 const EM_DASH = "—";
 const rupiah = (value: number) => formatCurrency(value, { fractionDigits: 0 });
 
-function Row({ label, children }: { label: string; children: ReactNode }) {
+function Row({ label, status, children }: { label: string; status: ReviewFieldStatus; children: ReactNode }) {
   return (
     <Box className="flex items-start justify-between gap-4 py-1.5">
-      <Text
-        as="span"
-        variant="muted"
-        className="text-sm"
-      >
-        {label}
-      </Text>
+      <Box className="flex min-w-0 items-center gap-2">
+        <ReviewStatusIcon status={status} />
+        <Text
+          as="span"
+          variant="muted"
+          className="text-sm"
+        >
+          {label}
+        </Text>
+      </Box>
       <Box className="flex items-center gap-2 text-right">{children}</Box>
     </Box>
   );
@@ -226,65 +230,95 @@ export function AddProductsReviewDialog({
               </AccordionTrigger>
 
               <AccordionContent className="flex flex-col gap-4">
-                <Section caption={t("reviewSectionData")}>
-                  <Row label={t("productName")}>
-                    <Value>{item.name || EM_DASH}</Value>
-                  </Row>
-                  <Row label={t("subName")}>
-                    <Value>{item.subName || EM_DASH}</Value>
-                  </Row>
-                  <Row label={t("category")}>
-                    <Value>{item.categoryName || EM_DASH}</Value>
-                  </Row>
-                  <Row label={t("subCategory")}>
+                {/* Four sections, one per step the admin filled — same order, same titles,
+                    each row carrying a check for filled, a warning for a missing required
+                    field, and a muted dash for an optional blank. */}
+                <Section caption={t("stepData")}>
+                  <Row
+                    label={t("subCategory")}
+                    status={item.fields.subCategory}
+                  >
                     <Value>{item.subCategoryName || EM_DASH}</Value>
                   </Row>
-                  <Row label={t("productLogo")}>
-                    <Value>{item.hasLogo ? t("active") : EM_DASH}</Value>
+                  <Row
+                    label={t("productName")}
+                    status={item.fields.name}
+                  >
+                    <Value>{item.name || EM_DASH}</Value>
                   </Row>
-                  <Row label={t("discount")}>
-                    <Value>{discountLabel(item)}</Value>
+                  <Row
+                    label={t("subName")}
+                    status={item.fields.subName}
+                  >
+                    <Value>{item.subName || EM_DASH}</Value>
                   </Row>
-                  <Row label={t("pointsPercent")}>
+                  <Row
+                    label={t("category")}
+                    status={item.fields.category}
+                  >
+                    <Value>{item.categoryName || EM_DASH}</Value>
+                  </Row>
+                  <Row
+                    label={t("pointsPercent")}
+                    status={item.fields.points}
+                  >
                     <Value>{item.pointPercent ?? EM_DASH}</Value>
                   </Row>
-                  <Row label={t("bonusPoints")}>
+                  <Row
+                    label={t("bonusPoints")}
+                    status={item.fields.pointsFlat}
+                  >
                     <Value>{item.pointFlat ?? EM_DASH}</Value>
                   </Row>
-                  <Row label={t("lowerLimit")}>
-                    <Value>{item.priceMin !== null ? rupiah(item.priceMin) : EM_DASH}</Value>
+                  <Row
+                    label={t("discount")}
+                    status={item.fields.discount}
+                  >
+                    <Value>{discountLabel(item)}</Value>
                   </Row>
-                  <Row label={t("upperLimit")}>
-                    <Value>{item.priceMax !== null ? rupiah(item.priceMax) : EM_DASH}</Value>
+                  <Row
+                    label={t("productLogo")}
+                    status={item.fields.logo}
+                  >
+                    <Value>{item.hasLogo ? t("active") : EM_DASH}</Value>
                   </Row>
                 </Section>
 
-                <Section caption={t("reviewSectionPricing")}>
+                <Section caption={t("stepPricing")}>
                   <Box className="py-2">
                     <MarginSimulationCard
                       cost={item.accumulated}
+                      status={item.fields.defaultPrice}
                       rows={item.planPrices.map((plan) => ({
                         key: plan.planValue,
                         label: `${plan.label} (%)`,
                         price: plan.price,
+                        hint: marginSourceLabel(plan),
                       }))}
                       breakdown={item.mixCost > 0 ? { main: item.cost, mix: item.mixCost } : undefined}
                     />
                   </Box>
-                  {item.planPrices.map((plan) => (
-                    <Row
-                      key={plan.planValue}
-                      label={`${plan.label} (%)`}
-                    >
-                      <Value className="text-muted-foreground">{marginSourceLabel(plan)}</Value>
-                      <Value className="font-medium">{rupiah(plan.price)}</Value>
-                    </Row>
-                  ))}
                 </Section>
 
-                <Section caption={t("reviewSectionMix")}>
+                <Section caption={t("stepLimits")}>
+                  <Row
+                    label={t("lowerLimit")}
+                    status={item.fields.priceMin}
+                  >
+                    <Value>{item.priceMin !== null ? rupiah(item.priceMin) : EM_DASH}</Value>
+                  </Row>
+                  <Row
+                    label={t("upperLimit")}
+                    status={item.fields.priceMax}
+                  >
+                    <Value>{item.priceMax !== null ? rupiah(item.priceMax) : EM_DASH}</Value>
+                  </Row>
+                </Section>
+
+                <Section caption={t("stepMix")}>
                   {item.mix.length === 0 ? (
-                    <Box className="py-1.5">
+                    <Box className="flex items-center gap-2 py-1.5">
+                      <ReviewStatusIcon status={item.fields.mix} />
                       <Text
                         as="span"
                         variant="muted"
@@ -299,12 +333,16 @@ export function AddProductsReviewDialog({
                         <Row
                           key={`${line.name}-${index}`}
                           label={`${line.name}${line.code ? ` — ${line.code}` : ""}`}
+                          status="filled"
                         >
                           <Value className="text-muted-foreground">×{line.quantity}</Value>
                           <Value>{rupiah(line.cost)}</Value>
                         </Row>
                       ))}
-                      <Row label={t("mixCostNote")}>
+                      <Row
+                        label={t("mixCostNote")}
+                        status="filled"
+                      >
                         <Value className="font-medium">{rupiah(item.mixCost)}</Value>
                       </Row>
                     </>

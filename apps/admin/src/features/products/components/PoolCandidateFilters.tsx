@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { digitsOnly } from "@/lib/numericInput";
 import { formatCurrency } from "@/utils/currency";
 import { ALL, countActiveFilters, type PoolFilterState } from "../lib/poolFilters";
 import type { PoolFacets, PoolSort } from "../types/product.type";
@@ -129,7 +130,7 @@ export function PoolCandidateFilters({ filters, onChange, onReset, onRefresh, fa
               id="pool-cost-min"
               inputMode="numeric"
               value={filters.costMin}
-              onChange={(event) => onChange({ costMin: event.target.value.replace(/\D/g, "") })}
+              onChange={(event) => onChange({ costMin: digitsOnly(event.target.value) })}
               placeholder={t("min")}
               aria-label={t("minimumCost")}
               className="h-9 w-28 rounded-xl tabular-nums"
@@ -145,7 +146,7 @@ export function PoolCandidateFilters({ filters, onChange, onReset, onRefresh, fa
               id="pool-cost-max"
               inputMode="numeric"
               value={filters.costMax}
-              onChange={(event) => onChange({ costMax: event.target.value.replace(/\D/g, "") })}
+              onChange={(event) => onChange({ costMax: digitsOnly(event.target.value) })}
               placeholder={t("max")}
               aria-label={t("maximumCost")}
               className="h-9 w-28 rounded-xl tabular-nums"

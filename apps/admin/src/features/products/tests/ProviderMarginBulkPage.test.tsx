@@ -68,10 +68,12 @@ describe("ProviderMarginBulkPage", () => {
   it("prefills the margins and points already saved on the selection", async () => {
     await renderRoute("/admin/products/provider/set-profit-margin?ids=4");
 
-    expect(await screen.findByLabelText("Basic (free) margin (%) · default tier")).toHaveValue(20);
-    expect(screen.getByLabelText("Gold (gold) margin (%)")).toHaveValue(5);
-    expect(screen.getByLabelText("Points (%)")).toHaveValue(2.5);
-    expect(screen.getByLabelText("Bonus Points")).toHaveValue(50);
+    // The numeric fields are text inputs now (digit/decimal-only), so the DOM
+    // value reads back as a string.
+    expect(await screen.findByLabelText("Basic (free) margin (%) · default tier")).toHaveValue("20");
+    expect(screen.getByLabelText("Gold (gold) margin (%)")).toHaveValue("5");
+    expect(screen.getByLabelText("Points (%)")).toHaveValue("2.5");
+    expect(screen.getByLabelText("Bonus Points")).toHaveValue("50");
   });
 
   it("saves the points alongside the margins and stays on the page", async () => {
@@ -84,7 +86,7 @@ describe("ProviderMarginBulkPage", () => {
     await user.click(screen.getByRole("button", { name: "Save" }));
 
     // Still here — navigating away is what hid the result from the admin.
-    await waitFor(() => expect(screen.getByLabelText("Points (%)")).toHaveValue(3));
+    await waitFor(() => expect(screen.getByLabelText("Points (%)")).toHaveValue("3"));
     expect(screen.getByRole("heading", { name: "Set Profit Margin" })).toBeInTheDocument();
   });
 

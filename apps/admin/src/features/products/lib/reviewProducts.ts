@@ -4,6 +4,28 @@ import type { MixProductOption } from "../components/MixProductPicker";
 
 export type PriceSource = "margin" | "rule" | "cost";
 
+/**
+ * A review field's readiness: filled (a check), missing (a required field left
+ * empty), or optional (a blank that is allowed to stay blank).
+ */
+export type ReviewFieldStatus = "filled" | "optional" | "missing";
+
+/** Per-field readiness, so the dialog flags one empty field without the whole card. */
+export interface ReviewFieldStatuses {
+  category: ReviewFieldStatus;
+  subCategory: ReviewFieldStatus;
+  name: ReviewFieldStatus;
+  subName: ReviewFieldStatus;
+  points: ReviewFieldStatus;
+  pointsFlat: ReviewFieldStatus;
+  discount: ReviewFieldStatus;
+  logo: ReviewFieldStatus;
+  priceMin: ReviewFieldStatus;
+  priceMax: ReviewFieldStatus;
+  defaultPrice: ReviewFieldStatus;
+  mix: ReviewFieldStatus;
+}
+
 /** One membership plan's resolved selling price for the review dialog. */
 export interface ReviewPlanPrice {
   planValue: string;
@@ -62,6 +84,7 @@ export interface ReviewItem {
   mix: ReviewMixLine[];
   planPrices: ReviewPlanPrice[];
   defaultPlan?: ReviewPlanPrice;
+  fields: ReviewFieldStatuses;
   issues: ReviewIssue[];
   blocked: boolean;
 }
@@ -92,6 +115,9 @@ const toNumber = (raw: string): number | null => {
   const parsed = Number(trimmed);
   return Number.isFinite(parsed) ? parsed : null;
 };
+
+const filledOrOptional = (filled: boolean): ReviewFieldStatus => (filled ? "filled" : "optional");
+const requiredOrMissing = (filled: boolean): ReviewFieldStatus => (filled ? "filled" : "missing");
 
 /** The page's `RowForm` is structurally this — kept here so the lib imports no page. */
 export interface ReviewFormInput {
@@ -184,10 +210,37 @@ export function buildReviewItem({
     issues.push({ level: "warn", messageKey: "issueIncompleteMix" });
   }
 
+  const pointPercent = toNumber(form.points);
+  const pointFlat = toNumber(form.pointsFlat);
+  const priceMin = toNumber(form.priceMin);
+  const priceMax = toNumber(form.priceMax);
   const discountValue = toNumber(form.discountValue);
   if (form.discountType !== "" && discountValue === null) issues.push({ level: "warn", messageKey: "issueDiscountValue" });
   if (form.discountType === "" && discountValue !== null) issues.push({ level: "warn", messageKey: "issueDiscountType" });
   if (form.logo === null) issues.push({ level: "warn", messageKey: "issueNoLogo" });
+
+  // Each field's readiness, mirroring the block/warn rules above: a blank is
+  // "missing" only where it actually blocks (or, for a half-filled discount,
+  // warns), and "optional" everywhere the API accepts nothing.
+  const fields: ReviewFieldStatuses = {
+    category: filledOrOptional((meta?.mappedCategoryName || categoryName || "") !== ""),
+    subCategory: subCategoryRequired ? requiredOrMissing(form.subCategoryId !== "") : filledOrOptional(form.subCategoryId !== ""),
+    name: requiredOrMissing(form.name.trim() !== ""),
+    subName: filledOrOptional(form.subName.trim() !== ""),
+    points: filledOrOptional(pointPercent !== null),
+    pointsFlat: filledOrOptional(pointFlat !== null),
+    discount: form.discountType === "" ? "optional" : requiredOrMissing(discountValue !== null),
+    logo: filledOrOptional(form.logo !== null),
+    priceMin: filledOrOptional(priceMin !== null),
+    priceMax: filledOrOptional(priceMax !== null),
+    defaultPrice: defaultPlan?.source === "cost" ? "missing" : "filled",
+    mix:
+      currentMode === "bulk"
+        ? "optional"
+        : form.mix.some((line) => line.productId === "")
+          ? "missing"
+          : filledOrOptional(form.mix.length > 0),
+  };
 
   return {
     buyerSkuCode,
@@ -200,16 +253,17 @@ export function buildReviewItem({
     hasLogo: form.logo !== null,
     discountType: form.discountType,
     discountValue,
-    pointPercent: toNumber(form.points),
-    pointFlat: toNumber(form.pointsFlat),
-    priceMin: toNumber(form.priceMin),
-    priceMax: toNumber(form.priceMax),
+    pointPercent,
+    pointFlat,
+    priceMin,
+    priceMax,
     cost,
     mixCost,
     accumulated,
     mix,
     planPrices,
     defaultPlan,
+    fields,
     issues,
     blocked: issues.some((issue) => issue.level === "block"),
   };

@@ -18,6 +18,7 @@ import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
+import { decimalOnly, digitsOnly } from "@/lib/numericInput";
 import { formatCurrency } from "@/utils/currency";
 import { PlanPriceCard } from "./PlanPriceCard";
 import { ProductMixBuilder } from "./ProductMixBuilder";
@@ -25,6 +26,7 @@ import { NICKNAME_VALIDATION_OPTIONS, PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTION
 import { useCreateProduct, useProduct, useSetProductMargin, useSetProductMix, useUpdateProduct } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { useMarginPlanOptions } from "../hooks/useProviderProducts";
+import { numericRegister } from "../lib/numericRegister";
 import { DESCRIPTION_MAX, productFormSchema, type ProductFormValues } from "../schemas/productForm.schema";
 
 interface MainProductFormDialogProps {
@@ -550,7 +552,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                           className="rounded-xl tabular-nums"
                           inputMode="decimal"
                           placeholder={t("pricingRules")}
-                          {...register(`margins.${plan.value}`)}
+                          {...numericRegister(register, `margins.${plan.value}`, decimalOnly)}
                         />
                         {errors.margins?.[plan.value] && (
                           <Text
@@ -583,7 +585,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       className="rounded-xl tabular-nums"
                       inputMode="numeric"
                       placeholder={t("rpZero")}
-                      {...register("priceMin")}
+                      {...numericRegister(register, "priceMin", digitsOnly)}
                     />
                     <Text
                       variant="small"
@@ -599,7 +601,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       className="rounded-xl tabular-nums"
                       inputMode="numeric"
                       placeholder={t("rpZero")}
-                      {...register("priceMax")}
+                      {...numericRegister(register, "priceMax", digitsOnly)}
                     />
                     <Text
                       variant="small"
@@ -642,7 +644,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       inputMode="numeric"
                       disabled={!watch("discountType")}
                       placeholder={t("rpZero")}
-                      {...register("discountValue")}
+                      {...numericRegister(register, "discountValue", digitsOnly)}
                     />
                     <Text
                       variant="small"
@@ -664,7 +666,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         id="product-points"
                         inputMode="numeric"
                         placeholder={t("globalDefault")}
-                        {...register("points")}
+                        {...numericRegister(register, "points", digitsOnly)}
                       />
                       <InputGroupAddon align="inline-end">
                         <InputGroupText>%</InputGroupText>
@@ -690,7 +692,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         id="product-points-flat"
                         inputMode="numeric"
                         placeholder={t("globalDefault")}
-                        {...register("pointsFlat")}
+                        {...numericRegister(register, "pointsFlat", digitsOnly)}
                       />
                       <InputGroupAddon align="inline-end">
                         <InputGroupText>pts</InputGroupText>

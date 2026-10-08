@@ -9,7 +9,9 @@ import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { digitsOnly } from "@/lib/numericInput";
 import { useProductList } from "../hooks/useProducts";
+import { numericRegister } from "../lib/numericRegister";
 import type { ProductFormValues } from "../schemas/productForm.schema";
 
 interface ProductMixBuilderProps {
@@ -93,7 +95,7 @@ export function ProductMixBuilder({ control, register, errors, currentProductId 
                   className="rounded-xl"
                   inputMode="numeric"
                   placeholder="1"
-                  {...register(`productMix.${index}.quantity`)}
+                  {...numericRegister(register, `productMix.${index}.quantity`, digitsOnly)}
                 />
                 {errors.productMix?.[index]?.quantity && (
                   <Text

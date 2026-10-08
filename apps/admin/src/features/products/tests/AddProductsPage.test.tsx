@@ -314,4 +314,51 @@ describe("AddProductsPage", () => {
     expect(within(dialog).getByRole("button", { name: "Yes, save as draft" })).toBeDisabled();
     expect(within(dialog).getByText("Product name is empty.")).toBeInTheDocument();
   });
+
+  /** A numeric field must take digits, not letters — including pasted text. */
+  it("refuses letters in a numeric field", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+
+    const points = screen.getByLabelText("VAL120 points") as HTMLInputElement;
+    await user.type(points, "12a3");
+    expect(points).toHaveValue("123");
+
+    await user.click(screen.getByRole("button", { name: /Price Limits/ }));
+    const priceMin = screen.getByLabelText("VAL120 price min") as HTMLInputElement;
+    await user.type(priceMin, "1o0");
+    expect(priceMin).toHaveValue("10");
+  });
+
+  /** The dialog mirrors the form's four steps, so the eye lands where it filled. */
+  it("groups the review dialog into the form's four sections", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    expect(within(dialog).getByText("Product Data")).toBeInTheDocument();
+    expect(within(dialog).getByText("Pricing & Margin")).toBeInTheDocument();
+    expect(within(dialog).getByText("Price Limits")).toBeInTheDocument();
+    expect(within(dialog).getByText("Product Mix")).toBeInTheDocument();
+  });
+
+  /** Every field shows a check, a warning, or a neutral dash. */
+  it("marks each review field as filled, required, or optional", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.clear(screen.getByLabelText("VAL120 name"));
+    await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    // The emptied name is the only missing required field; the rest are optional.
+    expect(within(dialog).getAllByLabelText("Required").length).toBeGreaterThan(0);
+    expect(within(dialog).getAllByLabelText("Optional — may be left empty").length).toBeGreaterThan(0);
+  });
 });
