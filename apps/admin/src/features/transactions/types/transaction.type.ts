@@ -131,10 +131,25 @@ export interface TransactionDetailSupplier {
 
 /** One delivered part of an order: its component, its verdict, its serial. */
 export interface TransactionSupplierPart {
+  id?: string;
   code?: string;
   name?: string;
+  /** The normalized provider verdict — what the status badge renders. */
+  provider_status?: ProviderStatus;
+  /** The provider's own raw wording, kept as evidence. */
   status?: string;
   sn?: string;
+  /** The supplier this part was ordered from. */
+  supplier?: string;
+  /** Our own reference for this sub-order — the callback value. */
+  idtrx?: string;
+  attempts?: number;
+  last_error?: string;
+  created_at?: string;
+  updated_at?: string;
+  /** Who last re-hit this part with the supplier, and when. */
+  retried_by?: string;
+  retried_at?: string;
 }
 
 /**

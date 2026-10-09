@@ -49,6 +49,8 @@ class AddProductsFromSupplierRequest extends FormRequest
             'items.*.mix_items' => ['nullable', 'array', 'max:20'],
             'items.*.mix_items.*.product_id' => ['required', 'integer'],
             'items.*.mix_items.*.quantity' => ['required', 'integer', 'min:1', 'max:100'],
+            // Optional per-product logo, sent as multipart with the rest of the row.
+            'items.*.logo' => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp,avif', 'max:10240'],
             'items.*.publish' => ['sometimes', 'boolean'],
         ];
     }
@@ -62,15 +64,21 @@ class AddProductsFromSupplierRequest extends FormRequest
     public function items(): array
     {
         if ($this->filled('items')) {
-            return array_map(function (array $item): array {
+            $items = [];
+
+            // Indexed so each row's uploaded logo can be pulled back out of the
+            // multipart payload — `validated()` carries scalar fields only.
+            foreach ($this->validated('items') as $index => $item) {
                 $margins = [];
 
                 foreach (($item['margins'] ?? []) as $planId => $percent) {
                     // Plan ids arrive as object keys, so they are strings here.
-                    $margins[(int) $planId] = $percent === null ? null : (float) $percent;
+                    // A multipart form cannot carry null, so "" is the same
+                    // "no override" the JSON shape sent as null.
+                    $margins[(int) $planId] = ($percent === null || $percent === '') ? null : (float) $percent;
                 }
 
-                return [
+                $items[] = [
                     'buyer_sku_code' => (string) $item['buyer_sku_code'],
                     'name' => $item['name'] ?? null,
                     'sub_name' => $item['sub_name'] ?? null,
@@ -87,9 +95,12 @@ class AddProductsFromSupplierRequest extends FormRequest
                         'product_id' => (int) $line['product_id'],
                         'quantity' => (int) $line['quantity'],
                     ], $item['mix_items'] ?? []),
+                    'logo' => $this->file("items.{$index}.logo"),
                     'publish' => (bool) ($item['publish'] ?? false),
                 ];
-            }, $this->validated('items'));
+            }
+
+            return $items;
         }
 
         // The plain list: codes only, nothing configured, left as drafts.
@@ -107,6 +118,7 @@ class AddProductsFromSupplierRequest extends FormRequest
             'price_max' => null,
             'margins' => [],
             'mix_items' => [],
+            'logo' => null,
             'publish' => false,
         ], $this->validated('buyer_sku_codes'));
     }

@@ -45,21 +45,26 @@ final class Catalog
 
         return $query
             ->where('status', true)
-            ->where(function (Builder $q) use ($mappingBacked) {
-                // A normal product is served by its own supplier mapping…
+            // At least one thing to deliver: its own supplier SKU, or a mix.
+            ->where(function (Builder $q) {
                 $q->whereHas('supplierProducts', fn (Builder $mapping) => $mapping->where('is_active', true))
-                    // …and a MIX has none of its own: it is sellable exactly when
-                    // every component of it is. Deactivating one component takes
-                    // the mix off sale too, which is the only honest answer —
-                    // half a mix cannot be delivered.
-                    ->orWhere(function (Builder $mix) use ($mappingBacked) {
-                        $mix->whereHas('mixItems')
-                            ->whereDoesntHave('mixItems', fn (Builder $item) => $item->whereDoesntHave(
-                                'component',
-                                $mappingBacked,
-                            ));
-                    });
-            });
+                    ->orWhereHas('mixItems');
+            })
+            // Its OWN supplier SKU, when it has one, must be live. A mix created
+            // from a provider SKU is fulfilled by that SKU AND its components, so
+            // a mix whose own SKU is switched off is as undeliverable as one with
+            // a dead component.
+            ->where(function (Builder $q) {
+                $q->whereDoesntHave('supplierProducts')
+                    ->orWhereHas('supplierProducts', fn (Builder $mapping) => $mapping->where('is_active', true));
+            })
+            // Every component (for a mix) must itself be deliverable. One level
+            // deep on purpose: a mix of a mix is refused when the composition is
+            // set, so a component is never itself a mix.
+            ->whereDoesntHave('mixItems', fn (Builder $item) => $item->whereDoesntHave(
+                'component',
+                $mappingBacked,
+            ));
     }
 
     /**
@@ -78,15 +83,19 @@ final class Catalog
 
         $product->loadMissing(['supplierProducts', 'mixItems.component']);
 
-        if ($product->supplierProducts->contains(fn ($mapping) => (bool) $mapping->is_active)) {
-            return true;
+        $hasActiveMapping = $product->supplierProducts->contains(fn ($mapping) => (bool) $mapping->is_active);
+
+        if ($product->mixItems->isNotEmpty()) {
+            // A mix is delivered by its components — and, when it still carries
+            // its own provider SKU, by that SKU too. Both halves have to be live.
+            if ($product->supplierProducts->isNotEmpty() && ! $hasActiveMapping) {
+                return false;
+            }
+
+            return $product->mixItems->every(fn ($item) => self::componentIsSellable($item->component));
         }
 
-        if ($product->mixItems->isEmpty()) {
-            return false;
-        }
-
-        return $product->mixItems->every(fn ($item) => self::componentIsSellable($item->component));
+        return $hasActiveMapping;
     }
 
     /** A component is a plain product: its own active mapping, nothing more. */

@@ -12,7 +12,9 @@ use App\Models\SupplierProduct;
 use App\Models\User;
 use App\Support\Storefront\Catalog;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use Tests\TestCase;
 
@@ -226,8 +228,29 @@ class AddProductsFromSupplierTest extends TestCase
         $mix = Product::where('code', 'MIX-5-10')->firstOrFail();
 
         $this->assertTrue($mix->isMix());
-        // Accumulated from the component, not from the SKU the mix was made from.
-        $this->assertSame(20000, (int) $mix->price_modal);
+        // The SKU the mix was made from still ships, so its cost counts too:
+        // own ML10 (10.000) + 2 × component ML5 (10.000) = 30.000.
+        $this->assertSame(30000, (int) $mix->price_modal);
+    }
+
+    public function test_it_stores_a_logo_uploaded_with_the_row(): void
+    {
+        $this->fakePriceList([$this->serviceItem()]);
+        Storage::fake('public');
+
+        $this->post('/api/v1/products/from-supplier', [
+            'items' => [[
+                'buyer_sku_code' => 'ML5',
+                'name' => 'Lima',
+                // Multipart: the logo travels as a file with the rest of the row.
+                'logo' => UploadedFile::fake()->image('logo.png', 128, 128),
+            ]],
+        ])->assertCreated();
+
+        $product = Product::where('code', 'ML5')->firstOrFail();
+
+        $this->assertNotNull($product->logo);
+        Storage::disk('public')->assertExists($product->logo);
     }
 
     public function test_it_files_the_product_under_the_chosen_sub_category(): void

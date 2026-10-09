@@ -172,5 +172,14 @@
   "tipPending": "Invoice sudah dibayar tapi belum diproses supplier",
   "tipProcessing": "Sudah dibayar dan diteruskan ke supplier, menunggu dipenuhi",
   "tipFailed": "Pelanggan sudah membayar tapi supplier tidak bisa memenuhi pesanan",
-  "guest": "Tamu"
+  "guest": "Tamu",
+  "itemTable": "Item Transaksi",
+  "colSupplier": "Supplier",
+  "colCallback": "Callback",
+  "colStatus": "Status",
+  "colSupSerial": "No. Seri Supplier",
+  "colCreated": "Dibuat Pada",
+  "colSent": "Terkirim Pada",
+  "colRetriedBy": "Di Rehit Oleh",
+  "rehitCallback": "Rehit"
 }

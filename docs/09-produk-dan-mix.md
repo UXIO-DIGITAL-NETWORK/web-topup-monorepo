@@ -85,13 +85,17 @@ Satu produk jual yang isinya beberapa produk, mis. 5 Diamond + 10 Diamond.
   `quantity`), unik per pasangan. **Tanpa nesting** — komponen tidak boleh produk
   mix, dan sebuah produk tidak boleh jadi komponen dirinya sendiri.
 - **Modal terakumulasi**: `POST /v1/products/{id}/mix` menulis
-  `products.price_modal` = Σ (modal komponen × qty), lalu menghitung ulang harga
-  jual dari modal BARU memakai margin yang sedang berlaku. Margin dibaca dari
-  pasangan harga/modal yang ada, karena produk mix **tidak punya mapping** tempat
+  `products.price_modal` = **modal SKU produk itu sendiri** (bila masih punya
+  mapping) + Σ (modal komponen × qty), lalu menghitung ulang harga jual dari
+  modal BARU memakai margin yang sedang berlaku. SKU produk sendiri ikut dihitung
+  karena ia juga dikirim (lihat pemenuhan di bawah); produk bundle tanpa supplier
+  sendiri bernilai 0 untuk bagian itu. Margin dibaca dari pasangan harga/modal
+  yang ada, karena produk mix **tidak punya mapping** tempat
   `supplier_product_margins` bisa menempel.
 - **Bisa dijual kalau komponennya bisa dijual**: `Catalog` mengenal mix — sebuah
-  mix tayang tepat ketika SEMUA komponennya tayang. Satu komponen nonaktif
-  menarik mix-nya dari peredaran, dan gerbang publish memakai aturan yang sama.
+  mix tayang tepat ketika SEMUA komponennya tayang (dan SKU produknya sendiri,
+  bila ia masih punya satu, juga tayang). Satu bagian nonaktif menarik mix-nya
+  dari peredaran, dan gerbang publish memakai aturan yang sama.
 
 ### Pemenuhan: satu transaksi, beberapa order supplier
 
@@ -102,13 +106,13 @@ sisi supplier, bukan order kedua). Kuantitas >1 menjadi sebanyak itu order.
 
 | Bagian | Perilaku |
 |---|---|
-| `ProcessMixTransactionAction` | Satu order per komponen; komponen ber-supplier Internal System dilewati (dipenuhi admin). |
-| `transaction_supplier_orders` | Satu baris per order: `idtrx`, `supplier_trx_id`, `provider_status`, `sn`, `attempts`, `last_error`. |
+| `ProcessMixTransactionAction` | Satu order per komponen, PLUS satu order untuk SKU produk sendiri bila produk masih punya mapping aktif; bagian ber-supplier Internal System dilewati (dipenuhi admin). |
+| `transaction_supplier_orders` | Satu baris per order: `idtrx`, `supplier_trx_id`, `provider_status`, `sn`, `attempts`, `last_error`, `retried_by_user_id`/`retried_at`. |
 | `DeriveMixStatusAction` | Satu-satunya tempat yang memutuskan hasil mix: semua terkirim → `COMPLETED`; ada yang gagal → `FAILED_PROVIDER`; selain itu `PROCESSING`. |
 | Webhook | Resolve lewat `idtrx` sub-order dulu, fallback ke `invoice_number` untuk transaksi lama; satu callback menyelesaikan satu komponen. |
 | Poller / cek status | Per komponen, lalu induknya diturunkan. |
 | Refund | Satu komponen gagal → **refund penuh** (transaksi mix tidak bisa setengah terkirim). |
-| Checkout | Modal dari akumulasi komponen; kuota harian dicek untuk SETIAP komponen, masing-masing dikunci di dalam transaksi tulis. |
+| Checkout | Modal dari akumulasi SKU sendiri + komponen; kuota harian dicek untuk setiap bagian, masing-masing dikunci di dalam transaksi tulis. |
 
 `transactions.supplier_trx_id`/`sn`/`provider_status` tetap diisi sebagai
 ringkasan order pertama, supaya layar dan laporan yang lebih dulu ada tetap punya
@@ -119,7 +123,12 @@ angka. Yang butuh kebenaran utuh membaca `supplier_orders`
 
 - Panel admin → Produk: `+ Tambah Produk` (From Supplier / Manual / Bulk),
   aksi baris Listis/Unlistis, tab **Product Mix** di form produk.
-- Panel admin → Transaksi → detail: daftar **bagian** muncul saat order punya
-  lebih dari satu order supplier.
+- Panel admin → Transaksi → detail: tabel **Item Transaksi** — satu baris per
+  order supplier (Supplier, Callback/`idtrx`, No. Seri Supplier, Status, Dibuat
+  Pada, Terkirim Pada, Di Rehit Oleh) dengan tombol **Rehit** per baris untuk
+  mencek ulang satu bagian ke supplier.
+- Panel admin → Produk → Tambah Produk: tiap baris punya langkah bernomor
+  (Data Produk · Harga & Margin · Batas Harga · Mix Produk), termasuk unggah
+  logo dan simulasi modal/markup/keuntungan yang ikut menghitung komponen mix.
 - Invoice pelanggan (`/invoice/{nomor}`): daftar bagian, nama + serial, hanya
   saat lebih dari satu.

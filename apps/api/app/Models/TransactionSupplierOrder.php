@@ -24,6 +24,7 @@ class TransactionSupplierOrder extends Model
         'provider_status' => ProviderStatus::class,
         'attempts' => 'integer',
         'sequence' => 'integer',
+        'retried_at' => 'datetime',
     ];
 
     public function transaction()
@@ -34,6 +35,12 @@ class TransactionSupplierOrder extends Model
     public function product()
     {
         return $this->belongsTo(Product::class)->withTrashed();
+    }
+
+    /** The operator who last re-hit this sub-order with the supplier. */
+    public function retriedBy()
+    {
+        return $this->belongsTo(User::class, 'retried_by_user_id');
     }
 
     public function supplierProduct()

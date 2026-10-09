@@ -150,6 +150,18 @@ class CheckoutAction
                 throw new Exception('Produk mix ini tidak punya komponen.');
             }
 
+            // A mix built from a provider SKU still orders that SKU, so it must
+            // be live too. A hand-made bundle has no mapping and skips this.
+            $ownMapping = $product->supplierProducts->firstWhere('is_active', true);
+
+            if ($product->supplierProducts->isNotEmpty() && ! $ownMapping) {
+                throw new Exception('SKU utama produk mix sedang tidak tersedia.');
+            }
+
+            if ($ownMapping) {
+                $quotaTargets->push(['product' => $product, 'mapping' => $ownMapping]);
+            }
+
             foreach ($items as $item) {
                 $component = $item->component;
                 $mapping = $component?->supplierProducts()->where('is_active', true)->first();
@@ -163,7 +175,9 @@ class CheckoutAction
                 $quotaTargets->push(['product' => $component, 'mapping' => $mapping]);
             }
 
-            $cost = (int) $items->sum(fn ($item) => $item->cost());
+            // Own SKU + every component — the same accumulated figure the mix's
+            // selling prices were derived from.
+            $cost = $product->ownSupplierCost() + (int) $items->sum(fn ($item) => $item->cost());
         } else {
             if (! $activeSupplier) {
                 throw new Exception('Produk sedang tidak tersedia (tidak ada supplier aktif).');

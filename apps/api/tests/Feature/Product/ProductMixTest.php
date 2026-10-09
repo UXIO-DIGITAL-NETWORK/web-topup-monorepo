@@ -67,6 +67,34 @@ class ProductMixTest extends TestCase
         $this->assertSame(2, $mix->fresh()->mixItems()->count());
     }
 
+    /**
+     * A mix built from a provider SKU still orders that SKU, so its cost is the
+     * product's OWN cost plus every component — 10k + 5k = 15k, not 5k.
+     */
+    public function test_the_products_own_supplier_cost_is_part_of_the_accumulated_modal(): void
+    {
+        $component = $this->product(['code' => 'ML5', 'price_modal' => 5000]);
+        $mix = $this->product(['code' => 'MIX', 'price_modal' => 0]);
+
+        // Inactive: a draft has not been published yet, but it still costs.
+        SupplierProduct::factory()->for($mix)->for($this->uxiolabs)->create([
+            'buyer_sku_code' => 'MIX-SKU',
+            'price' => 10000,
+            'is_active' => false,
+        ]);
+
+        $this->postJson("/api/v1/products/{$mix->id}/mix", [
+            'items' => [['product_id' => $component->id, 'quantity' => 1]],
+        ])->assertOk();
+
+        $this->assertSame(15000, (int) $mix->fresh()->price_modal);
+
+        // Clearing the mix leaves the product's own cost behind, not zero.
+        $this->postJson("/api/v1/products/{$mix->id}/mix", ['items' => []])->assertOk();
+
+        $this->assertSame(10000, (int) $mix->fresh()->price_modal);
+    }
+
     public function test_it_replaces_the_composition_rather_than_appending(): void
     {
         $five = $this->product(['code' => 'ML5', 'price_modal' => 10000]);

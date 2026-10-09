@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import type { ReactNode } from "react";
+import { RefreshCw } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
 import { CopyButton } from "@/components/common/CopyButton";
@@ -11,7 +12,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { cn } from "@/lib/utils";
 import { formatCurrency } from "@/utils/currency";
 import { formatDateTimeSeconds } from "@/utils/date";
-import { useTransactionDetail } from "../hooks/useTransactions";
+import { useResendSupplierOrderCallback, useTransactionDetail } from "../hooks/useTransactions";
+import type { TransactionSupplierPart } from "../types/transaction.type";
 import { StatusBadge } from "./StatusBadge";
 import { PaymentStatusBadge } from "./PaymentStatusBadge";
 import { ProviderStatusBadge } from "./ProviderStatusBadge";
@@ -81,6 +83,84 @@ const money = (value: number) => formatCurrency(value, { fractionDigits: 0 });
 const timestamp = (value?: string) => (value ? formatDateTimeSeconds(value) : "Not paid");
 
 /**
+ * "Item Transaksi" — one row per supplier order placed for the transaction.
+ *
+ * An ordinary product has exactly one; a mix has one per component (plus the
+ * product's own SKU when it still has one). The Section rows above describe only
+ * the FIRST order, so this is the only place that can tell the truth about a
+ * mix's parts: each one's supplier, callback reference, serial, verdict, when it
+ * was placed and last answered, and who re-hit it.
+ */
+function ItemsTable({
+  orders,
+  transactionId,
+  canRetry,
+}: {
+  orders: TransactionSupplierPart[];
+  transactionId: string;
+  canRetry: boolean;
+}) {
+  const { t } = useTranslation("transactions");
+  const resend = useResendSupplierOrderCallback();
+
+  if (orders.length === 0) return null;
+
+  return (
+    <Box className="mt-2 overflow-x-auto rounded-xl border border-border">
+      <table className="w-full border-collapse text-left text-xs">
+        <thead>
+          <tr className="bg-muted/40 text-muted-foreground">
+            <th className="px-2 py-1.5 font-medium">{t("colSupplier")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colCallback")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colSupSerial")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colStatus")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colCreated")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colSent")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colRetriedBy")}</th>
+            <th className="px-2 py-1.5 font-medium">{t("colAction")}</th>
+          </tr>
+        </thead>
+        <tbody>
+          {orders.map((order, index) => (
+            <tr
+              key={order.id ?? index}
+              className="border-t border-border align-top"
+            >
+              <td className="px-2 py-1.5">{order.supplier ?? EM_DASH}</td>
+              <td className="px-2 py-1.5 font-mono text-[11px]">{order.idtrx ?? EM_DASH}</td>
+              <td className="px-2 py-1.5">{order.sn ?? EM_DASH}</td>
+              <td className="px-2 py-1.5">
+                {order.provider_status ? <ProviderStatusBadge status={order.provider_status} /> : EM_DASH}
+              </td>
+              <td className="px-2 py-1.5 whitespace-nowrap">
+                {order.created_at ? formatDateTimeSeconds(order.created_at) : EM_DASH}
+              </td>
+              <td className="px-2 py-1.5 whitespace-nowrap">
+                {order.updated_at ? formatDateTimeSeconds(order.updated_at) : EM_DASH}
+              </td>
+              <td className="px-2 py-1.5">{order.retried_by ?? EM_DASH}</td>
+              <td className="px-2 py-1.5">
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  className="size-7 rounded-lg"
+                  aria-label={`${t("rehitCallback")} ${index + 1}`}
+                  disabled={!canRetry || !order.id || resend.isPending}
+                  onClick={() => order.id && resend.mutate({ id: transactionId, orderId: order.id })}
+                >
+                  <RefreshCw className="size-3.5" />
+                </Button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </Box>
+  );
+}
+
+/**
  * Read-only summary of one order — what an operator opens to establish facts
  * before answering a customer or chasing a supplier.
  *
@@ -109,7 +189,7 @@ export function TransactionDetailDialog({ transactionId, open, onOpenChange }: T
       open={open}
       onOpenChange={onOpenChange}
     >
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
         <DialogHeader>
           <DialogTitle>{t("transactionDetail")}</DialogTitle>
           <DialogDescription>{t("detailSubtitle")}</DialogDescription>
@@ -279,23 +359,25 @@ export function TransactionDetailDialog({ transactionId, open, onOpenChange }: T
               <Row label={t("providerStatusRaw")}>
                 <Value className="text-muted-foreground">{data.supplier.status ?? EM_DASH}</Value>
               </Row>
-              {/* Only for an order that arrived in PARTS. The rows above already
-                  describe the first supplier order, so a normal product would
-                  just see itself repeated — a mix is the case where one row
-                  cannot tell the truth. */}
-              {data.supplier.orders && data.supplier.orders.length > 1
-                ? data.supplier.orders.map((part, index) => (
-                    <Row
-                      key={`${part.code ?? "part"}-${index}`}
-                      label={`${t("supplierParts")} ${index + 1}`}
-                    >
-                      <Value className="text-muted-foreground">
-                        {part.name ?? part.code ?? EM_DASH} · {part.status ?? EM_DASH}
-                        {part.sn ? ` · ${part.sn}` : ""}
-                      </Value>
-                    </Row>
-                  ))
-                : null}
+              {/* One row per supplier order — the only truthful view of a mix,
+                  whose parts the rows above cannot describe. Absent for an
+                  order older than the mix feature. */}
+              {data.supplier.orders && data.supplier.orders.length > 0 ? (
+                <Box className="flex flex-col gap-1 pt-1">
+                  <Text
+                    as="span"
+                    variant="muted"
+                    className="text-xs font-medium tracking-wide uppercase"
+                  >
+                    {t("itemTable")}
+                  </Text>
+                  <ItemsTable
+                    orders={data.supplier.orders}
+                    transactionId={data.id}
+                    canRetry={data.invoice_status === "processing"}
+                  />
+                </Box>
+              ) : null}
             </Section>
 
             <Section caption={t("capTiming")}>
