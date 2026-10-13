@@ -15,6 +15,7 @@
   "colProductProvider": "Product Provider",
   "projectedFromMargin": "Projected from the margin — nothing is stored until this SKU is promoted.",
   "locked": "Locked",
+  "available": "Available",
   "unavailable": "Unavailable",
   "providerInactive": "Inactive at provider",
   "providerInactiveHint": "This SKU is switched off at the provider, so the product can't be sold until the provider re-enables it. Its selling price still follows the provider cost automatically.",
