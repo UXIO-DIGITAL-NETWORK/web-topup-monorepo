@@ -70,6 +70,30 @@ class CheckoutTest extends TestCase
         $this->assertDatabaseHas('payments', ['status' => '3']);
     }
 
+    public function test_checkout_freezes_the_products_identity_on_the_order(): void
+    {
+        Http::fake([
+            '*/order' => Http::response(['status' => true, 'msg' => 'ok', 'data' => ['status' => 'pending', 'id' => 'UX1']]),
+        ]);
+
+        $this->product->update(['name' => 'Mobile Legends 100 Diamond', 'code' => 'MLBB_100']);
+        $this->actingAsMember();
+
+        $this->postJson('/api/v1/checkout', [
+            'product_id' => $this->product->id,
+            'payment_channel_id' => $this->balanceChannel->id,
+            'target_uid' => '12345678',
+            'email' => 'buyer@example.com',
+        ])->assertCreated();
+
+        // Frozen at checkout so a later rename cannot rewrite what sold.
+        $this->assertDatabaseHas('transactions', [
+            'product_id' => $this->product->id,
+            'product_name' => 'Mobile Legends 100 Diamond',
+            'product_code' => 'MLBB_100',
+        ]);
+    }
+
     public function test_checkout_rejected_when_margin_is_negative(): void
     {
         $this->product->supplierProducts()->update(['price' => 15000]);

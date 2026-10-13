@@ -141,6 +141,9 @@ interface TransactionApiRow {
   proof_url: string | null;
   user?: { id: number; name: string; phone: string; email?: string | null; avatar_url: string | null } | null;
   product?: { id: number; name: string; category?: { id: number; name: string } | null } | null;
+  /** Identity frozen at checkout; older rows have none and fall back to `product`. */
+  product_name?: string | null;
+  product_code?: string | null;
   payment?: { status: string } | null;
   /** Both added by the status split. Optional: absent when the API predates it. */
   provider_status?: string | null;
@@ -235,7 +238,8 @@ const toGame = (row: TransactionApiRow) => ({
 
 const toProductRef = (row: TransactionApiRow) => ({
   id: toRowId(row.product?.id ?? 0),
-  name: row.product?.name ?? "",
+  // The snapshot wins: a rename must not rewrite what the order sold.
+  name: row.product_name ?? row.product?.name ?? "",
 });
 
 interface RecapApiShape {
