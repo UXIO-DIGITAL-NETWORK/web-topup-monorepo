@@ -25,6 +25,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
+  useDeleteProducts,
   useUxiolabsUpdateProducts,
   useRestoreProduct,
   useSetProductPublished,
@@ -75,10 +76,12 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
   const [showOpen, setShowOpen] = useState(false);
   const [uxiolabsOpen, setUxiolabsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
+  const [archiveOpen, setArchiveOpen] = useState(false);
   const setProductPublished = useSetProductPublished();
   const restoreProduct = useRestoreProduct();
   const showProducts = useShowProducts();
   const uxiolabsUpdate = useUxiolabsUpdateProducts();
+  const deleteProducts = useDeleteProducts();
 
   // Each toggle names what the click would do, not what the row currently is.
   const isArchived = product.publish_state === "archived";
@@ -145,6 +148,11 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
               </DropdownMenuItem>
               <DropdownMenuItem onSelect={() => setEditOpen(true)}>
                 <Pencil />{t("editProduct")}</DropdownMenuItem>
+              {/* Archive, not delete: the row survives for its order history and
+                  can be restored. Also the confirmed path for a product whose
+                  provider SKU went inactive. */}
+              <DropdownMenuItem onSelect={() => setArchiveOpen(true)}>
+                <Archive />{t("archive")}</DropdownMenuItem>
             </Can>
           )}
         </DropdownMenuContent>
@@ -190,6 +198,16 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
             : "It leaves the storefront and stops being orderable. Nothing else changes, and you can publish it again at any time."
         }
         onConfirm={() => setProductPublished.mutate({ ids: [product.id], published: nextPublished })}
+      />
+
+      <DeleteConfirmDialog
+        open={archiveOpen}
+        onOpenChange={setArchiveOpen}
+        icon={<Archive />}
+        confirmLabel={t("archive")}
+        title={t("archiveProductTitle")}
+        description={t("archiveProductDescription")}
+        onConfirm={() => deleteProducts.mutate([product.id])}
       />
 
       <MainProductFormDialog

@@ -133,12 +133,14 @@ export const mainProductColumnsFor = (t: TFunction<"products">): ColumnDef<Produ
         <ProductStatusBadge state={row.original.publish_state} />
         <Box className="flex items-center gap-1.5">
           <ProductAvailabilityBadge isAvailable={row.original.is_available} />
-          {/* Availability is the provider's own flag: when a SKU is switched off
-              upstream the product cannot be sold, so say why rather than leaving
-              the admin to guess from a bare "Unavailable". */}
-          {!row.original.is_available && <InfoTooltip content={t("providerInactiveHint")} />}
+          {/* "Nonaktif dari provider" is the checker's flag on the supplier
+              mapping (`buyer_product_status`), NOT `is_available` — that column
+              is the admin's own storefront visibility and the checker never
+              writes it, so keying the warning off it stayed silent for a product
+              the provider had actually switched off. */}
+          {row.original.provider_inactive && <InfoTooltip content={t("providerInactiveHint")} />}
         </Box>
-        {!row.original.is_available && (
+        {row.original.provider_inactive && (
           <Text
             as="span"
             variant="small"

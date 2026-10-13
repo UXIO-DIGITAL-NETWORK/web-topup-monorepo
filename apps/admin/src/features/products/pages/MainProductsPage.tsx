@@ -11,6 +11,7 @@ import { Text } from "@/components/common/Text";
 import { mainProductColumnsFor } from "../components/mainProductColumns";
 import { MainProductToolbar } from "../components/MainProductToolbar";
 import {
+  useDeleteProducts,
   useUxiolabsUpdateProducts,
   useProductList,
   useSetProductPublished,
@@ -43,10 +44,12 @@ export default function MainProductsPage() {
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [publishState, setPublishState] = useState<string | undefined>(undefined);
+  const [providerInactive, setProviderInactive] = useState(false);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [bulkUnpublishOpen, setBulkUnpublishOpen] = useState(false);
   const [bulkShowOpen, setBulkShowOpen] = useState(false);
   const [bulkUxiolabsOpen, setBulkUxiolabsOpen] = useState(false);
+  const [bulkArchiveOpen, setBulkArchiveOpen] = useState(false);
 
   const goToAdd = (mode: "single" | "bulk") =>
     navigate({ to: `${base}/main/add` as "/admin/products/main/add", search: { mode } });
@@ -57,15 +60,17 @@ export default function MainProductsPage() {
       category_id: categoryId,
       price,
       publish_state: publishState as ProductListParams["publish_state"],
+      provider_inactive: providerInactive || undefined,
       page,
       per_page: pageSize,
     }),
-    [search, categoryId, price, publishState, page, pageSize],
+    [search, categoryId, price, publishState, providerInactive, page, pageSize],
   );
   const { data, isLoading, isError, refetch } = useProductList(params);
   const setProductPublished = useSetProductPublished();
   const showProducts = useShowProducts();
   const uxiolabsUpdate = useUxiolabsUpdateProducts();
+  const deleteProducts = useDeleteProducts();
 
   const handleSearchChange = (value: string) => {
     setSearch(value);
@@ -104,6 +109,11 @@ export default function MainProductsPage() {
           onCategoryChange={handleCategoryChange}
           price={price}
           onPriceChange={handlePriceChange}
+          providerInactive={providerInactive}
+          onProviderInactiveChange={(next) => {
+            setProviderInactive(next);
+            setPage(1);
+          }}
           onRefresh={() => refetch()}
           onAddSingle={() => goToAdd("single")}
           onAddBulk={() => goToAdd("bulk")}
@@ -116,6 +126,7 @@ export default function MainProductsPage() {
             setPage(1);
           }}
           onBulkUnpublish={() => setBulkUnpublishOpen(true)}
+          onBulkArchive={() => setBulkArchiveOpen(true)}
         />
       </Box>
 
@@ -177,6 +188,23 @@ export default function MainProductsPage() {
         title={selectedIds.length <= 1 ? "Show this price?" : `Show ${selectedIds.length} prices?`}
         description={t("bulkShowDescription")}
         onConfirm={() => showProducts.mutate({ ids: selectedIds, hidden: false })}
+      />
+
+      {/* Archiving keeps the row (order history resolves against it) but takes
+          it out of the catalogue and returns its provider SKU to the pool — so
+          it goes through a confirmation, and Restore brings it back. */}
+      <DeleteConfirmDialog
+        open={bulkArchiveOpen}
+        onOpenChange={setBulkArchiveOpen}
+        icon={<Archive />}
+        confirmLabel={t("archive")}
+        title={selectedIds.length <= 1 ? t("archiveProductTitle") : `Archive ${selectedIds.length} products?`}
+        description={
+          selectedIds.length <= 1
+            ? t("archiveProductDescription")
+            : `These ${selectedIds.length} products leave the storefront and the catalogue, and their provider SKUs return to the pool. Past orders keep their details, and you can restore them from the Archived filter.`
+        }
+        onConfirm={() => deleteProducts.mutate(selectedIds)}
       />
     </Box>
   );

@@ -57,6 +57,8 @@ interface ProductApiRow {
   published_at?: string | null;
   archived_at?: string | null;
   is_available: boolean;
+  /** Provider's own availability flag; present when the API loaded the mappings. */
+  provider_inactive?: boolean;
   is_price_hidden?: boolean;
   price_min?: number | null;
   price_max?: number | null;
@@ -114,6 +116,7 @@ const toProduct = (row: ProductApiRow): Product => ({
   published_at: row.published_at ?? null,
   archived_at: row.archived_at ?? null,
   is_available: Boolean(row.is_available),
+  provider_inactive: Boolean(row.provider_inactive),
   is_price_hidden: Boolean(row.is_price_hidden),
   price_min: row.price_min ?? null,
   price_max: row.price_max ?? null,

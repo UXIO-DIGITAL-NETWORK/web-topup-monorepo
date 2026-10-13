@@ -81,6 +81,13 @@ class ProductResource extends JsonResource
                 'publish_state' => $this->publishState(),
                 'can_publish' => $this->canPublish(),
                 'publish_blocked_reason' => $this->publishBlockedReason(),
+                // The provider's own flag, not `is_available`. The price checker
+                // (not the admin) writes `buyer_product_status`; a false mapping
+                // is what "nonaktif di provider" actually means, and what the
+                // archive flow filters on.
+                'provider_inactive' => $this->supplierProducts->contains(
+                    fn ($mapping) => ! (bool) $mapping->buyer_product_status
+                ),
             ]),
             'published_at' => $this->published_at,
             'archived_at' => $this->deleted_at,

@@ -101,6 +101,44 @@ class ArchiveProductTest extends TestCase
         $this->getJson('/api/v1/dashboard/stats')->assertOk();
     }
 
+    public function test_transaction_history_keeps_the_products_identity_when_it_is_renamed(): void
+    {
+        $this->actingAsAdmin();
+        $product = $this->product();
+        $this->mappingFor($product);
+        $transaction = $this->soldOnce($product);
+
+        // What checkout would have frozen.
+        $transaction->update(['product_name' => 'Edisi Lama', 'product_code' => 'MLBB_100']);
+
+        // Renaming the product must not rewrite what the order sold.
+        $product->update(['name' => 'Edisi Baru', 'code' => 'MLBB_999']);
+
+        $this->getJson('/api/v1/transactions')
+            ->assertOk()
+            ->assertJsonPath('data.data.0.product_name', 'Edisi Lama')
+            ->assertJsonPath('data.data.0.product_code', 'MLBB_100');
+    }
+
+    public function test_the_provider_inactive_filter_surfaces_only_switched_off_mappings(): void
+    {
+        $this->actingAsAdmin();
+        $inactive = $this->product();
+        $this->mappingFor($inactive)->update(['buyer_product_status' => false]);
+        $live = $this->product();
+        $this->mappingFor($live);
+
+        $this->getJson('/api/v1/products')
+            ->assertOk()
+            ->assertJsonCount(2, 'data.data');
+
+        $this->getJson('/api/v1/products?provider_inactive=1')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $inactive->id)
+            ->assertJsonPath('data.data.0.provider_inactive', true);
+    }
+
     public function test_archiving_returns_the_sku_to_the_pool_ready_to_re_promote(): void
     {
         $this->actingAsAdmin();

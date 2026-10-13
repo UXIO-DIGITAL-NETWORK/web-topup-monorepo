@@ -116,6 +116,8 @@
   "typeToSearchCategory": "Type to search category",
   "allStatuses": "All statuses",
   "allPrice": "All Price",
+  "providerAvailability": "Provider availability",
+  "allAvailability": "All availability",
   "editLogo": "Edit Logo",
   "uxiolabsUpdate": "Uxiotopup Update",
   "showPrice": "Show Price",
