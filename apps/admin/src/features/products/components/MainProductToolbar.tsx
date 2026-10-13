@@ -21,6 +21,10 @@ import { PUBLISH_STATE_LABELS, PUBLISH_STATES } from "../types/product.type";
 
 const CLEAR_VALUE = "all";
 
+// Archived is reached through its own button, not the Status dropdown — it is a
+// "where did it go" view, not a lifecycle state an admin picks while browsing.
+const LIFECYCLE_STATES = PUBLISH_STATES.filter((state) => state !== "archived");
+
 interface MainProductToolbarProps {
   search: string;
   onSearchChange: (value: string) => void;
@@ -142,9 +146,10 @@ export function MainProductToolbar({
 
           <Box className="flex flex-col gap-1.5">
             <Label htmlFor="product-state-filter">{t("status")}</Label>
-            {/* Archived products are excluded by default — the row is kept only
-                so its order history keeps resolving, not to clutter the
-                catalogue. This select is the one way back to them. */}
+            {/* Lifecycle only. Archived products are excluded by default (the
+                row is kept so its order history resolves), and they are reached
+                through the dedicated button below rather than this select —
+                mixing them here read as "another status". */}
             <Select
               value={publishState ?? ""}
               onValueChange={(next) => onPublishStateChange(next === CLEAR_VALUE ? undefined : next)}
@@ -157,7 +162,7 @@ export function MainProductToolbar({
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value={CLEAR_VALUE}>{t("allStatuses")}</SelectItem>
-                {PUBLISH_STATES.map((state) => (
+                {LIFECYCLE_STATES.map((state) => (
                   <SelectItem
                     key={state}
                     value={state}
@@ -167,6 +172,22 @@ export function MainProductToolbar({
                 ))}
               </SelectContent>
             </Select>
+          </Box>
+
+          {/* The one way back to archived rows, on its own so it does not read
+              as just another lifecycle status. It shares `publish_state` with
+              the Status select, so picking one clears the other. */}
+          <Box className="flex flex-col gap-1.5">
+            <Button
+              type="button"
+              variant={publishState === "archived" ? "default" : "outline"}
+              className="rounded-xl"
+              aria-pressed={publishState === "archived"}
+              onClick={() => onPublishStateChange(publishState === "archived" ? undefined : "archived")}
+            >
+              <Archive className="size-4" />
+              {t("archived")}
+            </Button>
           </Box>
 
           <Box className="flex flex-col gap-1.5">

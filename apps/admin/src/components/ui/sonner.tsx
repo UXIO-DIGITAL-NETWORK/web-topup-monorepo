@@ -30,6 +30,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
           "--border-radius": "var(--radius)",
         } as React.CSSProperties
       }
+      // Coloured by severity, everywhere: green = success, amber = warning,
+      // red = error. `!` is required because sonner's own
+      // `[data-sonner-toast]` background/border rules sit at the same
+      // specificity, so an unflagged utility could lose on stylesheet order.
+      toastOptions={{
+        classNames: {
+          success: "!bg-success !text-success-foreground !border-success/40",
+          warning: "!bg-warning !text-warning-foreground !border-warning/40",
+          error: "!bg-destructive !text-destructive-foreground !border-destructive/40",
+          info: "!bg-primary !text-primary-foreground !border-primary/40",
+          description: "!text-current opacity-90",
+        },
+      }}
       {...props}
     />
   )
