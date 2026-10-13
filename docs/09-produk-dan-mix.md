@@ -66,6 +66,33 @@ memesan SKU yang tidak ada di provider. Sekarang dispatch dilewati untuk
 supplier `is_system`, dan transaksinya berhenti di `PAID` + `QUEUED` menunggu
 manusia.
 
+## Kode produk ganda: internal vs provider
+
+Tiap produk membawa **dua** kode dengan peran berbeda:
+
+| Kode | Kolom | Siapa yang menetapkan | Peran |
+|---|---|---|---|
+| **Kode internal** | `products.code` (unik) | **Admin**, diisi di modal Add Products (wajib) | Identitas katalog kita sendiri |
+| **Kode provider** | `supplier_products.buyer_sku_code` | **Provider** — read-only | Kunci integrasi ke Uxiotopup; semua upsert/dedupe memakai `(supplier_id, buyer_sku_code)` |
+
+Kode provider **tidak pernah** diambil dari input admin — ia hanya datang dari
+price list Uxiotopup — dan kode internal tidak pernah menggantikannya. Jalur lama
+`buyer_sku_codes` masih menjatuhkan kode internal ke kode provider bila kosong,
+tetapi modal Add Products (Single & Massal) **mewajibkan** admin mengisi kode
+internal sendiri.
+
+**Hanya layanan aktif yang ditarik.** SKU dengan `status != 'aktif'` di price
+list di-skip dengan alasan "Layanan nonaktif di provider" — produk yang tidak
+bisa dijual tidak perlu dibuat.
+
+**Verifikasi perubahan kode provider.** Kode provider adalah kunci, jadi
+perubahannya tidak bisa dideteksi lewat lookup kunci. `CheckUxiolabsPricesAction`
+(sync 5 menit) membandingkan `nama_layanan` live dengan snapshot `provider_name`
+tiap mapping, dan menghitung SKU mapping yang hilang dari price list. Bila ada
+selisih, satu baris **log sistem** (`activity_logs`, `is_system = true`) ditulis:
+"Verifikasi kode provider: …". Baris `is_system` sengaja tidak tampil di feed
+Activity Log global (feed itu menyaringnya); ia tersimpan untuk verifikasi.
+
 ## Diskon per produk
 
 `products.discount_type` (`percent` | `fixed`) + `products.discount_value`.

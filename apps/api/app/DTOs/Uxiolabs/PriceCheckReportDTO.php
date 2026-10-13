@@ -10,6 +10,10 @@ readonly class PriceCheckReportDTO
      * @param  array<int,array{product:string,sku:string,cost:int,tier:string,price:int}>  $negativeMargin
      * @param  array<int,string>  $unknownSkusSample  first N service ids with no local mapping (never auto-created)
      * @param  array<int,string>  $failedSkusSample  first N service ids whose reprice raised (cost still updated, price left alone)
+     * @param  int  $providerNameChangedCount  mapped SKUs whose provider service name drifted from the stored snapshot
+     * @param  array<int,array{sku:string,old_name:string,new_name:string}>  $providerNameChanges  first N of those, for the log/report
+     * @param  int  $disappearedCount  mapped SKUs no longer present in the provider price list this run
+     * @param  array<int,string>  $disappearedSkusSample  first N of those service ids
      * @param  string|null  $skippedReason  set when nothing ran at all — another sync held the lock
      */
     public function __construct(
@@ -26,6 +30,10 @@ readonly class PriceCheckReportDTO
         public int $unknownCount = 0,
         public array $unknownSkusSample = [],
         public array $failedSkusSample = [],
+        public int $providerNameChangedCount = 0,
+        public array $providerNameChanges = [],
+        public int $disappearedCount = 0,
+        public array $disappearedSkusSample = [],
         public ?string $skippedReason = null,
     ) {}
 
@@ -58,6 +66,10 @@ readonly class PriceCheckReportDTO
             'unknown_count' => $this->unknownCount,
             'unknown_skus_sample' => $this->unknownSkusSample,
             'failed_skus_sample' => $this->failedSkusSample,
+            'provider_name_changed' => $this->providerNameChangedCount,
+            'provider_name_changes' => $this->providerNameChanges,
+            'disappeared_count' => $this->disappearedCount,
+            'disappeared_skus_sample' => $this->disappearedSkusSample,
             'skipped_reason' => $this->skippedReason,
         ];
     }

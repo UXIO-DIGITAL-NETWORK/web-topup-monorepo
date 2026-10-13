@@ -55,6 +55,8 @@ function pageWindow(page: number, lastPage: number): number[] {
 
 /** One row's editable data. Strings, because they are inputs. */
 interface RowForm {
+  /** Kode produk internal milik admin — berbeda dari `buyer_sku_code` provider. */
+  code: string;
   name: string;
   subName: string;
   subCategoryId: string;
@@ -70,6 +72,7 @@ interface RowForm {
 }
 
 const emptyForm = (name: string): RowForm => ({
+  code: "",
   name,
   subName: "",
   subCategoryId: "",
@@ -386,6 +389,8 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
           return {
             buyer_sku_code: code,
+            // Kode internal yang ditentukan admin — tidak menyentuh kode provider.
+            code: form.code.trim() || undefined,
             name: form.name || undefined,
             sub_name: form.subName || undefined,
             sub_category_id: form.subCategoryId || undefined,
@@ -768,6 +773,38 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         aria-label={`${code} name`}
                                         value={form.name}
                                         onChange={(event) => patch(code, { name: event.target.value })}
+                                      />
+                                    </Box>
+                                    <Box className="flex flex-col gap-1.5">
+                                      <FieldLabel
+                                        htmlFor={`${code}-code`}
+                                        tooltip={t("tipProductCode")}
+                                      >
+                                        {t("productCode")}
+                                      </FieldLabel>
+                                      <Input
+                                        id={`${code}-code`}
+                                        className="rounded-xl"
+                                        aria-label={`${code} internal code`}
+                                        value={form.code}
+                                        onChange={(event) => patch(code, { code: event.target.value })}
+                                      />
+                                    </Box>
+                                    <Box className="flex flex-col gap-1.5">
+                                      <FieldLabel
+                                        htmlFor={`${code}-provider-code`}
+                                        tooltip={t("tipProviderCode")}
+                                      >
+                                        {t("providerCode")}
+                                      </FieldLabel>
+                                      {/* Read-only: buyer_sku_code adalah kunci integrasi ke Uxiotopup. */}
+                                      <Input
+                                        id={`${code}-provider-code`}
+                                        className="rounded-xl bg-muted"
+                                        aria-label={`${code} provider code`}
+                                        value={code}
+                                        readOnly
+                                        disabled
                                       />
                                     </Box>
                                     <Box className="flex flex-col gap-1.5">

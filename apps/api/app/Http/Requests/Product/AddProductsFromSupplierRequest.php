@@ -34,7 +34,12 @@ class AddProductsFromSupplierRequest extends FormRequest
             'items.*.buyer_sku_code' => ['required', 'string', 'max:255'],
             'items.*.name' => ['nullable', 'string', 'max:255'],
             'items.*.sub_name' => ['nullable', 'string', 'max:255'],
-            'items.*.code' => ['nullable', 'string', 'max:255'],
+            // Kode internal milik admin (unik di tabel products) — wajib, supaya
+            // identitas katalog tidak lagi menyelinap menyalin kode provider.
+            // Sengaja tanpa rule `unique`: baris yang kodenya menempel ke produk
+            // terarsip harus tetap lolos ke action, yang menanganinya sebagai
+            // restore (withTrashed), bukan sebagai bentrok.
+            'items.*.code' => ['required', 'string', 'max:255'],
             'items.*.sub_category_id' => ['nullable', 'integer', 'exists:sub_categories,id'],
             'items.*.discount_type' => ['nullable', 'in:percent,fixed'],
             'items.*.discount_value' => ['nullable', 'integer', 'min:0'],
@@ -82,7 +87,7 @@ class AddProductsFromSupplierRequest extends FormRequest
                     'buyer_sku_code' => (string) $item['buyer_sku_code'],
                     'name' => $item['name'] ?? null,
                     'sub_name' => $item['sub_name'] ?? null,
-                    'code' => $item['code'] ?? null,
+                    'code' => trim((string) $item['code']),
                     'sub_category_id' => isset($item['sub_category_id']) ? (int) $item['sub_category_id'] : null,
                     'discount_type' => $item['discount_type'] ?? null,
                     'discount_value' => isset($item['discount_value']) ? (int) $item['discount_value'] : null,
