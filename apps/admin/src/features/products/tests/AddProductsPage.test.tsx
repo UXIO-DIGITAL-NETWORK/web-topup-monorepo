@@ -82,14 +82,18 @@ describe("AddProductsPage", () => {
     expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
   });
 
-  /** "Kalau dia udah ada di data kita itu enggak bisa double." */
-  it("refuses to select a service that is already a product", async () => {
+  /**
+   * "Kalau dia udah ada di data kita itu enggak bisa double." It is not merely
+   * un-tickable now — a service that is already a product never enters the list,
+   * so the add flow cannot be cluttered by rows that have nothing left to add.
+   */
+  it("hides services that are already a product", async () => {
     await openPage();
 
-    const checkbox = await screen.findByRole("checkbox", { name: "Select ML86" });
-
-    expect(checkbox).toBeDisabled();
-    expect(screen.getByRole("button", { name: "Save as draft (0)" })).toBeInTheDocument();
+    // ML86 is already mapped, so the API's `not_pooled` filter drops it entirely.
+    expect(await screen.findByText("VAL120")).toBeInTheDocument();
+    expect(screen.queryByText("ML86")).not.toBeInTheDocument();
+    expect(screen.queryByRole("checkbox", { name: "Select ML86" })).not.toBeInTheDocument();
   });
 
   it("single mode keeps exactly one product selected", async () => {
@@ -151,7 +155,8 @@ describe("AddProductsPage", () => {
 
   /**
    * The price headers share one server sort: cost asc → cost desc → provider
-   * order. The fixture feeds ML86 (20.000), VAL120 (15.000) and VAL420 (50.000).
+   * order. Already-added SKUs are hidden, so the fixture feeds VAL120 (15.000)
+   * and VAL420 (50.000).
    */
   it("sorts the services by cost, lowest then highest", async () => {
     const user = userEvent.setup();
@@ -161,8 +166,7 @@ describe("AddProductsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Cost: Sort by price" }));
     await waitFor(() => {
-      expect(appearsBefore("VAL120", "ML86")).toBe(true);
-      expect(appearsBefore("ML86", "VAL420")).toBe(true);
+      expect(appearsBefore("VAL120", "VAL420")).toBe(true);
     });
 
     // Both price headers carry the shared state.
@@ -170,8 +174,7 @@ describe("AddProductsPage", () => {
 
     await user.click(screen.getByRole("button", { name: "Cost: Lowest price first" }));
     await waitFor(() => {
-      expect(appearsBefore("VAL420", "ML86")).toBe(true);
-      expect(appearsBefore("ML86", "VAL120")).toBe(true);
+      expect(appearsBefore("VAL420", "VAL120")).toBe(true);
     });
   });
 
