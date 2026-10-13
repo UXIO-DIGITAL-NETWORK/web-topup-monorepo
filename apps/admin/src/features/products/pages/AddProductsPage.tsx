@@ -156,10 +156,10 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
       search: search || undefined,
       page,
       per_page: PER_PAGE,
-      // "all", not "not_pooled": a service that is already ours must stay
-      // VISIBLE and un-tickable, or the admin cannot tell "not added yet" from
-      // "already added".
-      pool_state: "all",
+      // "not_pooled": a service that is already a product (or already pooled) is
+      // hidden outright, so this screen is only ever about what is still to be
+      // added. The API drops every row whose `already_pooled` is true.
+      pool_state: "not_pooled",
       availability: "all",
       provider_category: providerCategory || undefined,
       category_id: categoryId || undefined,
