@@ -101,6 +101,14 @@ class AddProductsFromSupplierAction
                 continue;
             }
 
+            // Hanya layanan aktif yang boleh ditarik jadi produk. Nonaktif adalah
+            // fakta dari provider dan produk yang tak bisa dijual tak perlu dibuat.
+            if (! $this->uxiolabsService->isItemActive($entry)) {
+                $skipped[] = ['buyer_sku_code' => $sku, 'reason' => 'Layanan nonaktif di provider.'];
+
+                continue;
+            }
+
             $mapping = $existing[$sku] ?? null;
 
             if ($mapping && $mapping->product_id !== null) {

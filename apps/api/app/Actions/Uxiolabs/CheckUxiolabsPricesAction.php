@@ -57,6 +57,9 @@ class CheckUxiolabsPricesAction
     /** First N SKUs whose reprice failed, for the report — enough to start with, not a log dump. */
     private const FAILED_SAMPLE_LIMIT = 20;
 
+    /** First N drifted provider names / vanished mappings kept for the report. */
+    private const CODE_CHANGE_SAMPLE_LIMIT = 50;
+
     /**
      * One run at a time, whatever started it.
      *
@@ -67,6 +70,15 @@ class CheckUxiolabsPricesAction
      * A lock here is the one choke point all three go through.
      */
     private const RUN_LOCK_KEY = 'uxiolabs:price-check';
+
+    /**
+     * Last reported provider-code drift. A drifted name on an already-promoted
+     * mapping is never written back over `provider_name` (that column is the
+     * record of what the row was pooled as), so the same drift would otherwise be
+     * re-reported on every 5-minute run. The signature makes it once per distinct
+     * drift, not 288 times a day.
+     */
+    private const DRIFT_CACHE_KEY = 'uxiolabs:provider-code-drift';
 
     /** Past the worst case (an upstream fetch plus thousands of rows); a crashed run must not wedge the schedule. */
     private const RUN_LOCK_SECONDS = 300;
@@ -107,17 +119,38 @@ class CheckUxiolabsPricesAction
 
         $report = DB::transaction(fn () => $this->check($supplier->id, $items));
 
+        // Provider-code verification — the "kode produk uxiotopup berubah" check.
+        // A drifted name on a promoted mapping is seen again every run, so only a
+        // NEW drift set earns a log row (see DRIFT_CACHE_KEY).
+        $codeChanged = $report->providerNameChangedCount > 0 || $report->disappearedCount > 0;
+        $driftSignature = $codeChanged
+            ? md5((string) json_encode([$report->providerNameChanges, $report->disappearedSkusSample]))
+            : null;
+        $codeChangedFresh = $codeChanged && Cache::get(self::DRIFT_CACHE_KEY) !== $driftSignature;
+
+        if ($codeChangedFresh) {
+            Cache::put(self::DRIFT_CACHE_KEY, $driftSignature, now()->addDay());
+        }
+
         // 288 runs/day — only log when something actually changed.
-        if ($report->priceChangedCount > 0 || $report->deactivated !== [] || $report->reactivated !== []) {
+        if ($report->priceChangedCount > 0 || $report->deactivated !== []
+            || $report->reactivated !== [] || $codeChangedFresh) {
+            $message = "Cek harga Uxiotopup: {$report->priceChangedCount} modal berubah — "
+                ."{$report->repricedCount} di-reprice, {$report->unchangedCount} tetap, "
+                ."{$report->failedCount} gagal, "
+                ."{$report->negativeMarginCount} margin negatif, "
+                ."{$report->deactivatedLoggedCount} nonaktif (perlu perhatian).";
+
+            if ($codeChangedFresh) {
+                $message .= " Verifikasi kode provider: {$report->providerNameChangedCount} nama layanan berubah, "
+                    ."{$report->disappearedCount} SKU hilang dari price list.";
+            }
+
             $this->logAction->execute(new CreateActivityLogDTO(
                 userId: auth()->id(),
                 ipAddress: request()?->ip() ?? '127.0.0.1',
                 userAgent: request()?->userAgent() ?? 'System/Scheduler',
-                message: "Cek harga Uxiotopup: {$report->priceChangedCount} modal berubah — "
-                    ."{$report->repricedCount} di-reprice, {$report->unchangedCount} tetap, "
-                    ."{$report->failedCount} gagal, "
-                    ."{$report->negativeMarginCount} margin negatif, "
-                    ."{$report->deactivatedLoggedCount} nonaktif (perlu perhatian).",
+                message: $message,
                 isSystem: true,
             ));
         }
@@ -154,6 +187,11 @@ class CheckUxiolabsPricesAction
         $deactivatedLogged = 0;
         $upsertRows = [];
         $logRows = [];
+        // Provider-code verification: which ids we saw this run, and where the
+        // provider's own service name drifted from the snapshot we stored.
+        $seenSkus = [];
+        $providerNameChanged = 0;
+        $providerNameChanges = [];
 
         foreach ($items as $item) {
             // buyer_sku_code stores the uxiolabs service id (`id` in /service).
@@ -161,6 +199,10 @@ class CheckUxiolabsPricesAction
             if ($sku === '') {
                 continue;
             }
+
+            // Seen upstream this run — anything mapped but absent from this set
+            // has disappeared from the provider list.
+            $seenSkus[$sku] = true;
 
             $existing = $existingMappings->get($sku);
 
@@ -176,6 +218,23 @@ class CheckUxiolabsPricesAction
 
             $cost = $this->uxiolabsService->costFor($item);
             $available = $this->uxiolabsService->isItemActive($item);
+
+            // Verifikasi kode provider: nama layanan dianggap bagian dari identitas
+            // yang datang dari provider. Bila bergeser dari snapshot tersimpan,
+            // catat — inilah cara "kode produk uxiotopup berubah" terdeteksi, sebab
+            // buyer_sku_code sendiri adalah kunci dan tak bisa dibandingkan lewat lookup.
+            $liveName = trim((string) ($item['nama_layanan'] ?? ''));
+            if ($liveName !== '' && (string) $existing->provider_name !== ''
+                && $liveName !== (string) $existing->provider_name) {
+                $providerNameChanged++;
+                if (count($providerNameChanges) < self::CODE_CHANGE_SAMPLE_LIMIT) {
+                    $providerNameChanges[] = [
+                        'sku' => $sku,
+                        'old_name' => (string) $existing->provider_name,
+                        'new_name' => $liveName,
+                    ];
+                }
+            }
 
             $costChanged = (int) $existing->price !== $cost;
             $wasActive = (bool) $existing->is_active;
@@ -328,6 +387,14 @@ class CheckUxiolabsPricesAction
             ];
         }
 
+        // Mapping yang tidak lagi muncul di price list: sinyal kode/penawaran
+        // provider berubah atau layanan ditarik. Dihitung dari himpunan id yang
+        // benar-benar terlihat di run ini, bukan dari hitungan per baris.
+        $disappeared = $existingMappings->keys()
+            ->diff(array_keys($seenSkus))
+            ->values()
+            ->all();
+
         foreach (array_chunk($upsertRows, self::UPSERT_CHUNK) as $chunk) {
             SupplierProduct::upsert(
                 $chunk,
@@ -356,6 +423,10 @@ class CheckUxiolabsPricesAction
             unknownCount: $unknownCount,
             unknownSkusSample: $unknownSample,
             failedSkusSample: $failedSample,
+            providerNameChangedCount: $providerNameChanged,
+            providerNameChanges: $providerNameChanges,
+            disappearedCount: count($disappeared),
+            disappearedSkusSample: array_slice($disappeared, 0, self::CODE_CHANGE_SAMPLE_LIMIT),
         );
     }
 

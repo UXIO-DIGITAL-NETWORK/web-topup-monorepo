@@ -185,6 +185,7 @@ class AddProductsFromSupplierTest extends TestCase
         $this->postJson('/api/v1/products/from-supplier', [
             'items' => [[
                 'buyer_sku_code' => 'ML5',
+                'code' => 'ML5',
                 'publish' => true,
             ]],
         ])
@@ -210,7 +211,7 @@ class AddProductsFromSupplierTest extends TestCase
 
         // Created first, so it is "already ours" by the time the mix is built.
         $this->postJson('/api/v1/products/from-supplier', [
-            'items' => [['buyer_sku_code' => 'ML5', 'price_min' => null]],
+            'items' => [['buyer_sku_code' => 'ML5', 'code' => 'ML5', 'price_min' => null]],
         ])->assertCreated();
 
         $component = Product::where('code', 'ML5')->firstOrFail();
@@ -241,6 +242,7 @@ class AddProductsFromSupplierTest extends TestCase
         $this->post('/api/v1/products/from-supplier', [
             'items' => [[
                 'buyer_sku_code' => 'ML5',
+                'code' => 'ML5',
                 'name' => 'Lima',
                 // Multipart: the logo travels as a file with the rest of the row.
                 'logo' => UploadedFile::fake()->image('logo.png', 128, 128),
@@ -262,6 +264,7 @@ class AddProductsFromSupplierTest extends TestCase
         $this->postJson('/api/v1/products/from-supplier', [
             'items' => [[
                 'buyer_sku_code' => 'ML5',
+                'code' => 'ML5',
                 'name' => 'Lima',
                 'sub_name' => 'Spesial',
                 'sub_category_id' => $subCategory->id,
@@ -283,9 +286,9 @@ class AddProductsFromSupplierTest extends TestCase
 
         $this->postJson('/api/v1/products/from-supplier', [
             'items' => [
-                ['buyer_sku_code' => 'ML5', 'name' => 'Lima'],
-                ['buyer_sku_code' => 'NOPE'],
-                ['buyer_sku_code' => 'ML10', 'name' => 'Sepuluh'],
+                ['buyer_sku_code' => 'ML5', 'code' => 'ML5', 'name' => 'Lima'],
+                ['buyer_sku_code' => 'NOPE', 'code' => 'NOPE'],
+                ['buyer_sku_code' => 'ML10', 'code' => 'ML10', 'name' => 'Sepuluh'],
             ],
         ])
             ->assertCreated()
@@ -293,5 +296,58 @@ class AddProductsFromSupplierTest extends TestCase
             ->assertJsonPath('data.skipped.0.buyer_sku_code', 'NOPE');
 
         $this->assertSame(2, Product::count());
+    }
+
+    /**
+     * Dua kode, dua peran: kode internal ditentukan admin dan menjadi identitas
+     * katalog; kode provider (buyer_sku_code) tetap apa adanya dari price list —
+     * input admin tidak pernah menimpanya.
+     */
+    public function test_it_keeps_the_internal_code_and_the_provider_code_separate(): void
+    {
+        $this->fakePriceList([$this->serviceItem()]);
+
+        $this->postJson('/api/v1/products/from-supplier', [
+            'items' => [[
+                'buyer_sku_code' => 'ML5',
+                'code' => 'INTERNAL-1',
+                'name' => 'Lima',
+            ]],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.created', 1);
+
+        $product = Product::where('code', 'INTERNAL-1')->firstOrFail();
+        $mapping = SupplierProduct::where('product_id', $product->id)->firstOrFail();
+
+        // Kode provider tidak tergeser oleh kode internal.
+        $this->assertSame('ML5', $mapping->buyer_sku_code);
+        $this->assertNotSame($product->code, $mapping->buyer_sku_code);
+    }
+
+    public function test_the_internal_code_is_required_in_the_rich_shape(): void
+    {
+        $this->fakePriceList([$this->serviceItem()]);
+
+        $this->postJson('/api/v1/products/from-supplier', [
+            'items' => [['buyer_sku_code' => 'ML5', 'name' => 'Lima']],
+        ])->assertUnprocessable();
+
+        $this->assertSame(0, Product::count());
+    }
+
+    public function test_a_non_active_provider_sku_is_skipped_with_a_reason(): void
+    {
+        $this->fakePriceList([$this->serviceItem(['status' => 'nonaktif'])]);
+
+        $this->postJson('/api/v1/products/from-supplier', [
+            'items' => [['buyer_sku_code' => 'ML5', 'code' => 'ML5', 'name' => 'Lima']],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.created', 0)
+            ->assertJsonPath('data.skipped.0.buyer_sku_code', 'ML5')
+            ->assertJsonPath('data.skipped.0.reason', 'Layanan nonaktif di provider.');
+
+        $this->assertSame(0, Product::count());
     }
 }

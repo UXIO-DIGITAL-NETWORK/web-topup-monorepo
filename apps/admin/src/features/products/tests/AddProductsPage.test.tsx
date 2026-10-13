@@ -239,6 +239,7 @@ describe("AddProductsPage", () => {
     await openPage();
 
     await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.type(screen.getByLabelText("VAL120 internal code"), "VAL120-INT");
     await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
 
     // The review step comes first — nothing reaches the API until it is confirmed.
@@ -249,6 +250,8 @@ describe("AddProductsPage", () => {
 
     expect(spy.mock.calls[0][0].publish).toBe(false);
     expect(spy.mock.calls[0][0].items[0].buyer_sku_code).toBe("VAL120");
+    // The internal code the admin typed travels with the row…
+    expect(spy.mock.calls[0][0].items[0].code).toBe("VAL120-INT");
   });
 
   it("sends the data typed in the row with the product", async () => {
@@ -263,6 +266,7 @@ describe("AddProductsPage", () => {
     const nameField = screen.getByLabelText("VAL120 name");
     await user.clear(nameField);
     await user.type(nameField, "Valorant 120 Spesial");
+    await user.type(screen.getByLabelText("VAL120 internal code"), "VAL120-INT");
 
     await user.click(screen.getByRole("button", { name: "Publish (1)" }));
 
@@ -272,6 +276,7 @@ describe("AddProductsPage", () => {
     const payload = spy.mock.calls[0][0];
     expect(payload.publish).toBe(true);
     expect(payload.items[0].name).toBe("Valorant 120 Spesial");
+    expect(payload.items[0].code).toBe("VAL120-INT");
   });
 
   it("shows each product's details in the review dialog before saving", async () => {
@@ -313,5 +318,35 @@ describe("AddProductsPage", () => {
     const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
     expect(within(dialog).getByRole("button", { name: "Yes, save as draft" })).toBeDisabled();
     expect(within(dialog).getByText("Product name is empty.")).toBeInTheDocument();
+  });
+
+  /**
+   * Dua kode, dua peran: kode provider read-only (kunci integrasi ke Uxiotopup)
+   * dan kode internal yang ditentukan sendiri oleh admin.
+   */
+  it("shows an editable internal code and a read-only provider code", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+
+    const internal = screen.getByLabelText("VAL120 internal code");
+    const provider = screen.getByLabelText("VAL120 provider code");
+
+    expect(internal).toBeEnabled();
+    expect(provider).toBeDisabled();
+    expect(provider).toHaveValue("VAL120");
+  });
+
+  it("blocks the confirm until an internal product code is typed", async () => {
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
+    await user.click(screen.getByRole("button", { name: "Save as draft (1)" }));
+
+    const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
+    expect(within(dialog).getByRole("button", { name: "Yes, save as draft" })).toBeDisabled();
+    expect(within(dialog).getByText("Internal product code is empty.")).toBeInTheDocument();
   });
 });

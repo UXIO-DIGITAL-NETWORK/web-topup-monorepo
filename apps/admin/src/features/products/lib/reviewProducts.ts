@@ -44,6 +44,8 @@ export interface SelectedMeta {
  */
 export interface ReviewItem {
   buyerSkuCode: string;
+  /** Kode produk internal yang diisi admin (berbeda dari kode provider). */
+  internalCode: string;
   providerName: string;
   name: string;
   subName: string;
@@ -95,6 +97,7 @@ const toNumber = (raw: string): number | null => {
 
 /** The page's `RowForm` is structurally this — kept here so the lib imports no page. */
 export interface ReviewFormInput {
+  code: string;
   name: string;
   subName: string;
   subCategoryId: string;
@@ -171,6 +174,7 @@ export function buildReviewItem({
 
   const issues: ReviewIssue[] = [];
   if (form.name.trim() === "") issues.push({ level: "block", messageKey: "issueName" });
+  if (form.code.trim() === "") issues.push({ level: "block", messageKey: "issueCode" });
   if (subCategoryRequired && form.subCategoryId === "") issues.push({ level: "block", messageKey: "issueSubCategory" });
   if (defaultPlan && defaultPlan.source === "cost") issues.push({ level: "block", messageKey: "issueDefaultPrice" });
 
@@ -191,6 +195,7 @@ export function buildReviewItem({
 
   return {
     buyerSkuCode,
+    internalCode: form.code,
     providerName: meta?.providerName ?? "",
     name: form.name,
     subName: form.subName,

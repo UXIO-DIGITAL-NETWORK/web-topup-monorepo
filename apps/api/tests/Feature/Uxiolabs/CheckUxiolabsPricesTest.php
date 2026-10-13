@@ -5,6 +5,7 @@ namespace Tests\Feature\Uxiolabs;
 use App\Actions\Pricing\WriteProductPricesAction;
 use App\Actions\Uxiolabs\CheckUxiolabsPricesAction;
 use App\Enums\PriceChangeLogStatus;
+use App\Models\ActivityLog;
 use App\Models\FlashSale;
 use App\Models\FlashSaleItem;
 use App\Models\MembershipPlan;
@@ -703,6 +704,48 @@ class CheckUxiolabsPricesTest extends TestCase
         } finally {
             $held->release();
         }
+    }
+
+    /**
+     * Verifikasi kode provider: nama layanan yang bergeser dari snapshot tersimpan
+     * dicatat sebagai log sistem (`activity_logs`, `is_system`) — cara "kode produk
+     * uxiotopup berubah" terverifikasi tanpa pernah menyentuh buyer_sku_code itu sendiri.
+     */
+    public function test_a_drifted_provider_name_is_written_to_the_system_log(): void
+    {
+        Cache::flush(); // drift is reported once per distinct set, not once per process
+
+        $mapping = $this->seedMapping();
+        $mapping->update(['provider_name' => 'Mobile Legends 5 Diamond']);
+
+        $this->fakePriceList([$this->serviceItem(['nama_layanan' => 'ML 5 Diamond (baru)'])]);
+
+        $report = app(CheckUxiolabsPricesAction::class)->execute();
+
+        $this->assertSame(1, $report->providerNameChangedCount);
+        $this->assertSame(0, $report->disappearedCount);
+
+        $log = ActivityLog::query()->latest('id')->first();
+        $this->assertNotNull($log);
+        $this->assertTrue((bool) $log->is_system);
+        $this->assertStringContainsString('Verifikasi kode provider', (string) $log->message);
+
+        // Kode provider sendiri tidak pernah ditulis ulang.
+        $this->assertSame('ML5', $mapping->fresh()->buyer_sku_code);
+    }
+
+    /** Mapping yang tak lagi muncul di price list dihitung sebagai sinyal kode/penawaran berubah. */
+    public function test_a_mapping_missing_from_the_price_list_is_counted(): void
+    {
+        Cache::flush();
+
+        $this->seedMapping(); // ML5
+        $this->fakePriceList([$this->serviceItem(['id' => 'OTHER'])]);
+
+        $report = app(CheckUxiolabsPricesAction::class)->execute();
+
+        $this->assertSame(1, $report->disappearedCount);
+        $this->assertSame(['ML5'], $report->disappearedSkusSample);
     }
 
     /** A second, role-linked tier — what `ProductRepricer` maps the legacy VIP column to. */

@@ -230,6 +230,12 @@ export function AddProductsReviewDialog({
                   <Row label={t("productName")}>
                     <Value>{item.name || EM_DASH}</Value>
                   </Row>
+                  <Row label={t("productCode")}>
+                    <Value>{item.internalCode || EM_DASH}</Value>
+                  </Row>
+                  <Row label={t("providerCode")}>
+                    <Value>{item.buyerSkuCode || EM_DASH}</Value>
+                  </Row>
                   <Row label={t("subName")}>
                     <Value>{item.subName || EM_DASH}</Value>
                   </Row>
