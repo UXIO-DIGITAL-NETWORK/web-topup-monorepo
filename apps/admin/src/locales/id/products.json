@@ -15,6 +15,7 @@
   "colProductProvider": "Produk Penyedia",
   "projectedFromMargin": "Proyeksi dari margin — belum ada yang tersimpan sampai SKU ini dipromosikan.",
   "locked": "Terkunci",
+  "available": "Tersedia",
   "unavailable": "Tidak tersedia",
   "providerInactive": "Nonaktif dari provider",
   "providerInactiveHint": "SKU ini dimatikan di sisi provider, jadi produk tidak bisa dijual sampai provider mengaktifkannya lagi. Harga jual tetap otomatis mengikuti modal provider.",

@@ -10,6 +10,7 @@ import { ImageDropzone } from "@/components/common/ImageDropzone";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
@@ -653,7 +654,21 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
 
                         <td className="px-3 py-3 align-top">
                           <Box className="flex flex-col gap-1">
-                            <Text className="font-medium">{code}</Text>
+                            <Box className="flex flex-wrap items-center gap-1.5">
+                              <Text className="font-medium">{code}</Text>
+                              {/* Status langsung dari price list Uxiotopup — apakah
+                                  layanan ini benar-benar bisa dipesan sekarang. */}
+                              {row.available ? (
+                                <Badge
+                                  variant="outline"
+                                  className="border-success/30 bg-success/10 text-success"
+                                >
+                                  {t("available")}
+                                </Badge>
+                              ) : (
+                                <Badge variant="destructive">{t("unavailable")}</Badge>
+                              )}
+                            </Box>
                             <Text
                               variant="small"
                               className="text-muted-foreground"
