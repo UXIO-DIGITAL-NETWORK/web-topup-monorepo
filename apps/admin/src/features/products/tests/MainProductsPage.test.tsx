@@ -200,6 +200,7 @@ describe("MainProductsPage", () => {
       "Set Price Limit",
       "Unpublish",
       "Edit Product",
+      "Archive",
     ]);
   });
 

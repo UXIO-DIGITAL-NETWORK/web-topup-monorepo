@@ -151,6 +151,10 @@ export const PRODUCTS: Product[] = [
     publish_blocked_reason: "SKU sedang nonaktif di provider.",
     status: "inactive",
     is_available: true,
+    // The checker's flag on the supplier mapping — separate from `is_available`
+    // (the admin's own storefront visibility). This is what the "Inactive at
+    // provider" warning and the archive filter read.
+    provider_inactive: true,
     variants: [{ id: "prod-7-var-1", name: "60 Genesis Crystals", ...priced(16000), status: "active" }],
     created_at: "2026-03-15T08:45:00.000Z",
     updated_at: "2026-03-15T08:45:00.000Z",
