@@ -68,7 +68,7 @@
   "tipProductName": "The denomination buyers see, e.g. “86 Diamonds”.",
   "tipNickname": "Optional per-product override for the account-name lookup. The username check is normally configured on the game/category (its “Cek Username” field), not here.",
   "tipSubName": "Optional secondary label shown under the product name.",
-  "tipProductCode": "A unique internal SKU for this product (e.g. mlbb-86). Must not clash with another product.",
+  "tipProductCode": "A unique internal SKU for this product (e.g. mlbb-86). Must not clash with another product. Any space is replaced with an underscore (_) to keep codes consistent — e.g. “VIP 10” becomes “VIP_10”.",
   "tipProviderCode": "The service code from Uxiotopup. Read-only — used as the integration key, cannot be changed.",
   "tipAccess": "Who may buy this product — e.g. everyone (public) or a specific member tier.",
   "tipTag": "An optional marketing badge shown on the product (e.g. Hot, Promo).",

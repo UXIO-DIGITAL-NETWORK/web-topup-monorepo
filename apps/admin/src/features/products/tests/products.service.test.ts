@@ -144,6 +144,26 @@ describe("productsService — per-product points", () => {
   });
 });
 
+describe("productsService.addFromSupplier", () => {
+  // The API marks `items.*.code` required, so the row's internal code must reach
+  // the multipart body. It was omitted once and no test caught it — the page
+  // test stubs this method out, so only a serialisation test can see it.
+  it("sends each row's internal code in the multipart body", async () => {
+    vi.mocked(api.post).mockResolvedValue(envelope({ created: 1, published: 0, skipped: [] }));
+
+    await productsService.addFromSupplier({
+      publish: false,
+      items: [{ buyer_sku_code: "VAL120", code: "VAL120-INT", name: "Valorant 120" }],
+    });
+
+    const [url, body] = vi.mocked(api.post).mock.calls[0];
+    const form = body as FormData;
+    expect(url).toBe("/v1/products/from-supplier");
+    expect(form.get("items[0][buyer_sku_code]")).toBe("VAL120");
+    expect(form.get("items[0][code]")).toBe("VAL120-INT");
+  });
+});
+
 describe("productsService.remove", () => {
   it("deletes by id", async () => {
     vi.mocked(api.delete).mockResolvedValue(envelope(null));

@@ -30,6 +30,7 @@ import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { AddProductsReviewDialog } from "../components/AddProductsReviewDialog";
 import { MarginSimulationCard, type MarginSimulationRow } from "../components/MarginSimulationCard";
 import { MixProductPicker, type MixProductOption } from "../components/MixProductPicker";
+import { normalizeProductCode } from "../lib/productCode";
 import { buildReviewItem, resolvePlanPrice, type SelectedMeta } from "../lib/reviewProducts";
 import type { PoolSort } from "../types/product.type";
 import type { PricingRuleOption } from "../services/provider.service";
@@ -787,7 +788,9 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         className="rounded-xl"
                                         aria-label={`${code} internal code`}
                                         value={form.code}
-                                        onChange={(event) => patch(code, { code: event.target.value })}
+                                        onChange={(event) =>
+                                          patch(code, { code: normalizeProductCode(event.target.value) })
+                                        }
                                       />
                                     </Box>
                                     <Box className="flex flex-col gap-1.5">

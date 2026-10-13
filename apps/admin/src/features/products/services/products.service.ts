@@ -330,6 +330,9 @@ export const productsService = {
       };
 
       put("buyer_sku_code", item.buyer_sku_code);
+      // Kode internal milik admin — wajib di API (`items.*.code`), dan tanpa ini
+      // setiap submit ditolak 422 "The items.0.code field is required."
+      put("code", item.code);
       put("name", item.name);
       put("sub_name", item.sub_name);
       put("sub_category_id", item.sub_category_id ? toFk(item.sub_category_id) : undefined);
