@@ -5,6 +5,7 @@ import { Box } from "@/components/common/Box";
 import { InfoTooltip } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Badge } from "@/components/ui/badge";
 import { formatCurrency } from "@/utils/currency";
 import { formatDateTime } from "@/utils/date";
 import { initials } from "@/utils/initials";
@@ -133,21 +134,17 @@ export const mainProductColumnsFor = (t: TFunction<"products">): ColumnDef<Produ
         <ProductStatusBadge state={row.original.publish_state} />
         <Box className="flex items-center gap-1.5">
           <ProductAvailabilityBadge isAvailable={row.original.is_available} />
-          {/* "Nonaktif dari provider" is the checker's flag on the supplier
-              mapping (`buyer_product_status`), NOT `is_available` — that column
-              is the admin's own storefront visibility and the checker never
-              writes it, so keying the warning off it stayed silent for a product
-              the provider had actually switched off. */}
-          {row.original.provider_inactive && <InfoTooltip content={t("providerInactiveHint")} />}
         </Box>
         {row.original.provider_inactive && (
-          <Text
-            as="span"
-            variant="small"
-            className="text-muted-foreground"
-          >
-            {t("providerInactive")}
-          </Text>
+          <Box className="flex items-center gap-1.5">
+            {/* The checker's flag on the supplier mapping (`buyer_product_status`),
+                NOT `is_available` — the admin's own storefront visibility, which
+                the checker never writes. Red, because it is the one status on
+                this row that asks the admin to act: archive it, or have the
+                provider switch it back on. */}
+            <Badge variant="destructive">{t("providerInactive")}</Badge>
+            <InfoTooltip content={t("providerInactiveHint")} />
+          </Box>
         )}
       </Box>
     ),

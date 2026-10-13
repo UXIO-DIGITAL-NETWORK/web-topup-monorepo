@@ -97,9 +97,9 @@ describe("Main Products row actions", () => {
     const user = userEvent.setup();
     await renderRoute(LIST_PATH);
 
-    // Archived rows are out of the list until the Status filter asks for them.
-    await user.click(await screen.findByLabelText("Status"));
-    await user.click(await screen.findByRole("option", { name: "Archived" }));
+    // Archived rows are out of the list until the dedicated Archived button asks
+    // for them — it is no longer an option in the Status dropdown.
+    await user.click(await screen.findByRole("button", { name: "Archived" }));
 
     await openRowMenu(user, ARCHIVED_ROW);
     const items = await screen.findAllByRole("menuitem");
