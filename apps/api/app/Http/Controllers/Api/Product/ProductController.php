@@ -43,6 +43,7 @@ class ProductController extends Controller
         $status = $request->query('status');
         $minPrice = $request->query('min_price');
         $maxPrice = $request->query('max_price');
+        $providerInactive = $request->query('provider_inactive');
 
         $products = $action->execute(
             $perPage,
@@ -53,6 +54,7 @@ class ProductController extends Controller
             $minPrice !== null ? (int) $minPrice : null,
             $maxPrice !== null ? (int) $maxPrice : null,
             $request->query('publish_state'),
+            $providerInactive !== null ? filter_var($providerInactive, FILTER_VALIDATE_BOOLEAN) : null,
         );
 
         return $this->paginatedResponse(ProductResource::collection($products), 'Products retrieved successfully');

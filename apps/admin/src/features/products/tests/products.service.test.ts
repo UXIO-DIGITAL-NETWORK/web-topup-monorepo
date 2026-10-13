@@ -80,6 +80,22 @@ describe("productsService.list", () => {
     expect(config?.params).toHaveProperty("min_price");
   });
 
+  it("maps the provider's own availability flag", async () => {
+    vi.mocked(api.get).mockResolvedValue(paginated([apiRow({ provider_inactive: true })]));
+
+    const result = await productsService.list();
+
+    expect(result.data[0].provider_inactive).toBe(true);
+  });
+
+  it("passes the provider-inactive filter through to the API", async () => {
+    vi.mocked(api.get).mockResolvedValue(paginated([]));
+
+    await productsService.list({ provider_inactive: true });
+
+    expect(vi.mocked(api.get).mock.calls[0][1]?.params).toMatchObject({ provider_inactive: true });
+  });
+
   // A bucket the options list does not know must narrow to nothing, never
   // silently widen back to every product.
   it("narrows to nothing for an unknown price bucket", async () => {

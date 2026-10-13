@@ -490,6 +490,10 @@ class CheckoutAction
                 'contact_email' => $dto->email,
                 'locale' => $dto->locale ?? $user?->locale ?? 'id',
                 'product_id' => $product->id,
+                // The product's identity, frozen with the order: renaming the
+                // product later must not rewrite what this order sold.
+                'product_name' => $product->name,
+                'product_code' => $product->code,
                 // A mix has no supplier of its own; the first component's stands
                 // in, so the column is never null for a sold order and the
                 // existing reports keep a supplier to group by.

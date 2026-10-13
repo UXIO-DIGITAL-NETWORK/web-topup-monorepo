@@ -23,6 +23,10 @@ class TransactionResource extends JsonResource
             'guest_contact' => $this->guest_contact,
             'contact_email' => $this->contact_email,
             'product_id' => $this->product_id,
+            // The identity frozen at checkout; older rows have no snapshot and
+            // fall back to the (still-resolving) relation.
+            'product_name' => $this->product_name ?? $this->product?->name,
+            'product_code' => $this->product_code ?? $this->product?->code,
             'supplier_id' => $this->supplier_id,
             'target_uid' => $this->target_uid,
             'target_server' => $this->target_server,

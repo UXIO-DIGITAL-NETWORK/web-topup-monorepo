@@ -109,6 +109,13 @@ export interface Product {
   /** §6's `is_available` — storefront visibility. The second badge. */
   is_available: boolean;
   /**
+   * The provider's own flag: true when a supplier mapping was switched off
+   * upstream by the price checker. Distinct from `is_available` (the admin's
+   * storefront-visibility column). Present only when the API loaded the
+   * supplier mappings, which the product list does.
+   */
+  provider_inactive?: boolean;
+  /**
    * Loyalty points this product earns, set on the product form. `null` means
    * the global `points` settings apply — which is not the same as 0, "this
    * product earns nothing".
@@ -167,6 +174,8 @@ export interface ProductListParams {
   category_id?: string;
   /** A `PRICE_RANGE_OPTIONS` value — the toolbar's "All Price". */
   price?: string;
+  /** true surfaces only products whose provider SKU is switched off upstream. */
+  provider_inactive?: boolean;
   page?: number;
   per_page?: number;
 }

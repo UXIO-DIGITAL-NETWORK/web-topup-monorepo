@@ -29,6 +29,9 @@ interface MainProductToolbarProps {
   onCategoryChange: (value: string | undefined) => void;
   price?: string;
   onPriceChange: (value: string | undefined) => void;
+  /** true shows only products switched off upstream — the archive candidates. */
+  providerInactive?: boolean;
+  onProviderInactiveChange: (value: boolean) => void;
   onRefresh: () => void;
   /** Add Products, in one modal: one product, or many. */
   onAddSingle: () => void;
@@ -38,6 +41,7 @@ interface MainProductToolbarProps {
   onBulkShowPrice: () => void;
   onPublishStateChange: (value?: string) => void;
   onBulkUnpublish: () => void;
+  onBulkArchive: () => void;
 }
 
 /**
@@ -69,6 +73,8 @@ export function MainProductToolbar({
   onCategoryChange,
   price,
   onPriceChange,
+  providerInactive,
+  onProviderInactiveChange,
   onRefresh,
   onAddSingle,
   onAddBulk,
@@ -77,6 +83,7 @@ export function MainProductToolbar({
   onBulkShowPrice,
   onPublishStateChange,
   onBulkUnpublish,
+  onBulkArchive,
 }: MainProductToolbarProps) {
   const { t } = useTranslation("products");
   // The same source the product form, bulk-add and provider pool already read,
@@ -163,6 +170,28 @@ export function MainProductToolbar({
           </Box>
 
           <Box className="flex flex-col gap-1.5">
+            <Label htmlFor="product-availability-filter">{t("providerAvailability")}</Label>
+            {/* The archive flow's entry point: a product whose provider SKU the
+                checker switched off. Orthogonal to lifecycle, so it is its own
+                select rather than a PUBLISH_STATES option. */}
+            <Select
+              value={providerInactive ? "inactive" : ""}
+              onValueChange={(next) => onProviderInactiveChange(next === "inactive")}
+            >
+              <SelectTrigger
+                id="product-availability-filter"
+                className="w-48 rounded-xl"
+              >
+                <SelectValue placeholder={t("allAvailability")} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value={CLEAR_VALUE}>{t("allAvailability")}</SelectItem>
+                <SelectItem value="inactive">{t("providerInactive")}</SelectItem>
+              </SelectContent>
+            </Select>
+          </Box>
+
+          <Box className="flex flex-col gap-1.5">
             <Label htmlFor="product-price-filter">{t("price")}</Label>
             {/* Ranges are inferred: the reference only ever shows this select's
                 "All Price" trigger, never its open list (§4.6). */}
@@ -241,6 +270,7 @@ export function MainProductToolbar({
               { label: t("uxiolabsUpdate"), icon: <RefreshCcw className="size-4" />, onSelect: onBulkUxiolabs },
               { label: t("showPrice"), icon: <Eye className="size-4" />, onSelect: onBulkShowPrice },
               { label: t("unpublish"), icon: <Archive className="size-4" />, onSelect: onBulkUnpublish },
+              { label: t("archive"), icon: <Archive className="size-4" />, onSelect: onBulkArchive },
             ]}
           />
         </Box>
