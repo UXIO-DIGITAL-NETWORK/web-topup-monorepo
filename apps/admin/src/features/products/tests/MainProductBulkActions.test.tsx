@@ -38,12 +38,29 @@ describe("Main Products bulk actions", () => {
     await selectTwoRows(user);
     await openBulkMenu(user, 2);
 
-    for (const name of ["Edit Logo", "Uxiotopup Update", "Show Price", "Unpublish"]) {
+    for (const name of ["Edit Logo", "Uxiotopup Update", "Show Price", "Unpublish", "Archive"]) {
       expect(await screen.findByRole("menuitem", { name })).toBeInTheDocument();
     }
+  });
 
-    // There is no Archive here: a product is unlisted, never removed.
-    expect(screen.queryByRole("menuitem", { name: "Archive" })).not.toBeInTheDocument();
+  it("archives only after the confirmation is accepted", async () => {
+    const spy = vi.spyOn(productsService, "bulkDelete").mockResolvedValue(undefined);
+    const user = userEvent.setup();
+    await renderRoute(LIST_PATH);
+
+    await selectTwoRows(user);
+    await openBulkMenu(user, 2);
+    await user.click(await screen.findByRole("menuitem", { name: "Archive" }));
+
+    const dialog = await screen.findByRole("alertdialog");
+    expect(within(dialog).getByText("Archive 2 products?")).toBeInTheDocument();
+    expect(spy).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole("button", { name: "Archive" }));
+    expect(spy).toHaveBeenCalledTimes(1);
+    // Archiving keeps the row for its order history and returns the SKU to the
+    // pool — it is a soft-delete, not a removal.
+    expect(spy.mock.calls[0][0]).toHaveLength(2);
   });
 
   it("unpublishes nothing until the confirmation is accepted", async () => {
