@@ -25,6 +25,7 @@ import { NICKNAME_VALIDATION_OPTIONS, PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTION
 import { useCreateProduct, useProduct, useSetProductMargin, useSetProductMix, useUpdateProduct } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { useMarginPlanOptions } from "../hooks/useProviderProducts";
+import { normalizeProductCode } from "../lib/productCode";
 import { DESCRIPTION_MAX, productFormSchema, type ProductFormValues } from "../schemas/productForm.schema";
 
 interface MainProductFormDialogProps {
@@ -369,10 +370,20 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       htmlFor="product-code"
                       tooltip={t("tipProductCode")}
                     >{t("productCode")}</FieldLabel>
-                    <Input
-                      id="product-code"
-                      className="rounded-xl"
-                      {...register("code")}
+                    <Controller
+                      control={control}
+                      name="code"
+                      render={({ field }) => (
+                        <Input
+                          id="product-code"
+                          className="rounded-xl"
+                          name={field.name}
+                          value={field.value}
+                          onBlur={field.onBlur}
+                          ref={field.ref}
+                          onChange={(event) => field.onChange(normalizeProductCode(event.target.value))}
+                        />
+                      )}
                     />
                     {errors.code && (
                       <Text

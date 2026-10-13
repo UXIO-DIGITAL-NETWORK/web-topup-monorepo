@@ -68,7 +68,7 @@
   "tipProductName": "Nominal yang dilihat pembeli, misal “86 Diamonds”.",
   "tipNickname": "Penimpa opsional per produk untuk pencarian nama akun. Cek username biasanya diatur di game/kategori (kolom “Cek Username”), bukan di sini.",
   "tipSubName": "Label sekunder opsional yang tampil di bawah nama produk.",
-  "tipProductCode": "SKU internal unik untuk produk ini (misal mlbb-86). Tidak boleh bentrok dengan produk lain.",
+  "tipProductCode": "SKU internal unik untuk produk ini (misal mlbb-86). Tidak boleh bentrok dengan produk lain. Spasi otomatis diganti dengan garis bawah (_) agar kode konsisten — mis. “VIP 10” menjadi “VIP_10”.",
   "tipProviderCode": "Kode layanan dari Uxiotopup. Read-only — dipakai sebagai kunci integrasi, tidak bisa diubah.",
   "tipAccess": "Siapa yang boleh membeli produk ini — misal semua orang (publik) atau tingkat member tertentu.",
   "tipTag": "Badge pemasaran opsional yang tampil di produk (misal Hot, Promo).",
