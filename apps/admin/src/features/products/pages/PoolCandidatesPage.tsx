@@ -13,7 +13,7 @@ import { poolCandidateColumnsFor } from "../components/poolCandidateColumns";
 import { PoolCandidateFilters } from "../components/PoolCandidateFilters";
 import { ALL, EMPTY_POOL_FILTERS, type PoolFilterState } from "../lib/poolFilters";
 import { usePoolCandidates, usePoolFacets, usePoolSkus } from "../hooks/useProviderPool";
-import type { PoolCandidate, PoolSort } from "../types/product.type";
+import type { PoolAvailability, PoolCandidate, PoolSort } from "../types/product.type";
 
 const DEFAULT_PAGE_SIZE = 10;
 const POOL_PATH = "/admin/products/provider";
@@ -56,7 +56,7 @@ export default function PoolCandidatesPage() {
       provider_category: orUndefined(filters.providerCategory),
       category_id: orUndefined(filters.categoryId),
       pool_state: filters.poolState,
-      availability: filters.availability,
+      availability: filters.availability as PoolAvailability,
       cost_min: asNumber(costMin),
       // An inverted range is a typo mid-edit, not a query — the API 422s on it,
       // so drop the ceiling rather than turning a keystroke into an error toast.

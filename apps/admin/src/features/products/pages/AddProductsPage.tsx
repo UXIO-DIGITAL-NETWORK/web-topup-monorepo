@@ -35,7 +35,7 @@ import { MixProductPicker, type MixProductOption } from "../components/MixProduc
 import { PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
 import { normalizeProductCode } from "../lib/productCode";
 import { buildReviewItem, resolvePlanPrice, type SelectedMeta } from "../lib/reviewProducts";
-import type { PoolSort } from "../types/product.type";
+import type { PoolAvailability, PoolSort } from "../types/product.type";
 import type { PricingRuleOption } from "../services/provider.service";
 
 export type AddMode = "single" | "bulk";
@@ -144,6 +144,9 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
   const [page, setPage] = useState(1);
   const [providerCategory, setProviderCategory] = useState("");
   const [categoryId, setCategoryId] = useState("");
+  // Which provider services are offerable — "all" keeps the previous
+  // behaviour (every mapped SKU, available or not), the other two narrow it.
+  const [availability, setAvailability] = useState<PoolAvailability>("all");
   // Server-backed: the API sorts the whole candidate universe by cost, not just
   // the page on screen. Both price headers share it (see `toggleSort`).
   const [sort, setSort] = useState<PoolSort | undefined>(undefined);
@@ -167,12 +170,12 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
       // hidden outright, so this screen is only ever about what is still to be
       // added. The API drops every row whose `already_pooled` is true.
       pool_state: "not_pooled",
-      availability: "all",
+      availability,
       provider_category: providerCategory || undefined,
       category_id: categoryId || undefined,
       sort,
     }),
-    [search, page, providerCategory, categoryId, sort],
+    [search, page, providerCategory, categoryId, sort, availability],
   );
 
   const { data, isLoading } = usePoolCandidates(params);
@@ -470,6 +473,23 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
               value={categoryId || NONE}
               onChange={(next) => {
                 setCategoryId(next === NONE ? "" : next);
+                setPage(1);
+              }}
+            />
+          </Box>
+          <Box className="w-52">
+            <SelectField
+              id="add-availability-filter"
+              label={t("availability")}
+              tooltip={t("tipAvailability")}
+              options={[
+                { value: "all", label: t("allAvailability") },
+                { value: "available", label: t("available") },
+                { value: "unavailable", label: t("unavailable") },
+              ]}
+              value={availability}
+              onChange={(next) => {
+                setAvailability(next as PoolAvailability);
                 setPage(1);
               }}
             />
