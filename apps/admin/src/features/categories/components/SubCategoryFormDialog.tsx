@@ -196,6 +196,7 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
             render={({ field }) => (
               <ImageDropzone
                 id="sub-category-logo"
+                existingUrl={existing?.logo_url}
                 label={t("logo")}
                 accept="image/jpeg,image/jpg,image/png,image/webp"
                 formatsLabel="JPG, JPEG, PNG, WEBP up to 10mb"

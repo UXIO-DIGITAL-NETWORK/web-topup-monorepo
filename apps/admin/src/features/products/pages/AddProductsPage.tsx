@@ -451,7 +451,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
         {/* Filters and mode, in one strip — the two things that decide which
             rows are on screen and how many may be ticked. */}
         <Box className="flex shrink-0 flex-wrap items-end gap-3">
-          <Box className="w-56">
+          <Box className="min-w-40 flex-1 md:max-w-64">
             <SelectField
               id="add-provider-filter"
               label={t("supplier")}
@@ -464,7 +464,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
               }}
             />
           </Box>
-          <Box className="w-56">
+          <Box className="min-w-40 flex-1 md:max-w-64">
             <SelectField
               id="add-category-filter"
               label={t("category")}
@@ -477,7 +477,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
               }}
             />
           </Box>
-          <Box className="w-52">
+          <Box className="min-w-36 flex-1 md:max-w-52">
             <SelectField
               id="add-availability-filter"
               label={t("availability")}
@@ -494,7 +494,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
               }}
             />
           </Box>
-          <Box className="min-w-64 flex-1">
+          <Box className="min-w-40 flex-1 md:max-w-72">
             <Box className="flex flex-col gap-1.5">
               <FieldLabel
                 htmlFor="add-service-search"

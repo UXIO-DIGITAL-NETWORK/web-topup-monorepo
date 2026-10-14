@@ -107,15 +107,15 @@ export function MainProductToolbar({
 
   return (
     <Box className="flex flex-col gap-3">
-      <Box className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-        <Box className="flex flex-1 flex-col gap-3 sm:flex-row sm:items-end">
-          <Box className="flex flex-col gap-1.5">
+      <Box className="flex flex-col gap-3 xl:flex-row xl:items-end xl:justify-between">
+        <Box className="flex flex-1 flex-wrap items-end gap-3">
+          <Box className="flex min-w-40 flex-1 flex-col gap-1.5 md:max-w-72">
             <Label htmlFor="product-search">{t("search")}</Label>
             <Box className="relative">
               <Search className="pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2 text-muted-foreground" />
               <Input
                 id="product-search"
-                className="w-64 rounded-xl pl-8"
+                className="w-full rounded-xl pl-8"
                 placeholder={t("searchProductName")}
                 value={search}
                 onChange={(event) => onSearchChange(event.target.value)}
@@ -123,7 +123,7 @@ export function MainProductToolbar({
             </Box>
           </Box>
 
-          <Box className="flex flex-col gap-1.5">
+          <Box className="flex min-w-40 flex-1 flex-col gap-1.5 md:max-w-64">
             <Label htmlFor="product-category-filter">{t("category")}</Label>
             {/* `""` (not the clear sentinel) when unfiltered, so Radix renders
                 the placeholder rather than the "All categories" item's label. */}
@@ -133,7 +133,7 @@ export function MainProductToolbar({
             >
               <SelectTrigger
                 id="product-category-filter"
-                className="w-56 rounded-xl"
+                className="w-full rounded-xl"
               >
                 <SelectValue placeholder={t("typeToSearchCategory")} />
               </SelectTrigger>
@@ -157,7 +157,7 @@ export function MainProductToolbar({
               are excluded from the options either way (the row is kept so its
               order history resolves); they are reached through the Archived tab. */}
           {!archivedView && (
-            <Box className="flex flex-col gap-1.5">
+            <Box className="flex min-w-36 flex-1 flex-col gap-1.5 md:max-w-44">
               <Label htmlFor="product-state-filter">{t("status")}</Label>
               <Select
                 value={publishState ?? ""}
@@ -165,7 +165,7 @@ export function MainProductToolbar({
               >
                 <SelectTrigger
                   id="product-state-filter"
-                  className="w-44 rounded-xl"
+                  className="w-full rounded-xl"
                 >
                   <SelectValue placeholder={t("allStatuses")} />
                 </SelectTrigger>
@@ -184,7 +184,7 @@ export function MainProductToolbar({
             </Box>
           )}
 
-          <Box className="flex flex-col gap-1.5">
+          <Box className="flex min-w-40 flex-1 flex-col gap-1.5 md:max-w-48">
             <Label htmlFor="product-availability-filter">{t("providerAvailability")}</Label>
             {/* The archive flow's entry point: a product whose provider SKU the
                 checker switched off. Orthogonal to lifecycle, so it is its own
@@ -195,7 +195,7 @@ export function MainProductToolbar({
             >
               <SelectTrigger
                 id="product-availability-filter"
-                className="w-48 rounded-xl"
+                className="w-full rounded-xl"
               >
                 <SelectValue placeholder={t("allAvailability")} />
               </SelectTrigger>
@@ -206,7 +206,7 @@ export function MainProductToolbar({
             </Select>
           </Box>
 
-          <Box className="flex flex-col gap-1.5">
+          <Box className="flex min-w-40 flex-1 flex-col gap-1.5 md:max-w-48">
             <Label htmlFor="product-price-filter">{t("price")}</Label>
             {/* Ranges are inferred: the reference only ever shows this select's
                 "All Price" trigger, never its open list (§4.6). */}
@@ -216,7 +216,7 @@ export function MainProductToolbar({
             >
               <SelectTrigger
                 id="product-price-filter"
-                className="w-48 rounded-xl"
+                className="w-full rounded-xl"
               >
                 <SelectValue placeholder={t("allPrice")} />
               </SelectTrigger>
@@ -235,7 +235,7 @@ export function MainProductToolbar({
           </Box>
         </Box>
 
-        <Box className="flex items-center gap-2">
+        <Box className="flex items-center gap-2 md:justify-end">
           <Button
             variant="outline"
             size="icon"

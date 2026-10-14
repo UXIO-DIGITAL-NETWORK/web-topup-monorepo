@@ -224,6 +224,7 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
 
           <ImageDropzone
             id="testimonial-avatar"
+            existingUrl={existing?.avatar_url}
             label={t("avatar")}
             caption={t("avatarCaption")}
             value={avatar ?? undefined}

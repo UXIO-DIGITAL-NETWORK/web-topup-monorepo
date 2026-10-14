@@ -1,7 +1,7 @@
 import { useTranslation } from "react-i18next";
 import { useRef, useState } from "react";
 import type { ReactNode } from "react";
-import { UploadCloud } from "lucide-react";
+import { Eye, UploadCloud } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
 import { FieldLabel } from "@/components/common/FieldLabel";
@@ -74,6 +74,17 @@ interface ImageDropzoneProps {
   required?: boolean;
   /** Marks the field as optional (`(Opsional)`); ignored when `required`. */
   optional?: boolean;
+  /**
+   * Public URL of the image already stored on the record, when there is one.
+   *
+   * `value` only ever holds a *newly picked* file, so without this a record that
+   * already carries artwork looks exactly like one that carries none: the field
+   * reads as empty and the operator cannot tell whether anything is uploaded.
+   * When this is set — and nothing has replaced it yet — a compact preview
+   * button is offered: the way to look at the stored image, and the sign that
+   * one exists.
+   */
+  existingUrl?: string | null;
 }
 
 export function ImageDropzone({
@@ -89,6 +100,7 @@ export function ImageDropzone({
   uploading,
   required,
   optional,
+  existingUrl,
 }: ImageDropzoneProps) {
   const { t } = useTranslation("common");
   const [dragActive, setDragActive] = useState(false);
@@ -101,6 +113,10 @@ export function ImageDropzone({
   // upload comes to look like a click that did nothing. Only the wording
   // separates them.
   const busy = optimising || Boolean(uploading);
+
+  // The stored artwork is only the answer while nothing has replaced it: with a
+  // new file picked, the field is already showing what is about to be saved.
+  const offersStoredPreview = Boolean(existingUrl) && !value && !busy;
 
   // Every image is re-encoded to WebP before it leaves the browser. The API
   // converts anyway, so a failure here costs bandwidth, never the upload —
@@ -175,16 +191,33 @@ export function ImageDropzone({
           disabled={busy}
           onChange={(event) => void handleFiles(event.target.files)}
         />
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          className="rounded-xl"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={busy}
-        >
-          Browse files
-        </Button>
+        <Box className="flex flex-wrap items-center justify-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            className="rounded-xl"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={busy}
+          >
+            Browse files
+          </Button>
+          {/* The stored image, opened in its own tab. A button rather than a
+              thumbnail on purpose: the field stays compact, and its presence is
+              itself the answer to "is there artwork here?". */}
+          {offersStoredPreview && (
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              className="rounded-xl"
+              onClick={() => window.open(existingUrl as string, "_blank", "noopener,noreferrer")}
+            >
+              <Eye className="size-4" />
+              {t("dropzone.preview")}
+            </Button>
+          )}
+        </Box>
         {optimising ? (
           <Text
             variant="small"

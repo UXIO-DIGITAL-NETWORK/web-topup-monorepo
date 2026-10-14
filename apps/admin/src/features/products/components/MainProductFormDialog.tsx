@@ -468,6 +468,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                   render={({ field }) => (
                     <ImageDropzone
                       id="product-logo"
+                      existingUrl={existing?.image_url}
                       label={t("productLogo")}
                       accept="image/jpeg,image/jpg,image/png,image/webp"
                       formatsLabel="JPG, JPEG, PNG, WEBP up to 10mb"

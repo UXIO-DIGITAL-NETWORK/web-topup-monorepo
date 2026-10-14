@@ -32,7 +32,8 @@
     "optimising": "Optimising image…",
     "formats": "JPG, JPEG, PNG, WEBP — optimised automatically",
     "unsupportedType": "That file type is not supported here.",
-    "uploading": "Uploading…"
+    "uploading": "Uploading…",
+    "preview": "Preview"
   },
   "confirm": {
     "delete": "Delete",
