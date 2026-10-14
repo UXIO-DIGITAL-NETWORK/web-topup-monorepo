@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/utils/currency";
 import { PlanPriceCard } from "./PlanPriceCard";
 import { ProductMixBuilder } from "./ProductMixBuilder";
-import { NICKNAME_VALIDATION_OPTIONS, PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
+import { NICKNAME_VALIDATION_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
 import { useCreateProduct, useProduct, useSetProductMargin, useSetProductMix, useUpdateProduct } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { useMarginPlanOptions } from "../hooks/useProviderProducts";
@@ -108,7 +108,6 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
       nicknameValidation: "",
       subName: "",
       code: "",
-      access: "",
       tag: "",
       category: "",
       subCategory: "",
@@ -128,7 +127,6 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
           nicknameValidation: existing.nickname_validation ?? "",
           subName: existing.sub_name ?? "",
           code: existing.code,
-          access: existing.access ?? "",
           tag: existing.tag ?? "",
           category: existing.game_id,
           subCategory: "",
@@ -188,7 +186,6 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
       category_id: values.category,
       sub_category_id: values.subCategory || undefined,
       nickname_validation: values.nicknameValidation || undefined,
-      access: values.access || undefined,
       tag: values.tag || undefined,
       description: values.description || undefined,
       logo: values.logo ?? undefined,
@@ -410,21 +407,6 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       </Text>
                     )}
                   </Box>
-                  <Controller
-                    control={control}
-                    name="access"
-                    render={({ field }) => (
-                      <SelectField
-                        id="product-access"
-                        label={t("productAccess")}
-                        tooltip={t("tipAccess")}
-                        options={translateOptions(PRODUCT_ACCESS_OPTIONS, t)}
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        optional
-                      />
-                    )}
-                  />
                 </Box>
 
                 <Box className="grid grid-cols-1 gap-4 sm:grid-cols-3">

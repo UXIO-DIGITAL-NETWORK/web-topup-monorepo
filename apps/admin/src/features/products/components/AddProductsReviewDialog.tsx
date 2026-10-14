@@ -11,7 +11,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { cn } from "@/lib/utils";
 import { translateOptions } from "@/lib/i18nOptions";
 import { formatCurrency } from "@/utils/currency";
-import { PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
+import { PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
 import { MarginSimulationCard } from "./MarginSimulationCard";
 import type { ReviewItem, ReviewPlanPrice } from "../lib/reviewProducts";
 
@@ -253,9 +253,6 @@ export function AddProductsReviewDialog({
                   </Row>
                   <Row label={t("subCategory")}>
                     <Value>{item.subCategoryName || EM_DASH}</Value>
-                  </Row>
-                  <Row label={t("productAccess")}>
-                    <Value>{optionLabel(PRODUCT_ACCESS_OPTIONS, item.access)}</Value>
                   </Row>
                   <Row label={t("productTag")}>
                     <Value>{optionLabel(PRODUCT_TAG_OPTIONS, item.tag)}</Value>

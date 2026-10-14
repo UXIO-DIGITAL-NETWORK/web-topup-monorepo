@@ -34,19 +34,9 @@ export const SUB_CATEGORY_OPTIONS: Record<string, SelectOption[]> = {
 };
 
 /**
- * The Add form's three remaining selects. **Inferred, not confirmed** (§4.6):
+ * The Add form's two remaining selects. **Inferred, not confirmed** (§4.6):
  * the reference shows only their placeholders, never their lists.
- *
- * Access mirrors `PRICE_TIERS` — the same four customer tiers the price card
- * is broken down by, which is the only tier vocabulary this domain has.
  */
-export const PRODUCT_ACCESS_OPTIONS: KeyedSelectOption[] = [
-  { value: "public", labelKey: "optPublic" },
-  { value: "vip", labelKey: "optVip" },
-  { value: "reseller", labelKey: "optReseller" },
-  { value: "agent", labelKey: "optAgent" },
-];
-
 export const PRODUCT_TAG_OPTIONS: KeyedSelectOption[] = [
   { value: "popular", labelKey: "optPopular" },
   { value: "new", labelKey: "newBadge" },

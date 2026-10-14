@@ -569,8 +569,6 @@ export interface AddProductsFromSupplierItem {
   sub_name?: string;
   sub_category_id?: string;
   code?: string;
-  /** Which customer tier may buy it — a `PRODUCT_ACCESS_OPTIONS` value. */
-  access?: string;
   /** Storefront merchandising label — a `PRODUCT_TAG_OPTIONS` value. */
   tag?: string;
   discount_type?: ProductDiscountType;

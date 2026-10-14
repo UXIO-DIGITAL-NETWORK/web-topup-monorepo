@@ -32,7 +32,7 @@ import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { AddProductsReviewDialog } from "../components/AddProductsReviewDialog";
 import { MarginSimulationCard, type MarginSimulationRow } from "../components/MarginSimulationCard";
 import { MixProductPicker, type MixProductOption } from "../components/MixProductPicker";
-import { PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
+import { PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
 import { normalizeProductCode } from "../lib/productCode";
 import { buildReviewItem, resolvePlanPrice, type SelectedMeta } from "../lib/reviewProducts";
 import type { PoolSort } from "../types/product.type";
@@ -64,8 +64,6 @@ interface RowForm {
   name: string;
   subName: string;
   subCategoryId: string;
-  /** Which customer tier may buy it — a `PRODUCT_ACCESS_OPTIONS` value. */
-  access: string;
   /** Storefront merchandising label — a `PRODUCT_TAG_OPTIONS` value. */
   tag: string;
   points: string;
@@ -84,7 +82,6 @@ const emptyForm = (name: string): RowForm => ({
   name,
   subName: "",
   subCategoryId: "",
-  access: "",
   tag: "",
   points: "",
   pointsFlat: "",
@@ -404,7 +401,6 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
             name: form.name || undefined,
             sub_name: form.subName || undefined,
             sub_category_id: form.subCategoryId || undefined,
-            access: form.access || undefined,
             tag: form.tag || undefined,
             discount_type: form.discountType || undefined,
             discount_value: toNumber(form.discountValue) ?? undefined,
@@ -927,19 +923,9 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         onChange={(event) => patch(code, { discountValue: event.target.value })}
                                       />
                                     </Box>
-                                    {/* Access and tag, the two storefront-facing
-                                        columns the product form has — set here so a
-                                        product added from a provider is finished in
-                                        one pass instead of a second edit. */}
-                                    <SelectField
-                                      id={`${code}-access`}
-                                      label={t("productAccess")}
-                                      tooltip={t("tipAccess")}
-                                      options={translateOptions(PRODUCT_ACCESS_OPTIONS, t)}
-                                      value={form.access}
-                                      onChange={(value) => patch(code, { access: value })}
-                                      optional
-                                    />
+                                    {/* Tag — the storefront merchandising label the
+                                        product form has, set here so a product added
+                                        from a provider is finished in one pass. */}
                                     <SelectField
                                       id={`${code}-tag`}
                                       label={t("productTag")}
