@@ -398,6 +398,17 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         {errors.code.message}
                       </Text>
                     )}
+                    {/* The supplier's own SKU, read-only — shown next to our
+                        internal code so an edit makes the two tellable apart.
+                        Absent for a product with no provider mapping. */}
+                    {existing?.provider_sku_code && (
+                      <Text
+                        variant="small"
+                        className="text-muted-foreground tabular-nums"
+                      >
+                        {t("providerCode")}: {existing.provider_sku_code}
+                      </Text>
+                    )}
                   </Box>
                   <Controller
                     control={control}

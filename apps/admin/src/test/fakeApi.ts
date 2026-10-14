@@ -137,6 +137,7 @@ const toApiProduct = (row: (typeof PRODUCTS)[number], index: number): Row => {
     name: row.name,
     sub_name: row.sub_name ?? null,
     code: row.code,
+    provider_sku_code: row.provider_sku_code ?? null,
     logo_url: row.image_url ?? null,
     description: row.description ?? null,
     validasi_nickname: row.nickname_validation ?? null,

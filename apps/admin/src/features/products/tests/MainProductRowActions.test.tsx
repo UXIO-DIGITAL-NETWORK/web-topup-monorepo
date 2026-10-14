@@ -188,6 +188,16 @@ describe("Edit Main Product — pricing", () => {
     expect(within(dialog).getByRole("tab", { name: "Product Mix" })).toBeInTheDocument();
   });
 
+  it("shows the provider's own SKU next to the internal product code", async () => {
+    const user = userEvent.setup();
+    const dialog = await openEdit(user);
+
+    // The internal code is what the admin edits; the supplier's SKU is a
+    // read-only detail so the two are tellable apart.
+    expect(within(dialog).getByLabelText("Product Code")).toHaveValue("MLBB-WDP-01");
+    expect(within(dialog).getByText("Provider Code: mlweek")).toBeInTheDocument();
+  });
+
   it("prefills the margin each plan currently sells at", async () => {
     const user = userEvent.setup();
     const dialog = await openEdit(user);

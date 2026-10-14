@@ -81,6 +81,14 @@ class ProductResource extends JsonResource
                 'publish_state' => $this->publishState(),
                 'can_publish' => $this->canPublish(),
                 'publish_blocked_reason' => $this->publishBlockedReason(),
+                // The provider's SKU this product is served by, so the admin can
+                // see the supplier's own code next to our internal one without a
+                // second request. The active mapping wins; a mapping that exists
+                // but is switched off is still the product's provider code, so it
+                // is the fallback rather than nothing. Null when there is no
+                // mapping at all (a hand-made product, or a mix container).
+                'provider_sku_code' => ($this->supplierProducts->firstWhere('is_active', true)
+                    ?? $this->supplierProducts->first())?->buyer_sku_code,
                 // The provider's own flag, not `is_available`. The price checker
                 // (not the admin) writes `buyer_product_status`; a false mapping
                 // is what "nonaktif di provider" actually means, and what the

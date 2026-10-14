@@ -178,6 +178,33 @@ class AddProductsFromSupplierTest extends TestCase
         $this->assertFalse((bool) $product->status);
     }
 
+    /**
+     * Access and tag are the two storefront-facing columns the modal also
+     * collects, so a product added from a provider is finished in one step
+     * instead of needing a second trip to the product form.
+     */
+    public function test_it_stores_the_access_and_tag_typed_in_the_modal(): void
+    {
+        $this->fakePriceList([$this->serviceItem()]);
+
+        $this->postJson('/api/v1/products/from-supplier', [
+            'items' => [[
+                'buyer_sku_code' => 'ML5',
+                'code' => 'ML5-ACCESS',
+                'name' => 'Lima',
+                'access' => 'vip',
+                'tag' => 'promo',
+            ]],
+        ])
+            ->assertCreated()
+            ->assertJsonPath('data.created', 1);
+
+        $product = Product::where('code', 'ML5-ACCESS')->firstOrFail();
+
+        $this->assertSame('vip', $product->access);
+        $this->assertSame('promo', $product->tag);
+    }
+
     public function test_it_publishes_straight_away_when_asked(): void
     {
         $this->fakePriceList([$this->serviceItem()]);

@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
+import { translateOptions } from "@/lib/i18nOptions";
 import { formatCurrency } from "@/utils/currency";
+import { PRODUCT_ACCESS_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
 import { MarginSimulationCard } from "./MarginSimulationCard";
 import type { ReviewItem, ReviewPlanPrice } from "../lib/reviewProducts";
 
@@ -129,6 +131,13 @@ export function AddProductsReviewDialog({
     return item.discountType === "percent" ? `${item.discountValue}%` : rupiah(item.discountValue);
   };
 
+  // The stored value is the option's code ("vip"), not its label — resolve it
+  // for display, falling back to the raw value for anything unrecognised.
+  const optionLabel = (options: { value: string; labelKey: string }[], value: string) => {
+    if (value === "") return EM_DASH;
+    return translateOptions(options, t).find((option) => option.value === value)?.label ?? value;
+  };
+
   return (
     <Dialog
       open={open}
@@ -244,6 +253,12 @@ export function AddProductsReviewDialog({
                   </Row>
                   <Row label={t("subCategory")}>
                     <Value>{item.subCategoryName || EM_DASH}</Value>
+                  </Row>
+                  <Row label={t("productAccess")}>
+                    <Value>{optionLabel(PRODUCT_ACCESS_OPTIONS, item.access)}</Value>
+                  </Row>
+                  <Row label={t("productTag")}>
+                    <Value>{optionLabel(PRODUCT_TAG_OPTIONS, item.tag)}</Value>
                   </Row>
                   <Row label={t("productLogo")}>
                     <Value>{item.hasLogo ? t("active") : EM_DASH}</Value>
