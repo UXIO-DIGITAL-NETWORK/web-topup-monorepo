@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { Plus, Trash2 } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Heading } from "@/components/common/Heading";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
@@ -110,10 +111,14 @@ export function FlashSaleFormDialog({ open, onOpenChange, flashSaleId }: FlashSa
         >
           <Box className="flex flex-col gap-4">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="flash-sale-name">{t("colName")}</Label>
+              <FieldLabel
+                htmlFor="flash-sale-name"
+                required
+              >{t("colName")}</FieldLabel>
               <Input
                 id="flash-sale-name"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("flashSaleNamePlaceholder")}
                 {...register("name")}
               />
@@ -129,11 +134,15 @@ export function FlashSaleFormDialog({ open, onOpenChange, flashSaleId }: FlashSa
 
             <Box className="grid gap-4 sm:grid-cols-2">
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="flash-sale-starts">{t("starts")}</Label>
+                <FieldLabel
+                  htmlFor="flash-sale-starts"
+                  required
+                >{t("starts")}</FieldLabel>
                 <Input
                   id="flash-sale-starts"
                   type="datetime-local"
                   className="rounded-xl"
+                  aria-required="true"
                   {...register("startsAt")}
                 />
                 {errors.startsAt && (
@@ -146,11 +155,15 @@ export function FlashSaleFormDialog({ open, onOpenChange, flashSaleId }: FlashSa
                 )}
               </Box>
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="flash-sale-ends">{t("colEnds")}</Label>
+                <FieldLabel
+                  htmlFor="flash-sale-ends"
+                  required
+                >{t("colEnds")}</FieldLabel>
                 <Input
                   id="flash-sale-ends"
                   type="datetime-local"
                   className="rounded-xl"
+                  aria-required="true"
                   {...register("endsAt")}
                 />
                 {errors.endsAt && (
@@ -230,30 +243,55 @@ export function FlashSaleFormDialog({ open, onOpenChange, flashSaleId }: FlashSa
                             error={errors.items?.[index]?.productId?.message}
                             disabled={productsLoading}
                             emptyLabel={productsLoading ? "Loading products..." : "No products available"}
+                            required
                           />
                         )}
                       />
 
                       <Box className="flex flex-col gap-1.5">
-                        <Label htmlFor={`flash-sale-price-${index}`}>{t("salePrice")}</Label>
+                        <FieldLabel
+                          htmlFor={`flash-sale-price-${index}`}
+                          required
+                        >{t("salePrice")}</FieldLabel>
                         <Input
                           id={`flash-sale-price-${index}`}
                           type="number"
                           min={0}
                           className="rounded-xl tabular-nums"
+                          aria-required="true"
                           {...register(`items.${index}.salePrice`, { valueAsNumber: true })}
                         />
+                        {errors.items?.[index]?.salePrice && (
+                          <Text
+                            variant="small"
+                            className="text-destructive"
+                          >
+                            {errors.items[index]?.salePrice?.message}
+                          </Text>
+                        )}
                       </Box>
 
                       <Box className="flex flex-col gap-1.5">
-                        <Label htmlFor={`flash-sale-stock-${index}`}>{t("stock")}</Label>
+                        <FieldLabel
+                          htmlFor={`flash-sale-stock-${index}`}
+                          required
+                        >{t("stock")}</FieldLabel>
                         <Input
                           id={`flash-sale-stock-${index}`}
                           type="number"
                           min={0}
                           className="rounded-xl tabular-nums"
+                          aria-required="true"
                           {...register(`items.${index}.stockTotal`, { valueAsNumber: true })}
                         />
+                        {errors.items?.[index]?.stockTotal && (
+                          <Text
+                            variant="small"
+                            className="text-destructive"
+                          >
+                            {errors.items[index]?.stockTotal?.message}
+                          </Text>
+                        )}
                       </Box>
 
                       <Button

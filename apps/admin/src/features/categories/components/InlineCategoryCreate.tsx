@@ -2,10 +2,10 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useCategoryTypeOptions } from "../hooks/useCategoryTypeOptions";
 import { useQuickCreateCategory } from "../hooks/useCategories";
@@ -89,13 +89,17 @@ export function InlineCategoryCreate({ onCreated, onCancel }: InlineCategoryCrea
       >{t("inlineCreateHint")}</Text>
 
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="inline-category-type">{t("colCategoryType")}</Label>
+        <FieldLabel
+          htmlFor="inline-category-type"
+          required
+        >{t("colCategoryType")}</FieldLabel>
         <Select
           value={values.typeId}
           onValueChange={(value) => set("typeId", value)}
         >
           <SelectTrigger
             id="inline-category-type"
+            aria-required="true"
             className="w-full rounded-xl"
           >
             <SelectValue placeholder={typesLoading ? "Loading types..." : "Select a category type"} />
@@ -122,12 +126,16 @@ export function InlineCategoryCreate({ onCreated, onCancel }: InlineCategoryCrea
       </Box>
 
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="inline-category-name">{t("colCategoryName")}</Label>
+        <FieldLabel
+          htmlFor="inline-category-name"
+          required
+        >{t("colCategoryName")}</FieldLabel>
         <Input
           id="inline-category-name"
           value={values.name}
           onChange={(event) => set("name", event.target.value)}
           placeholder={t("nameExample")}
+          aria-required="true"
           className="rounded-xl"
         />
         {errors.name && (
@@ -141,12 +149,16 @@ export function InlineCategoryCreate({ onCreated, onCancel }: InlineCategoryCrea
       </Box>
 
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="inline-category-code">{t("categoryCode")}</Label>
+        <FieldLabel
+          htmlFor="inline-category-code"
+          required
+        >{t("categoryCode")}</FieldLabel>
         <Input
           id="inline-category-code"
           value={values.code}
           onChange={(event) => set("code", event.target.value)}
           placeholder={t("codeExample")}
+          aria-required="true"
           className="rounded-xl"
         />
         <Text

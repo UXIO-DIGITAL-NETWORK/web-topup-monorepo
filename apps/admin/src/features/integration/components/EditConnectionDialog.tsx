@@ -2,6 +2,7 @@ import { useTranslation } from "react-i18next";
 import { Controller, useForm } from "react-hook-form";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -111,7 +112,10 @@ export function EditConnectionDialog({ provider, channelName, open, onOpenChange
                 key={field.key}
                 className="flex flex-col gap-1.5"
               >
-                <Label htmlFor={field.key}>{field.label}</Label>
+                <FieldLabel
+                  htmlFor={field.key}
+                  optional
+                >{field.label}</FieldLabel>
                 <Input
                   id={field.key}
                   type={field.secret ? "password" : "text"}

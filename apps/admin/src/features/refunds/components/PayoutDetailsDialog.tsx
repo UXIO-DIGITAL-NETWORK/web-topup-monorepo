@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { usePayoutBanks } from "../hooks/usePayoutBanks";
 import { payoutDetailsSchema, type PayoutDetailsFormValues } from "../schemas/refund.schema";
@@ -106,7 +106,10 @@ export function PayoutDetailsDialog({ open, onOpenChange, refund, onConfirm, isP
           </DialogHeader>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="payout-bank">{t("bankOrEwalletField")}</Label>
+            <FieldLabel
+              htmlFor="payout-bank"
+              required
+            >{t("bankOrEwalletField")}</FieldLabel>
             <Controller
               control={control}
               name="bank_code"
@@ -117,6 +120,7 @@ export function PayoutDetailsDialog({ open, onOpenChange, refund, onConfirm, isP
                 >
                   <SelectTrigger
                     id="payout-bank"
+                    aria-required="true"
                     className="w-full rounded-xl"
                   >
                     <SelectValue placeholder={t("selectDestination")} />
@@ -146,20 +150,28 @@ export function PayoutDetailsDialog({ open, onOpenChange, refund, onConfirm, isP
 
           {isEwallet ? (
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="payout-phone">{t("ewalletPhone")}</Label>
+              <FieldLabel
+                htmlFor="payout-phone"
+                required
+              >{t("ewalletPhone")}</FieldLabel>
               <Input
                 id="payout-phone"
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 placeholder="08xxxxxxxxxx"
                 {...register("account_phone")}
               />
             </Box>
           ) : (
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="payout-account">{t("accountNumber")}</Label>
+              <FieldLabel
+                htmlFor="payout-account"
+                required
+              >{t("accountNumber")}</FieldLabel>
               <Input
                 id="payout-account"
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 placeholder="1234567890"
                 {...register("account_number")}
               />
@@ -175,10 +187,14 @@ export function PayoutDetailsDialog({ open, onOpenChange, refund, onConfirm, isP
           )}
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="payout-name">{t("accountHolderName")}</Label>
+            <FieldLabel
+              htmlFor="payout-name"
+              required
+            >{t("accountHolderName")}</FieldLabel>
             <Input
               id="payout-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("asPrintedOnAccount")}
               {...register("account_name")}
             />

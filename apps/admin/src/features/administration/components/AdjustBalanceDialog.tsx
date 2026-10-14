@@ -5,6 +5,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
   balanceAdjustmentSchema,
@@ -95,12 +95,16 @@ export function AdjustBalanceDialog({ open, onOpenChange, userName, onConfirm, i
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.direction?.message}
+                required
               />
             )}
           />
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="adjust-amount">{t("amount")}</Label>
+            <FieldLabel
+              htmlFor="adjust-amount"
+              required
+            >{t("amount")}</FieldLabel>
             {/* No native `min` — a browser constraint would block the whole
                 form submit before Zod ever runs, so the "must be > 0" message
                 would never render. The schema owns that rule instead. */}
@@ -108,6 +112,7 @@ export function AdjustBalanceDialog({ open, onOpenChange, userName, onConfirm, i
               id="adjust-amount"
               type="number"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("amountPlaceholder")}
               {...register("amount", { valueAsNumber: true })}
             />
@@ -122,10 +127,14 @@ export function AdjustBalanceDialog({ open, onOpenChange, userName, onConfirm, i
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="adjust-reason">{t("reason")}</Label>
+            <FieldLabel
+              htmlFor="adjust-reason"
+              required
+            >{t("reason")}</FieldLabel>
             <Textarea
               id="adjust-reason"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("reasonPlaceholder")}
               {...register("reason")}
             />

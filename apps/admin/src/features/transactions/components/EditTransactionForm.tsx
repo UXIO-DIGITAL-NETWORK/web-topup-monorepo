@@ -5,11 +5,11 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { UploadCloud } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Link } from "@/components/common/Link";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
@@ -91,7 +91,10 @@ export function EditTransactionForm({ transaction, cancelHref, onSaved }: EditTr
       className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6"
     >
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="edit-payment-status">{t("statusPayment")}</Label>
+        <FieldLabel
+          htmlFor="edit-payment-status"
+          required
+        >{t("statusPayment")}</FieldLabel>
         <Controller
           control={control}
           name="paymentStatus"
@@ -102,6 +105,7 @@ export function EditTransactionForm({ transaction, cancelHref, onSaved }: EditTr
             >
               <SelectTrigger
                 id="edit-payment-status"
+                aria-required="true"
                 className="w-full rounded-xl"
               >
                 <SelectValue placeholder={t("selectStatus")} />
@@ -130,7 +134,10 @@ export function EditTransactionForm({ transaction, cancelHref, onSaved }: EditTr
       </Box>
 
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="edit-invoice-status">{t("invoiceStatus")}</Label>
+        <FieldLabel
+          htmlFor="edit-invoice-status"
+          required
+        >{t("invoiceStatus")}</FieldLabel>
         <Controller
           control={control}
           name="invoiceStatus"
@@ -141,6 +148,7 @@ export function EditTransactionForm({ transaction, cancelHref, onSaved }: EditTr
             >
               <SelectTrigger
                 id="edit-invoice-status"
+                aria-required="true"
                 className="w-full rounded-xl"
               >
                 <SelectValue placeholder={t("selectStatus")} />
@@ -169,7 +177,10 @@ export function EditTransactionForm({ transaction, cancelHref, onSaved }: EditTr
       </Box>
 
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="edit-serial-number">{t("serialNumber")}</Label>
+        <FieldLabel
+          htmlFor="edit-serial-number"
+          optional
+        >{t("serialNumber")}</FieldLabel>
         <Input
           id="edit-serial-number"
           type="text"
@@ -180,7 +191,10 @@ export function EditTransactionForm({ transaction, cancelHref, onSaved }: EditTr
       </Box>
 
       <Box className="flex flex-col gap-1.5">
-        <Label htmlFor="edit-proof-file">{t("invoiceProof")}</Label>
+        <FieldLabel
+          htmlFor="edit-proof-file"
+          optional
+        >{t("invoiceProof")}</FieldLabel>
         <Box
           aria-busy={uploading}
           onDragOver={(event) => {

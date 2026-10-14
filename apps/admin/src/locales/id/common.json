@@ -42,7 +42,9 @@
     "copied": "Disalin ke clipboard"
   },
   "field": {
-    "moreInformation": "Informasi lebih lanjut"
+    "moreInformation": "Informasi lebih lanjut",
+    "required": "Wajib",
+    "optional": "Opsional"
   },
   "password": {
     "show": "Tampilkan password",

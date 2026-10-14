@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -131,10 +132,14 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
         >
           <Box className="grid gap-4 sm:grid-cols-2">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-code">{t("colCode")}</Label>
+              <FieldLabel
+                htmlFor="promo-code"
+                required
+              >{t("colCode")}</FieldLabel>
               <Input
                 id="promo-code"
                 className="rounded-xl uppercase tracking-wider"
+                aria-required="true"
                 placeholder={t("promoCodePlaceholder")}
                 {...register("code")}
               />
@@ -148,10 +153,14 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
               )}
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-name">{t("colName")}</Label>
+              <FieldLabel
+                htmlFor="promo-name"
+                required
+              >{t("colName")}</FieldLabel>
               <Input
                 id="promo-name"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("promoNamePlaceholder")}
                 {...register("name")}
               />
@@ -167,7 +176,10 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="promo-description">{t("description")}</Label>
+            <FieldLabel
+              htmlFor="promo-description"
+              optional
+            >{t("description")}</FieldLabel>
             <Textarea
               id="promo-description"
               rows={2}
@@ -187,16 +199,23 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
                   options={translateOptions(TYPE_OPTIONS, t)}
                   value={field.value}
                   onChange={field.onChange}
+                  required
                 />
               )}
             />
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-value">{type === "percentage" ? "Percentage" : "Amount"}</Label>
+              <FieldLabel
+                htmlFor="promo-value"
+                required
+              >
+                {type === "percentage" ? "Percentage" : "Amount"}
+              </FieldLabel>
               <Input
                 id="promo-value"
                 type="number"
                 min={1}
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 {...register("value", { valueAsNumber: true })}
               />
               {errors.value && (
@@ -210,7 +229,10 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
             </Box>
             {type === "percentage" && (
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="promo-max">{t("maxDiscount")}</Label>
+                <FieldLabel
+                  htmlFor="promo-max"
+                  optional
+                >{t("maxDiscount")}</FieldLabel>
                 <Input
                   id="promo-max"
                   type="number"
@@ -224,17 +246,32 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
 
           <Box className="grid gap-4 sm:grid-cols-3">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-min">{t("colMinPurchase")}</Label>
+              <FieldLabel
+                htmlFor="promo-min"
+                required
+              >{t("colMinPurchase")}</FieldLabel>
               <Input
                 id="promo-min"
                 type="number"
                 min={0}
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 {...register("minPurchase", { valueAsNumber: true })}
               />
+              {errors.minPurchase && (
+                <Text
+                  variant="small"
+                  className="text-destructive"
+                >
+                  {errors.minPurchase.message}
+                </Text>
+              )}
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-quota">{t("totalQuota")}</Label>
+              <FieldLabel
+                htmlFor="promo-quota"
+                optional
+              >{t("totalQuota")}</FieldLabel>
               <Input
                 id="promo-quota"
                 type="number"
@@ -245,7 +282,10 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
               />
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-quota-user">{t("quotaPerUser")}</Label>
+              <FieldLabel
+                htmlFor="promo-quota-user"
+                optional
+              >{t("quotaPerUser")}</FieldLabel>
               <Input
                 id="promo-quota-user"
                 type="number"
@@ -259,7 +299,10 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
 
           <Box className="grid gap-4 sm:grid-cols-2">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-starts">{t("starts")}</Label>
+              <FieldLabel
+                htmlFor="promo-starts"
+                optional
+              >{t("starts")}</FieldLabel>
               <Input
                 id="promo-starts"
                 type="date"
@@ -268,7 +311,10 @@ export function PromoFormDialog({ open, onOpenChange, promoId }: PromoFormDialog
               />
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="promo-ends">{t("colEnds")}</Label>
+              <FieldLabel
+                htmlFor="promo-ends"
+                optional
+              >{t("colEnds")}</FieldLabel>
               <Input
                 id="promo-ends"
                 type="date"

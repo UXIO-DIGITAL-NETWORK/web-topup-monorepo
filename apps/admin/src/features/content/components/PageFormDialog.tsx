@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -117,10 +118,14 @@ export function PageFormDialog({ open, onOpenChange, pageId }: PageFormDialogPro
           <Box className="flex flex-col gap-4">
             <Box className="grid gap-4 sm:grid-cols-3">
               <Box className="flex flex-col gap-1.5 sm:col-span-2">
-                <Label htmlFor="page-title">{t("title")}</Label>
+                <FieldLabel
+                  htmlFor="page-title"
+                  required
+                >{t("title")}</FieldLabel>
                 <Input
                   id="page-title"
                   className="rounded-xl"
+                  aria-required="true"
                   {...register("title")}
                 />
                 {errors.title && (
@@ -144,16 +149,21 @@ export function PageFormDialog({ open, onOpenChange, pageId }: PageFormDialogPro
                     value={field.value}
                     onChange={field.onChange}
                     error={errors.locale?.message}
+                    required
                   />
                 )}
               />
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="page-slug">{t("slug")}</Label>
+              <FieldLabel
+                htmlFor="page-slug"
+                required
+              >{t("slug")}</FieldLabel>
               <Input
                 id="page-slug"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("pageSlugPlaceholder")}
                 {...register("slug")}
               />
@@ -168,7 +178,10 @@ export function PageFormDialog({ open, onOpenChange, pageId }: PageFormDialogPro
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="page-intro">{t("intro")}</Label>
+              <FieldLabel
+                htmlFor="page-intro"
+                optional
+              >{t("intro")}</FieldLabel>
               <Textarea
                 id="page-intro"
                 rows={4}
@@ -206,7 +219,10 @@ export function PageFormDialog({ open, onOpenChange, pageId }: PageFormDialogPro
 
             <Box className="grid gap-4 sm:grid-cols-2">
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="page-meta-title">{t("metaTitle")}</Label>
+                <FieldLabel
+                  htmlFor="page-meta-title"
+                  optional
+                >{t("metaTitle")}</FieldLabel>
                 <Input
                   id="page-meta-title"
                   className="rounded-xl"
@@ -214,7 +230,10 @@ export function PageFormDialog({ open, onOpenChange, pageId }: PageFormDialogPro
                 />
               </Box>
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="page-meta-robots">{t("metaRobots")}</Label>
+                <FieldLabel
+                  htmlFor="page-meta-robots"
+                  optional
+                >{t("metaRobots")}</FieldLabel>
                 <Input
                   id="page-meta-robots"
                   className="rounded-xl"
@@ -224,7 +243,10 @@ export function PageFormDialog({ open, onOpenChange, pageId }: PageFormDialogPro
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="page-meta-description">{t("metaDescription")}</Label>
+              <FieldLabel
+                htmlFor="page-meta-description"
+                optional
+              >{t("metaDescription")}</FieldLabel>
               <Textarea
                 id="page-meta-description"
                 rows={3}

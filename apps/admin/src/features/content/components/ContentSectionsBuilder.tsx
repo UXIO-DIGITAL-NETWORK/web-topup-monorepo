@@ -3,6 +3,7 @@ import { useFieldArray, type Control, type FieldErrors, type UseFormRegister } f
 import { Plus, Trash2 } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -66,7 +67,10 @@ export function ContentSectionsBuilder({ control, register, errors, requireOne =
           >
             <Box className="flex items-end justify-between gap-3">
               <Box className="flex flex-1 flex-col gap-1.5">
-                <Label htmlFor={`section-heading-${index}`}>{t("heading")}</Label>
+                <FieldLabel
+                  htmlFor={`section-heading-${index}`}
+                  optional
+                >{t("heading")}</FieldLabel>
                 <Input
                   id={`section-heading-${index}`}
                   className="rounded-xl"
@@ -86,11 +90,15 @@ export function ContentSectionsBuilder({ control, register, errors, requireOne =
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor={`section-body-${index}`}>{t("content")}</Label>
+              <FieldLabel
+                htmlFor={`section-body-${index}`}
+                required
+              >{t("content")}</FieldLabel>
               <Textarea
                 id={`section-body-${index}`}
                 rows={5}
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("sectionPlaceholder")}
                 {...register(`sections.${index}.body` as never)}
               />

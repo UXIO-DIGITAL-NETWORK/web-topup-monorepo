@@ -775,11 +775,14 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       disabled={subCategoryDisabled}
                                       emptyLabel={subCategoryDisabled ? t("chooseCategoryFirst") : t("noSubCategory")}
                                       onChange={(value) => patch(code, { subCategoryId: value })}
+                                      required={subCategoryRequired}
+                                      optional={!subCategoryRequired}
                                     />
                                     <Box className="flex flex-col gap-1.5">
                                       <FieldLabel
                                         htmlFor={`${code}-name`}
                                         tooltip={t("tipProductName")}
+                                        required
                                       >
                                         {t("productName")}
                                       </FieldLabel>
@@ -787,6 +790,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         id={`${code}-name`}
                                         className="rounded-xl"
                                         aria-label={`${code} name`}
+                                        aria-required="true"
                                         value={form.name}
                                         onChange={(event) => patch(code, { name: event.target.value })}
                                       />
@@ -795,6 +799,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <FieldLabel
                                         htmlFor={`${code}-code`}
                                         tooltip={t("tipProductCode")}
+                                        required
                                       >
                                         {t("productCode")}
                                       </FieldLabel>
@@ -802,6 +807,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         id={`${code}-code`}
                                         className="rounded-xl"
                                         aria-label={`${code} internal code`}
+                                        aria-required="true"
                                         value={form.code}
                                         onChange={(event) =>
                                           patch(code, { code: normalizeProductCode(event.target.value) })
@@ -829,6 +835,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <FieldLabel
                                         htmlFor={`${code}-sub-name`}
                                         tooltip={t("tipSubName")}
+                                        optional
                                       >
                                         {t("subName")}
                                       </FieldLabel>
@@ -845,6 +852,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <FieldLabel
                                         htmlFor={`${code}-points`}
                                         tooltip={t("tipPoints")}
+                                        optional
                                       >
                                         {t("pointsPercent")}
                                       </FieldLabel>
@@ -861,6 +869,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <FieldLabel
                                         htmlFor={`${code}-bonus`}
                                         tooltip={t("tipBonusPoints")}
+                                        optional
                                       >
                                         {t("bonusPoints")}
                                       </FieldLabel>
@@ -888,11 +897,13 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                           discountType: (next === NONE ? "" : next) as RowForm["discountType"],
                                         })
                                       }
+                                      optional
                                     />
                                     <Box className="flex flex-col gap-1.5">
                                       <FieldLabel
                                         htmlFor={`${code}-discount-value`}
                                         tooltip={t("tipDiscountValue")}
+                                        optional
                                       >
                                         {t("discountValue")}
                                       </FieldLabel>
@@ -915,6 +926,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                         value={form.logo ?? undefined}
                                         onChange={(file) => patch(code, { logo: file })}
                                         uploading={addProducts.isPending}
+                                        optional
                                       />
                                     </Box>
                                   </Box>
@@ -973,6 +985,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                               <FieldLabel
                                                 htmlFor={`${code}-margin-${plan.value}`}
                                                 tooltip={t("tipMargin")}
+                                                optional
                                               >
                                                 {planLabel(plan)} (%)
                                               </FieldLabel>
@@ -1025,6 +1038,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <FieldLabel
                                         htmlFor={`${code}-price-min`}
                                         tooltip={t("tipLowerLimit")}
+                                        optional
                                       >
                                         {t("lowerLimit")}
                                       </FieldLabel>
@@ -1041,6 +1055,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <FieldLabel
                                         htmlFor={`${code}-price-max`}
                                         tooltip={t("tipUpperLimit")}
+                                        optional
                                       >
                                         {t("upperLimit")}
                                       </FieldLabel>
@@ -1110,6 +1125,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                               <FieldLabel
                                                 htmlFor={`${code}-mix-${index}`}
                                                 tooltip={t("tipMixProduct")}
+                                                required
                                               >
                                                 {t("mainProduct")}
                                               </FieldLabel>
@@ -1131,6 +1147,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                               <FieldLabel
                                                 htmlFor={`${code}-mix-qty-${index}`}
                                                 tooltip={t("tipQuantity")}
+                                                required
                                               >
                                                 {t("quantity")}
                                               </FieldLabel>

@@ -4,11 +4,11 @@ import { Controller, useFieldArray, type Control, type FieldErrors, type UseForm
 import { Plus, Trash2 } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useProductList } from "../hooks/useProducts";
 import type { ProductFormValues } from "../schemas/productForm.schema";
 
@@ -82,17 +82,22 @@ export function ProductMixBuilder({ control, register, errors, currentProductId 
                     value={select.value}
                     onChange={select.onChange}
                     error={errors.productMix?.[index]?.mainProduct?.message}
+                    required
                   />
                 )}
               />
 
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor={`product-mix-quantity-${index}`}>{t("quantity")}</Label>
+                <FieldLabel
+                  htmlFor={`product-mix-quantity-${index}`}
+                  required
+                >{t("quantity")}</FieldLabel>
                 <Input
                   id={`product-mix-quantity-${index}`}
                   className="rounded-xl"
                   inputMode="numeric"
                   placeholder="1"
+                  aria-required="true"
                   {...register(`productMix.${index}.quantity`)}
                 />
                 {errors.productMix?.[index]?.quantity && (

@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
@@ -16,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { useBanner, useCreateBanner, useUpdateBanner } from "../hooks/useBanners";
 import { useContentCategoryOptions } from "../hooks/useContentCategoryOptions";
 import { bannerFormSchema, type BannerFormValues } from "../schemas/contentForms.schema";
@@ -34,6 +34,10 @@ export function BannerFormDialog({ open, onOpenChange, bannerId }: BannerFormDia
   const { t } = useTranslation("content");
   const isEdit = Boolean(bannerId);
   const [image, setImage] = useState<File | null>(null);
+  // The image is required on create — the storefront hides a banner with no
+  // image, so the caption's promise is enforced rather than decorative. On edit
+  // the existing image stays if none is picked, so it is optional there.
+  const [imageError, setImageError] = useState<string | null>(null);
 
   const { data: existing } = useBanner(open ? bannerId : undefined);
   const { options: categoryOptions } = useContentCategoryOptions();
@@ -55,6 +59,11 @@ export function BannerFormDialog({ open, onOpenChange, bannerId }: BannerFormDia
   });
 
   const onSubmit = (values: BannerFormValues) => {
+    if (!isEdit && !image) {
+      setImageError(t("bannerImageRequired"));
+      return;
+    }
+
     const payload = {
       name: values.name,
       link: values.link || undefined,
@@ -89,10 +98,14 @@ export function BannerFormDialog({ open, onOpenChange, bannerId }: BannerFormDia
           className="flex flex-col gap-4"
         >
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="banner-name">{t("name")}</Label>
+            <FieldLabel
+              htmlFor="banner-name"
+              required
+            >{t("name")}</FieldLabel>
             <Input
               id="banner-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("bannerNamePlaceholder")}
               {...register("name")}
             />
@@ -108,7 +121,10 @@ export function BannerFormDialog({ open, onOpenChange, bannerId }: BannerFormDia
 
           <Box className="grid gap-4 sm:grid-cols-2">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="banner-link">{t("link")}</Label>
+              <FieldLabel
+                htmlFor="banner-link"
+                optional
+              >{t("link")}</FieldLabel>
               <Input
                 id="banner-link"
                 className="rounded-xl"
@@ -127,6 +143,7 @@ export function BannerFormDialog({ open, onOpenChange, bannerId }: BannerFormDia
                   options={[{ value: GLOBAL, label: t("globalAllGames") }, ...categoryOptions]}
                   value={field.value ?? GLOBAL}
                   onChange={field.onChange}
+                  optional
                 />
               )}
             />
@@ -135,12 +152,18 @@ export function BannerFormDialog({ open, onOpenChange, bannerId }: BannerFormDia
           <ImageDropzone
             id="banner-image"
             label={t("bannerImage")}
-            caption={isEdit ? "Upload to replace the current image." : "Required — the storefront hides a banner with no image."}
+            caption={isEdit ? t("bannerImageReplace") : t("bannerImageRequiredCaption")}
             value={image ?? undefined}
-            onChange={setImage}
+            onChange={(file) => {
+              setImage(file);
+              setImageError(null);
+            }}
             accept="image/jpeg,image/png,image/webp"
             formatsLabel="JPG, PNG or WEBP up to 2MB"
+            error={imageError ?? undefined}
             uploading={isPending}
+            required={!isEdit}
+            optional={isEdit}
           />
 
           <Box className="flex justify-end gap-3">

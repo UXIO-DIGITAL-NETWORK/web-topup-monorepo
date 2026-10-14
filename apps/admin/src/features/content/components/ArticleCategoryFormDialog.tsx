@@ -3,6 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,10 +77,14 @@ export function ArticleCategoryFormDialog({ open, onOpenChange, articleCategoryI
         >
           <Box className="grid gap-4 sm:grid-cols-2">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-category-name">{t("name")}</Label>
+              <FieldLabel
+                htmlFor="article-category-name"
+                required
+              >{t("name")}</FieldLabel>
               <Input
                 id="article-category-name"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("articleCategoryNamePlaceholder")}
                 {...register("name")}
               />
@@ -94,10 +99,14 @@ export function ArticleCategoryFormDialog({ open, onOpenChange, articleCategoryI
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-category-key">{t("colKey")}</Label>
+              <FieldLabel
+                htmlFor="article-category-key"
+                required
+              >{t("colKey")}</FieldLabel>
               <Input
                 id="article-category-key"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("keyPlaceholder")}
                 {...register("key")}
               />
@@ -116,14 +125,26 @@ export function ArticleCategoryFormDialog({ open, onOpenChange, articleCategoryI
 
           <Box className="grid gap-4 sm:grid-cols-2">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-category-order">{t("order")}</Label>
+              <FieldLabel
+                htmlFor="article-category-order"
+                required
+              >{t("order")}</FieldLabel>
               <Input
                 id="article-category-order"
                 type="number"
                 min={0}
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 {...register("sortOrder", { valueAsNumber: true })}
               />
+              {errors.sortOrder && (
+                <Text
+                  variant="small"
+                  className="text-destructive"
+                >
+                  {errors.sortOrder.message}
+                </Text>
+              )}
             </Box>
 
             <Controller

@@ -3,6 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCategoryList } from "../hooks/useCategories";
@@ -128,13 +128,17 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
             name="categoryId"
             render={({ field }) => (
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="sub-category-parent">{t("category")}</Label>
+                <FieldLabel
+                  htmlFor="sub-category-parent"
+                  required
+                >{t("category")}</FieldLabel>
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger
                     id="sub-category-parent"
+                    aria-required="true"
                     className="w-full rounded-xl"
                   >
                     <SelectValue placeholder={t("selectCategory")} />
@@ -156,10 +160,14 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
           />
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="sub-category-name">{t("subCategoryName")}</Label>
+            <FieldLabel
+              htmlFor="sub-category-name"
+              required
+            >{t("subCategoryName")}</FieldLabel>
             <Input
               id="sub-category-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("subCategoryNamePlaceholder")}
               {...register("name")}
             />
@@ -167,10 +175,14 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="sub-category-currency-name">{t("colCurrencyName")}</Label>
+            <FieldLabel
+              htmlFor="sub-category-currency-name"
+              required
+            >{t("colCurrencyName")}</FieldLabel>
             <Input
               id="sub-category-currency-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("currencyPlaceholder")}
               {...register("currencyName")}
             />
@@ -191,12 +203,16 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
                 onChange={field.onChange}
                 error={errors.logo?.message}
                 uploading={isPending}
+                optional
               />
             )}
           />
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="sub-category-description">{t("description")}</Label>
+            <FieldLabel
+              htmlFor="sub-category-description"
+              optional
+            >{t("description")}</FieldLabel>
             <Textarea
               id="sub-category-description"
               className="rounded-xl"
@@ -204,6 +220,7 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
               maxLength={DESCRIPTION_MAX}
               {...register("description")}
             />
+            <FieldError message={errors.description?.message} />
             <Box className="flex justify-between">
               <Text variant="small">
                 {descriptionLength}/{DESCRIPTION_MAX} characters
