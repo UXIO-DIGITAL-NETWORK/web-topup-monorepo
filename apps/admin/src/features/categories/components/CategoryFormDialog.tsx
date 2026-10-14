@@ -24,7 +24,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { CategoryFormFieldsBuilder } from "./CategoryFormFieldsBuilder";
 import { NicknameCheckField } from "./NicknameCheckField";
 
-import { META_ROBOTS_OPTIONS, REGION_OPTIONS } from "../data/select-options.data";
+import { META_ROBOTS_OPTIONS } from "../data/select-options.data";
 import { useCategory, useCreateCategory, useUpdateCategory } from "../hooks/useCategories";
 import { useCategoryTypeOptions } from "../hooks/useCategoryTypeOptions";
 import { slugify } from "../lib/slugify";
@@ -255,21 +255,19 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     )}
                   />
 
-                  <Controller
-                    control={control}
-                    name="region"
-                    render={({ field }) => (
-                      <SelectField
-                        id="category-region"
-                        label={t("region")}
-                        tooltip={t("tipRegion")}
-                        options={translateOptions(REGION_OPTIONS, t)}
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        optional
-                      />
-                    )}
-                  />
+                  <Box className="flex flex-col gap-1.5">
+                    <FieldLabel
+                      htmlFor="category-region"
+                      tooltip={t("tipRegion")}
+                      optional
+                    >{t("region")}</FieldLabel>
+                    <Input
+                      id="category-region"
+                      className="rounded-xl"
+                      placeholder={t("regionPlaceholder")}
+                      {...register("region")}
+                    />
+                  </Box>
 
                   <Box className="flex flex-col gap-1.5">
                     <FieldLabel

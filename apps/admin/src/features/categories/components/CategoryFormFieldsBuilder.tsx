@@ -35,9 +35,12 @@ export function CategoryFormFieldsBuilder({ control, register, errors }: Categor
         <Info />
         <AlertTitle>{t("fieldKeyGuide")}</AlertTitle>
         <AlertDescription>
-          <Text as="p">{t("noWhatsappEmail")}</Text>
-          <Text as="p">{t("suggestedKeys")}</Text>
-          <Text as="p">{t("fieldOrderHint")}</Text>
+          <Text as="p">{t("fieldKeyIntro")}</Text>
+          <Text as="p">{t("fieldKeyName")}</Text>
+          <Text as="p">{t("fieldKeyLabel")}</Text>
+          <Text as="p">{t("fieldKeyRequired")}</Text>
+          <Text as="p">{t("fieldKeyOrder")}</Text>
+          <Text as="p">{t("fieldKeyExample")}</Text>
         </AlertDescription>
       </Alert>
 

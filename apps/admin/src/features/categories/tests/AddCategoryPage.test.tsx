@@ -80,14 +80,14 @@ describe("AddCategoryDialog", () => {
     expect(within(dialog).queryByLabelText("Category UID Parser")).not.toBeInTheDocument();
   });
 
-  it("shows the field-key guide text verbatim", async () => {
+  it("shows the field-key guide, explaining the field definition rather than only forbidding two keys", async () => {
     const user = userEvent.setup();
     const dialog = await openAdd(user);
 
-    expect(
-      within(dialog).getByText("Do not use whatsapp or email keys — buyer contact is taken from their account."),
-    ).toBeInTheDocument();
-    expect(within(dialog).getByText("Suggested keys: user_id, server_id.")).toBeInTheDocument();
+    expect(within(dialog).getByText(/technical name used with the supplier/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/must not be whatsapp or email/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/column #1 becomes the account id/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Examples: Mobile Legends/)).toBeInTheDocument();
   });
 
   it("shows the empty-forms message before any field is added", async () => {
