@@ -139,6 +139,8 @@
   "tabMainProducts": "Main Products",
   "tabProductProvider": "Product Provider",
   "tabPriceChangeLog": "Price Change Log",
+  "tabArchived": "Archived",
+  "archivedSubtitle": "Archived products — out of the catalogue, but the row is kept so order history still resolves. Restore one to bring it back into the catalogue.",
   "addProductsFailed": "Failed to add products",
   "productCreated": "Product created",
   "productCreateFailed": "Failed to create product",

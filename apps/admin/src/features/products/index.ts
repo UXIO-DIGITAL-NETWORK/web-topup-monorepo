@@ -1,4 +1,5 @@
 export { default as MainProductsPage } from "./pages/MainProductsPage";
+export { ArchivedProductsPage } from "./pages/MainProductsPage";
 export { default as ManagedProviderPage } from "./pages/ManagedProviderPage";
 export { default as PoolCandidatesPage } from "./pages/PoolCandidatesPage";
 export { default as ProviderMarginBulkPage } from "./pages/ProviderMarginBulkPage";

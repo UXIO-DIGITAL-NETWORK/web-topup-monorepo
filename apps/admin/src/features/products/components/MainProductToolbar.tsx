@@ -21,7 +21,7 @@ import { PUBLISH_STATE_LABELS, PUBLISH_STATES } from "../types/product.type";
 
 const CLEAR_VALUE = "all";
 
-// Archived is reached through its own button, not the Status dropdown — it is a
+// Archived is reached through its own tab, not the Status dropdown — it is a
 // "where did it go" view, not a lifecycle state an admin picks while browsing.
 const LIFECYCLE_STATES = PUBLISH_STATES.filter((state) => state !== "archived");
 
@@ -46,6 +46,12 @@ interface MainProductToolbarProps {
   onPublishStateChange: (value?: string) => void;
   onBulkUnpublish: () => void;
   onBulkArchive: () => void;
+  /**
+   * The Archived tab renders this same toolbar list a fixed, read-only way: the
+   * Status filter and the selection action bar are hidden, because the list is
+   * already narrowed to archived rows and none of the bulk actions apply to one.
+   */
+  archivedView?: boolean;
 }
 
 /**
@@ -88,6 +94,7 @@ export function MainProductToolbar({
   onPublishStateChange,
   onBulkUnpublish,
   onBulkArchive,
+  archivedView = false,
 }: MainProductToolbarProps) {
   const { t } = useTranslation("products");
   // The same source the product form, bulk-add and provider pool already read,
@@ -144,51 +151,38 @@ export function MainProductToolbar({
             </Select>
           </Box>
 
-          <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="product-state-filter">{t("status")}</Label>
-            {/* Lifecycle only. Archived products are excluded by default (the
-                row is kept so its order history resolves), and they are reached
-                through the dedicated button below rather than this select —
-                mixing them here read as "another status". */}
-            <Select
-              value={publishState ?? ""}
-              onValueChange={(next) => onPublishStateChange(next === CLEAR_VALUE ? undefined : next)}
-            >
-              <SelectTrigger
-                id="product-state-filter"
-                className="w-44 rounded-xl"
+          {/* Lifecycle filter. Hidden on the Archived tab, whose list is already
+              fixed to archived rows — a Status select there would only offer to
+              filter away from the one thing the tab is for. Archived products
+              are excluded from the options either way (the row is kept so its
+              order history resolves); they are reached through the Archived tab. */}
+          {!archivedView && (
+            <Box className="flex flex-col gap-1.5">
+              <Label htmlFor="product-state-filter">{t("status")}</Label>
+              <Select
+                value={publishState ?? ""}
+                onValueChange={(next) => onPublishStateChange(next === CLEAR_VALUE ? undefined : next)}
               >
-                <SelectValue placeholder={t("allStatuses")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={CLEAR_VALUE}>{t("allStatuses")}</SelectItem>
-                {LIFECYCLE_STATES.map((state) => (
-                  <SelectItem
-                    key={state}
-                    value={state}
-                  >
-                    {PUBLISH_STATE_LABELS[state]}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </Box>
-
-          {/* The one way back to archived rows, on its own so it does not read
-              as just another lifecycle status. It shares `publish_state` with
-              the Status select, so picking one clears the other. */}
-          <Box className="flex flex-col gap-1.5">
-            <Button
-              type="button"
-              variant={publishState === "archived" ? "default" : "outline"}
-              className="rounded-xl"
-              aria-pressed={publishState === "archived"}
-              onClick={() => onPublishStateChange(publishState === "archived" ? undefined : "archived")}
-            >
-              <Archive className="size-4" />
-              {t("archived")}
-            </Button>
-          </Box>
+                <SelectTrigger
+                  id="product-state-filter"
+                  className="w-44 rounded-xl"
+                >
+                  <SelectValue placeholder={t("allStatuses")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={CLEAR_VALUE}>{t("allStatuses")}</SelectItem>
+                  {LIFECYCLE_STATES.map((state) => (
+                    <SelectItem
+                      key={state}
+                      value={state}
+                    >
+                      {PUBLISH_STATE_LABELS[state]}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </Box>
+          )}
 
           <Box className="flex flex-col gap-1.5">
             <Label htmlFor="product-availability-filter">{t("providerAvailability")}</Label>
@@ -277,8 +271,10 @@ export function MainProductToolbar({
 
       {/* Selection actions collapse into one "N items selected" menu (the
           reference's checklist menu), only shown with a selection. Edit Logo
-          still waits on the product image endpoint (§5). */}
-      {selectedCount > 0 && (
+          still waits on the product image endpoint (§5). Hidden entirely on the
+          Archived tab: none of these actions (update, publish, archive) apply to
+          a row that is already out of the catalogue. */}
+      {!archivedView && selectedCount > 0 && (
         <Box className="flex justify-end">
           <BulkActionsMenu
             count={selectedCount}

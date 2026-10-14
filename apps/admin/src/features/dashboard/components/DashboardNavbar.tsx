@@ -93,6 +93,7 @@ function getTransactionBreadcrumb(pathname: string, t: TFunction<"dashboard">): 
 // Tab segment -> breadcrumb label, mirrors ProductTabsLayout's TAB_SEGMENTS.
 const PRODUCT_TAB_KEYS: Record<string, string> = {
   main: "tabMainProducts",
+  archived: "tabArchived",
   provider: "tabProductProvider",
   "price-log": "tabPriceChangeLog",
 };

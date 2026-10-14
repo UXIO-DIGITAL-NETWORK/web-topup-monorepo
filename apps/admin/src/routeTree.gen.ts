@@ -56,6 +56,7 @@ import { Route as AdminProtectedSettingsSecurityIndexRouteImport } from './route
 import { Route as AdminProtectedProductsProviderIndexRouteImport } from './routes/admin/_protected/products/provider/index'
 import { Route as AdminProtectedProductsPriceLogIndexRouteImport } from './routes/admin/_protected/products/price-log/index'
 import { Route as AdminProtectedProductsMainIndexRouteImport } from './routes/admin/_protected/products/main/index'
+import { Route as AdminProtectedProductsArchivedIndexRouteImport } from './routes/admin/_protected/products/archived/index'
 import { Route as AdminProtectedContentTestimonialsIndexRouteImport } from './routes/admin/_protected/content/testimonials/index'
 import { Route as AdminProtectedContentPagesIndexRouteImport } from './routes/admin/_protected/content/pages/index'
 import { Route as AdminProtectedContentNewsIndexRouteImport } from './routes/admin/_protected/content/news/index'
@@ -72,6 +73,7 @@ import { Route as AdminProtectedCategoriesCategoryProviderIndexRouteImport } fro
 import { Route as AdminPreviewProductsPreviewProviderIndexRouteImport } from './routes/admin/_preview/products-preview/provider/index'
 import { Route as AdminPreviewProductsPreviewPriceLogIndexRouteImport } from './routes/admin/_preview/products-preview/price-log/index'
 import { Route as AdminPreviewProductsPreviewMainIndexRouteImport } from './routes/admin/_preview/products-preview/main/index'
+import { Route as AdminPreviewProductsPreviewArchivedIndexRouteImport } from './routes/admin/_preview/products-preview/archived/index'
 import { Route as AdminPreviewCategoriesPreviewSubCategoryIndexRouteImport } from './routes/admin/_preview/categories-preview/sub-category/index'
 import { Route as AdminPreviewCategoriesPreviewCategoryIndexRouteImport } from './routes/admin/_preview/categories-preview/category/index'
 import { Route as AdminPreviewCategoriesPreviewCategoryTypeIndexRouteImport } from './routes/admin/_preview/categories-preview/category-type/index'
@@ -359,6 +361,12 @@ const AdminProtectedProductsMainIndexRoute =
     path: '/main/',
     getParentRoute: () => AdminProtectedProductsRouteRoute,
   } as any)
+const AdminProtectedProductsArchivedIndexRoute =
+  AdminProtectedProductsArchivedIndexRouteImport.update({
+    id: '/archived/',
+    path: '/archived/',
+    getParentRoute: () => AdminProtectedProductsRouteRoute,
+  } as any)
 const AdminProtectedContentTestimonialsIndexRoute =
   AdminProtectedContentTestimonialsIndexRouteImport.update({
     id: '/testimonials/',
@@ -453,6 +461,12 @@ const AdminPreviewProductsPreviewMainIndexRoute =
   AdminPreviewProductsPreviewMainIndexRouteImport.update({
     id: '/main/',
     path: '/main/',
+    getParentRoute: () => AdminPreviewProductsPreviewRouteRoute,
+  } as any)
+const AdminPreviewProductsPreviewArchivedIndexRoute =
+  AdminPreviewProductsPreviewArchivedIndexRouteImport.update({
+    id: '/archived/',
+    path: '/archived/',
     getParentRoute: () => AdminPreviewProductsPreviewRouteRoute,
   } as any)
 const AdminPreviewCategoriesPreviewSubCategoryIndexRoute =
@@ -577,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/admin/categories-preview/category-type/': typeof AdminPreviewCategoriesPreviewCategoryTypeIndexRoute
   '/admin/categories-preview/category/': typeof AdminPreviewCategoriesPreviewCategoryIndexRoute
   '/admin/categories-preview/sub-category/': typeof AdminPreviewCategoriesPreviewSubCategoryIndexRoute
+  '/admin/products-preview/archived/': typeof AdminPreviewProductsPreviewArchivedIndexRoute
   '/admin/products-preview/main/': typeof AdminPreviewProductsPreviewMainIndexRoute
   '/admin/products-preview/price-log/': typeof AdminPreviewProductsPreviewPriceLogIndexRoute
   '/admin/products-preview/provider/': typeof AdminPreviewProductsPreviewProviderIndexRoute
@@ -593,6 +608,7 @@ export interface FileRoutesByFullPath {
   '/admin/content/news/': typeof AdminProtectedContentNewsIndexRoute
   '/admin/content/pages/': typeof AdminProtectedContentPagesIndexRoute
   '/admin/content/testimonials/': typeof AdminProtectedContentTestimonialsIndexRoute
+  '/admin/products/archived/': typeof AdminProtectedProductsArchivedIndexRoute
   '/admin/products/main/': typeof AdminProtectedProductsMainIndexRoute
   '/admin/products/price-log/': typeof AdminProtectedProductsPriceLogIndexRoute
   '/admin/products/provider/': typeof AdminProtectedProductsProviderIndexRoute
@@ -646,6 +662,7 @@ export interface FileRoutesByTo {
   '/admin/categories-preview/category-type': typeof AdminPreviewCategoriesPreviewCategoryTypeIndexRoute
   '/admin/categories-preview/category': typeof AdminPreviewCategoriesPreviewCategoryIndexRoute
   '/admin/categories-preview/sub-category': typeof AdminPreviewCategoriesPreviewSubCategoryIndexRoute
+  '/admin/products-preview/archived': typeof AdminPreviewProductsPreviewArchivedIndexRoute
   '/admin/products-preview/main': typeof AdminPreviewProductsPreviewMainIndexRoute
   '/admin/products-preview/price-log': typeof AdminPreviewProductsPreviewPriceLogIndexRoute
   '/admin/products-preview/provider': typeof AdminPreviewProductsPreviewProviderIndexRoute
@@ -662,6 +679,7 @@ export interface FileRoutesByTo {
   '/admin/content/news': typeof AdminProtectedContentNewsIndexRoute
   '/admin/content/pages': typeof AdminProtectedContentPagesIndexRoute
   '/admin/content/testimonials': typeof AdminProtectedContentTestimonialsIndexRoute
+  '/admin/products/archived': typeof AdminProtectedProductsArchivedIndexRoute
   '/admin/products/main': typeof AdminProtectedProductsMainIndexRoute
   '/admin/products/price-log': typeof AdminProtectedProductsPriceLogIndexRoute
   '/admin/products/provider': typeof AdminProtectedProductsProviderIndexRoute
@@ -725,6 +743,7 @@ export interface FileRoutesById {
   '/admin/_preview/categories-preview/category-type/': typeof AdminPreviewCategoriesPreviewCategoryTypeIndexRoute
   '/admin/_preview/categories-preview/category/': typeof AdminPreviewCategoriesPreviewCategoryIndexRoute
   '/admin/_preview/categories-preview/sub-category/': typeof AdminPreviewCategoriesPreviewSubCategoryIndexRoute
+  '/admin/_preview/products-preview/archived/': typeof AdminPreviewProductsPreviewArchivedIndexRoute
   '/admin/_preview/products-preview/main/': typeof AdminPreviewProductsPreviewMainIndexRoute
   '/admin/_preview/products-preview/price-log/': typeof AdminPreviewProductsPreviewPriceLogIndexRoute
   '/admin/_preview/products-preview/provider/': typeof AdminPreviewProductsPreviewProviderIndexRoute
@@ -741,6 +760,7 @@ export interface FileRoutesById {
   '/admin/_protected/content/news/': typeof AdminProtectedContentNewsIndexRoute
   '/admin/_protected/content/pages/': typeof AdminProtectedContentPagesIndexRoute
   '/admin/_protected/content/testimonials/': typeof AdminProtectedContentTestimonialsIndexRoute
+  '/admin/_protected/products/archived/': typeof AdminProtectedProductsArchivedIndexRoute
   '/admin/_protected/products/main/': typeof AdminProtectedProductsMainIndexRoute
   '/admin/_protected/products/price-log/': typeof AdminProtectedProductsPriceLogIndexRoute
   '/admin/_protected/products/provider/': typeof AdminProtectedProductsProviderIndexRoute
@@ -802,6 +822,7 @@ export interface FileRouteTypes {
     | '/admin/categories-preview/category-type/'
     | '/admin/categories-preview/category/'
     | '/admin/categories-preview/sub-category/'
+    | '/admin/products-preview/archived/'
     | '/admin/products-preview/main/'
     | '/admin/products-preview/price-log/'
     | '/admin/products-preview/provider/'
@@ -818,6 +839,7 @@ export interface FileRouteTypes {
     | '/admin/content/news/'
     | '/admin/content/pages/'
     | '/admin/content/testimonials/'
+    | '/admin/products/archived/'
     | '/admin/products/main/'
     | '/admin/products/price-log/'
     | '/admin/products/provider/'
@@ -871,6 +893,7 @@ export interface FileRouteTypes {
     | '/admin/categories-preview/category-type'
     | '/admin/categories-preview/category'
     | '/admin/categories-preview/sub-category'
+    | '/admin/products-preview/archived'
     | '/admin/products-preview/main'
     | '/admin/products-preview/price-log'
     | '/admin/products-preview/provider'
@@ -887,6 +910,7 @@ export interface FileRouteTypes {
     | '/admin/content/news'
     | '/admin/content/pages'
     | '/admin/content/testimonials'
+    | '/admin/products/archived'
     | '/admin/products/main'
     | '/admin/products/price-log'
     | '/admin/products/provider'
@@ -949,6 +973,7 @@ export interface FileRouteTypes {
     | '/admin/_preview/categories-preview/category-type/'
     | '/admin/_preview/categories-preview/category/'
     | '/admin/_preview/categories-preview/sub-category/'
+    | '/admin/_preview/products-preview/archived/'
     | '/admin/_preview/products-preview/main/'
     | '/admin/_preview/products-preview/price-log/'
     | '/admin/_preview/products-preview/provider/'
@@ -965,6 +990,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/content/news/'
     | '/admin/_protected/content/pages/'
     | '/admin/_protected/content/testimonials/'
+    | '/admin/_protected/products/archived/'
     | '/admin/_protected/products/main/'
     | '/admin/_protected/products/price-log/'
     | '/admin/_protected/products/provider/'
@@ -1322,6 +1348,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedProductsMainIndexRouteImport
       parentRoute: typeof AdminProtectedProductsRouteRoute
     }
+    '/admin/_protected/products/archived/': {
+      id: '/admin/_protected/products/archived/'
+      path: '/archived'
+      fullPath: '/admin/products/archived/'
+      preLoaderRoute: typeof AdminProtectedProductsArchivedIndexRouteImport
+      parentRoute: typeof AdminProtectedProductsRouteRoute
+    }
     '/admin/_protected/content/testimonials/': {
       id: '/admin/_protected/content/testimonials/'
       path: '/testimonials'
@@ -1432,6 +1465,13 @@ declare module '@tanstack/react-router' {
       path: '/main'
       fullPath: '/admin/products-preview/main/'
       preLoaderRoute: typeof AdminPreviewProductsPreviewMainIndexRouteImport
+      parentRoute: typeof AdminPreviewProductsPreviewRouteRoute
+    }
+    '/admin/_preview/products-preview/archived/': {
+      id: '/admin/_preview/products-preview/archived/'
+      path: '/archived'
+      fullPath: '/admin/products-preview/archived/'
+      preLoaderRoute: typeof AdminPreviewProductsPreviewArchivedIndexRouteImport
       parentRoute: typeof AdminPreviewProductsPreviewRouteRoute
     }
     '/admin/_preview/categories-preview/sub-category/': {
@@ -1584,6 +1624,7 @@ const AdminPreviewCategoriesPreviewRouteRouteWithChildren =
 
 interface AdminPreviewProductsPreviewRouteRouteChildren {
   AdminPreviewProductsPreviewIndexRoute: typeof AdminPreviewProductsPreviewIndexRoute
+  AdminPreviewProductsPreviewArchivedIndexRoute: typeof AdminPreviewProductsPreviewArchivedIndexRoute
   AdminPreviewProductsPreviewMainIndexRoute: typeof AdminPreviewProductsPreviewMainIndexRoute
   AdminPreviewProductsPreviewPriceLogIndexRoute: typeof AdminPreviewProductsPreviewPriceLogIndexRoute
   AdminPreviewProductsPreviewProviderIndexRoute: typeof AdminPreviewProductsPreviewProviderIndexRoute
@@ -1594,6 +1635,8 @@ const AdminPreviewProductsPreviewRouteRouteChildren: AdminPreviewProductsPreview
   {
     AdminPreviewProductsPreviewIndexRoute:
       AdminPreviewProductsPreviewIndexRoute,
+    AdminPreviewProductsPreviewArchivedIndexRoute:
+      AdminPreviewProductsPreviewArchivedIndexRoute,
     AdminPreviewProductsPreviewMainIndexRoute:
       AdminPreviewProductsPreviewMainIndexRoute,
     AdminPreviewProductsPreviewPriceLogIndexRoute:
@@ -1707,6 +1750,7 @@ const AdminProtectedContentRouteRouteWithChildren =
 
 interface AdminProtectedProductsRouteRouteChildren {
   AdminProtectedProductsIndexRoute: typeof AdminProtectedProductsIndexRoute
+  AdminProtectedProductsArchivedIndexRoute: typeof AdminProtectedProductsArchivedIndexRoute
   AdminProtectedProductsMainIndexRoute: typeof AdminProtectedProductsMainIndexRoute
   AdminProtectedProductsPriceLogIndexRoute: typeof AdminProtectedProductsPriceLogIndexRoute
   AdminProtectedProductsProviderIndexRoute: typeof AdminProtectedProductsProviderIndexRoute
@@ -1719,6 +1763,8 @@ interface AdminProtectedProductsRouteRouteChildren {
 const AdminProtectedProductsRouteRouteChildren: AdminProtectedProductsRouteRouteChildren =
   {
     AdminProtectedProductsIndexRoute: AdminProtectedProductsIndexRoute,
+    AdminProtectedProductsArchivedIndexRoute:
+      AdminProtectedProductsArchivedIndexRoute,
     AdminProtectedProductsMainIndexRoute: AdminProtectedProductsMainIndexRoute,
     AdminProtectedProductsPriceLogIndexRoute:
       AdminProtectedProductsPriceLogIndexRoute,

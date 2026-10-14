@@ -7,9 +7,14 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 
 /**
- * Two URL-driven tabs (product_requirements.md §4.6) — real nested routes, not
+ * Three URL-driven tabs (product_requirements.md §4.6) — real nested routes, not
  * client state, so the breadcrumb and back button reflect the active tab. Same
- * pattern as `TransactionsLayout`, which also has two.
+ * pattern as `TransactionsLayout`.
+ *
+ * "Archived" is a tab rather than a toggle button on the toolbar (it used to be
+ * a button beside the filters): archived rows are a whole other list — nothing
+ * about them can be edited, only restored — so giving them their own URL keeps
+ * the two views from being mistaken for one filtered list.
  *
  * There is no "Product Provider" tab any more. It existed to hold the pool —
  * a staging list of picked SKUs waiting to be promoted — and the pool is gone:
@@ -17,27 +22,18 @@ import { cn } from "@/lib/utils";
  * directly. The provider routes still exist for operators who land on them by
  * URL, but nothing in the panel points at them.
  *
- * Segments are `main`/`price-log` rather than the full label kebab, following
- * the two-tab Transactions precedent (`automatic`/`manual`).
+ * Segments are `main`/`archived`/`price-log` rather than the full label kebab,
+ * following the Transactions precedent (`automatic`/`manual`).
  */
 const TAB_SEGMENTS = [
   { value: "main", labelKey: "tabMainProducts", segment: "main" },
+  { value: "archived", labelKey: "tabArchived", segment: "archived" },
   { value: "price-log", labelKey: "tabPriceChangeLog", segment: "price-log" },
 ];
 
 const PREVIEW_BASE = "/admin/products-preview";
 const REAL_BASE = "/admin/products";
 
-/**
- * Two URL-driven tabs (product_requirements.md §4.6) — real nested routes, not
- * client state, so the breadcrumb and back button reflect the active tab. Same
- * pattern as `TransactionsLayout`, which also has two.
- *
- * Segments are `main`/`provider` rather than the full label kebab, following
- * the two-tab Transactions precedent (`automatic`/`manual`); the five-tab
- * Categories layout spells its segments out because its labels are unique
- * nouns rather than qualifiers of the feature name.
- */
 export function ProductTabsLayout() {
   const { t } = useTranslation("products");
   // `/admin/products-preview` also starts with `/admin/products`, so the
