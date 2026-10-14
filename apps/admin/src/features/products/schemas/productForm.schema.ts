@@ -47,7 +47,6 @@ export const productFormSchema = z.object({
   nicknameValidation: z.string().optional(),
   subName: z.string().optional(),
   code: z.string().min(1, "Product Code is required"),
-  access: z.string().optional(),
   tag: z.string().optional(),
   category: z.string().min(1, "Category is required"),
   subCategory: z.string().optional(),

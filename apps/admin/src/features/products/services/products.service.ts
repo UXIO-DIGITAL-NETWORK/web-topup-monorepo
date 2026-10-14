@@ -341,7 +341,6 @@ export const productsService = {
       put("code", item.code);
       put("name", item.name);
       put("sub_name", item.sub_name);
-      put("access", item.access);
       put("tag", item.tag);
       put("sub_category_id", item.sub_category_id ? toFk(item.sub_category_id) : undefined);
       put("discount_type", item.discount_type);

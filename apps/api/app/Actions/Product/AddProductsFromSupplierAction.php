@@ -214,21 +214,19 @@ class AddProductsFromSupplierAction
             $product->update(['logo' => $this->images->store($item['logo'], 'products/logos')]);
         }
 
-        // The discount, the sub-name, and the access/tag columns are plain
-        // columns the margin action does not own; everything else it writes goes
-        // through that one writer.
+        // The discount, the sub-name, and the tag column are plain columns the
+        // margin action does not own; everything else it writes goes through that
+        // one writer.
         if (
             $item['discount_type'] !== null
             || $item['discount_value'] !== null
             || $item['sub_name'] !== null
-            || $item['access'] !== null
             || $item['tag'] !== null
         ) {
             $product->update([
                 'discount_type' => $item['discount_type'],
                 'discount_value' => $item['discount_value'],
                 'sub_name' => $item['sub_name'],
-                'access' => $item['access'],
                 'tag' => $item['tag'],
             ]);
         }

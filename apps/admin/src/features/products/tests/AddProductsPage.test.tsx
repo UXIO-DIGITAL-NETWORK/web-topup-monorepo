@@ -282,8 +282,8 @@ describe("AddProductsPage", () => {
     expect(payload.items[0].code).toBe("VAL120-INT");
   });
 
-  /** Access and tag are set here now, so a provider add is finished in one pass. */
-  it("carries the access and tag the admin picks from a provider", async () => {
+  /** Tag is set here now, so a provider add is finished in one pass. */
+  it("carries the tag the admin picks from a provider", async () => {
     const spy = vi
       .spyOn(productsService, "addFromSupplier")
       .mockResolvedValue({ created: 1, published: 0, skipped: [] });
@@ -292,8 +292,6 @@ describe("AddProductsPage", () => {
 
     await user.click(await screen.findByRole("checkbox", { name: "Select VAL120" }));
 
-    await user.click(screen.getByRole("combobox", { name: "Product Access" }));
-    await user.click(await screen.findByRole("option", { name: "VIP" }));
     await user.click(screen.getByRole("combobox", { name: "Product Tag" }));
     await user.click(await screen.findByRole("option", { name: "Promo" }));
 
@@ -302,14 +300,11 @@ describe("AddProductsPage", () => {
 
     const dialog = await screen.findByRole("dialog", { name: "Review before saving" });
     // The review resolves the stored code to its human label.
-    expect(within(dialog).getByText("VIP")).toBeInTheDocument();
     expect(within(dialog).getByText("Promo")).toBeInTheDocument();
 
     await user.click(within(dialog).getByRole("button", { name: "Yes, save as draft" }));
 
-    const payload = spy.mock.calls[0][0];
-    expect(payload.items[0].access).toBe("vip");
-    expect(payload.items[0].tag).toBe("promo");
+    expect(spy.mock.calls[0][0].items[0].tag).toBe("promo");
   });
 
   it("shows each product's details in the review dialog before saving", async () => {
