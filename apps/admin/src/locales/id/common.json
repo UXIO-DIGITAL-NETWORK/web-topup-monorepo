@@ -33,7 +33,12 @@
     "formats": "JPG, JPEG, PNG, WEBP — dioptimalkan otomatis",
     "unsupportedType": "Tipe berkas itu tidak didukung di sini.",
     "uploading": "Mengunggah…",
-    "preview": "Pratinjau"
+    "preview": "Pratinjau",
+    "browse": "Pilih berkas"
+  },
+  "select": {
+    "placeholder": "Ketik untuk mencari…",
+    "empty": "Tidak ada pilihan"
   },
   "confirm": {
     "delete": "Hapus",

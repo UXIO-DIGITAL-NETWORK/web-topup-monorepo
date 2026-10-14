@@ -102,7 +102,6 @@ export function CategoryServerFormDialog({ open, onOpenChange, categoryServerId 
                 onChange={field.onChange}
                 error={errors.category_id?.message}
                 disabled={categoriesLoading}
-                emptyLabel={categoriesLoading ? "Loading categories..." : "No categories available"}
                 required
               />
             )}

@@ -200,7 +200,7 @@ export function ImageDropzone({
             onClick={() => fileInputRef.current?.click()}
             disabled={busy}
           >
-            Browse files
+            {t("dropzone.browse")}
           </Button>
           {/* The stored image, opened in its own tab. A button rather than a
               thumbnail on purpose: the field stays compact, and its presence is

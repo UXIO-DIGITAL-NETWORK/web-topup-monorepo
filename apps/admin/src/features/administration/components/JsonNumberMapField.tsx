@@ -72,6 +72,7 @@ export function JsonNumberMapField({ id, value, onChange }: JsonNumberMapFieldPr
             id={`${id}-${row.name}`}
             type="number"
             inputMode="numeric"
+            placeholder="0"
             min={1}
             className="w-28 rounded-xl"
             value={row.minutes}

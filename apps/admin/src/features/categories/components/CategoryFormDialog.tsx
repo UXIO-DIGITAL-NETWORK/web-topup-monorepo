@@ -229,7 +229,6 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                         tooltip={t("tipCategoryType")}
                         options={categoryTypeOptions}
                         disabled={typesLoading}
-                        emptyLabel={typesLoading ? "Loading types..." : "No category types available"}
                         value={field.value}
                         onChange={field.onChange}
                         error={errors.categoryType?.message}
@@ -261,6 +260,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <Input
                       id="category-name"
                       className="rounded-xl"
+                      placeholder={t("categoryNamePlaceholder")}
                       aria-required="true"
                       {...register("name", { onBlur: handleNameBlur })}
                     />
@@ -283,6 +283,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <Input
                       id="category-code"
                       className="rounded-xl"
+                      placeholder={t("categoryCodePlaceholder")}
                       aria-required="true"
                       {...register("code")}
                     />
@@ -305,6 +306,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <Input
                       id="category-sub-name"
                       className="rounded-xl"
+                      placeholder={t("categorySubNamePlaceholder")}
                       {...register("subName")}
                     />
                   </Box>
@@ -318,6 +320,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <Input
                       id="category-slug"
                       className="rounded-xl"
+                      placeholder={t("categorySlugPlaceholder")}
                       aria-required="true"
                       {...register("slug")}
                     />

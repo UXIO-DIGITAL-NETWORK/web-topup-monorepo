@@ -131,6 +131,7 @@ export function ArticleCategoryFormDialog({ open, onOpenChange, articleCategoryI
               >{t("order")}</FieldLabel>
               <Input
                 id="article-category-order"
+                placeholder={t("sortOrderPlaceholder")}
                 type="number"
                 min={0}
                 className="rounded-xl tabular-nums"
