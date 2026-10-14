@@ -1,16 +1,12 @@
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import {
   Archive,
   ArchiveRestore,
-  Eye,
-  EyeOff,
   MoreVertical,
   Pencil,
   RefreshCcw,
   Rocket,
-  SlidersHorizontal,
 } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
@@ -29,7 +25,6 @@ import {
   useUxiolabsUpdateProducts,
   useRestoreProduct,
   useSetProductPublished,
-  useShowProducts,
 } from "../hooks/useProducts";
 import type { Product } from "../types/product.type";
 import { MainProductFormDialog } from "./MainProductFormDialog";
@@ -39,10 +34,14 @@ interface ProductRowActionsProps {
 }
 
 /**
- * Row menu for the Main Products list, in the reference's order. Each action is
- * wired: Uxiolabs Update / Show Price go through a confirm dialog, Set Price
- * Limit opens its page, and the lifecycle toggle / Edit are unchanged. The
- * single-row paths reuse the bulk hooks with a one-id selection.
+ * Row menu for the Main Products list. Uxiolabs Update goes through a confirm
+ * dialog; the lifecycle toggle, Edit and Archive are unchanged. The single-row
+ * paths reuse the bulk hooks with a one-id selection.
+ *
+ * Price visibility ("Hide Price") and the price-limit page are not offered here
+ * on purpose: they are pricing edges an admin rarely reaches for, and both sat
+ * between the entries that are actually used — so the menu buried "Edit
+ * Product" under them. Visibility is still reachable in bulk from the toolbar.
  *
  * There is NO delete here. A product that stops selling is unpublished —
  * "Unlistis" — not removed: order history resolves against `transactions.
@@ -50,14 +49,8 @@ interface ProductRowActionsProps {
  * The archive path still exists on the server for operators, and an archived
  * row (reachable through the Archived filter) offers Restore.
  *
- * The two reversible items — publishing and price visibility — each read the
- * row's own state and offer the direction that would change something. A live
- * row is offered "Unpublish"; a hidden one, "Show Price".
- *
- * A price lock used to sit between them, holding the selling price still while
- * the supplier's cost moved underneath it. That is what left a product priced
- * below its cost and made checkout refuse the customer, so it is gone: prices
- * follow the margin rules, always.
+ * The lifecycle item reads the row's own state and offers the direction that
+ * would change something: a live row is offered "Unpublish", a draft "Publish".
  *
  * Publish replaced Activate. Activate wrote the product's `status` and nothing
  * else, while a product is only sellable when an active supplier mapping backs
@@ -71,22 +64,18 @@ interface ProductRowActionsProps {
  */
 export function ProductRowActions({ product }: ProductRowActionsProps) {
   const { t } = useTranslation("products");
-  const navigate = useNavigate();
   const [publishOpen, setPublishOpen] = useState(false);
-  const [showOpen, setShowOpen] = useState(false);
   const [uxiolabsOpen, setUxiolabsOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [archiveOpen, setArchiveOpen] = useState(false);
   const setProductPublished = useSetProductPublished();
   const restoreProduct = useRestoreProduct();
-  const showProducts = useShowProducts();
   const uxiolabsUpdate = useUxiolabsUpdateProducts();
   const deleteProducts = useDeleteProducts();
 
   // Each toggle names what the click would do, not what the row currently is.
   const isArchived = product.publish_state === "archived";
   const nextPublished = product.publish_state !== "published";
-  const nextHidden = !product.is_price_hidden;
 
   return (
     <>
@@ -105,7 +94,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
           align="end"
           className="rounded-2xl"
         >
-          {/* An archived product has nothing to price, publish or edit — the one
+          {/* An archived product has nothing to publish or edit — the one
               thing that applies to it is bringing it back. */}
           {isArchived ? (
             <Can permission="products.edit">
@@ -116,14 +105,6 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
             <Can permission="products.edit">
               <DropdownMenuItem onSelect={() => setUxiolabsOpen(true)}>
                 <RefreshCcw />{t("uxiolabsUpdate")}</DropdownMenuItem>
-              <DropdownMenuItem onSelect={() => setShowOpen(true)}>
-                {nextHidden ? <EyeOff /> : <Eye />}
-                {nextHidden ? "Hide Price" : "Show Price"}
-              </DropdownMenuItem>
-              <DropdownMenuItem
-                onSelect={() => navigate({ to: "/admin/products/main/set-price-limit", search: { id: product.id } })}
-              >
-                <SlidersHorizontal />{t("setPriceLimit")}</DropdownMenuItem>
               {/* Disabled rather than hidden, with the server's own reason inside
                 the item: a disabled DropdownMenuItem swallows pointer events, so
                 a tooltip on it would never fire. Same pattern as the pool's
@@ -166,20 +147,6 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
         title={t("updateProductTitle")}
         description={t("updateProductDescription")}
         onConfirm={() => uxiolabsUpdate.mutate([product.id])}
-      />
-
-      <DeleteConfirmDialog
-        open={showOpen}
-        onOpenChange={setShowOpen}
-        icon={nextHidden ? <EyeOff /> : <Eye />}
-        confirmLabel={nextHidden ? "Hide" : "Show"}
-        title={nextHidden ? "Hide price for this product?" : "Show price for this product?"}
-        description={
-          nextHidden
-            ? "The price will be hidden on the storefront. The product itself stays listed."
-            : "The price will be visible on the storefront."
-        }
-        onConfirm={() => showProducts.mutate({ ids: [product.id], hidden: nextHidden })}
       />
 
       {/* Same shared dialog and same mutation as the toolbar's bulk archive —

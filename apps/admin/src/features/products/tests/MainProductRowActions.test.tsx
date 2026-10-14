@@ -14,8 +14,6 @@ const INACTIVE_ROW = "Diamond Top Up 355";
 const BLOCKED_ROW = "Genesis Crystal 60";
 /** Soft-deleted; only reachable through the Archived tab. */
 const ARCHIVED_ROW = "Blessing of the Welkin Moon";
-/** The one fixture row that ships `is_price_hidden`. */
-const HIDDEN_ROW = "Diamond Top Up 86";
 
 async function openRowMenu(user: ReturnType<typeof userEvent.setup>, row = FIRST_ROW) {
   await user.click(await screen.findByRole("button", { name: `Actions for ${row}` }));
@@ -23,9 +21,9 @@ async function openRowMenu(user: ReturnType<typeof userEvent.setup>, row = FIRST
 
 /**
  * The row action menu (product_requirements.md §4.6). Every action is wired:
- * Uxiotopup Update / Show Price go through a confirm dialog, Set Price Limit
- * opens its page, and Delete/Edit are unchanged. The lifecycle item's label
- * mirrors the row's Status badge, both directions.
+ * Uxiotopup Update goes through a confirm dialog, and Edit/Delete are unchanged.
+ * The lifecycle item's label mirrors the row's Status badge, both directions.
+ * Price visibility and the price-limit page are deliberately off this menu.
  */
 describe("Main Products row actions", () => {
   afterEach(() => {
@@ -107,27 +105,6 @@ describe("Main Products row actions", () => {
     expect(spy).toHaveBeenCalledTimes(1);
   });
 
-  it("offers Hide Price on a visible row, and Show Price on a hidden one", async () => {
-    const spy = vi.spyOn(productsService, "bulkShowPrice").mockResolvedValue(undefined);
-    const user = userEvent.setup();
-    await renderRoute(LIST_PATH);
-
-    // A visible row: the only thing left to do is hide it.
-    await openRowMenu(user, HIDDEN_ROW);
-    await user.click(await screen.findByRole("menuitem", { name: "Show Price" }));
-    let dialog = await screen.findByRole("alertdialog");
-    expect(within(dialog).getByText("Show price for this product?")).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Show" }));
-    expect(spy.mock.calls[0]?.[1]).toBe(false);
-
-    await openRowMenu(user);
-    await user.click(await screen.findByRole("menuitem", { name: "Hide Price" }));
-    dialog = await screen.findByRole("alertdialog");
-    expect(within(dialog).getByText("Hide price for this product?")).toBeInTheDocument();
-    await user.click(within(dialog).getByRole("button", { name: "Hide" }));
-    expect(spy.mock.calls[1]?.[1]).toBe(true);
-  });
-
   it("confirms a Uxiotopup Update for the single row", async () => {
     const spy = vi.spyOn(productsService, "bulkUxiolabsUpdate").mockResolvedValue(undefined);
     const user = userEvent.setup();
@@ -138,20 +115,6 @@ describe("Main Products row actions", () => {
     await user.click(within(await screen.findByRole("alertdialog")).getByRole("button", { name: "Update" }));
 
     expect(spy.mock.calls[0][0]).toHaveLength(1);
-  });
-
-  it("navigates to the Set Price Limit page", async () => {
-    // Set Price Limit is a real protected route (not a preview twin), so this
-    // one runs authenticated against /admin/products/main.
-    useAuthStore.setState({ token: "test-token", permissions: ["*"] });
-    const user = userEvent.setup();
-    await renderRoute("/admin/products/main");
-
-    await openRowMenu(user);
-    await user.click(await screen.findByRole("menuitem", { name: "Set Price Limit" }));
-
-    expect(await screen.findByRole("heading", { name: "Set Price limit" })).toBeInTheDocument();
-    useAuthStore.setState({ token: null, permissions: [] });
   });
 });
 
