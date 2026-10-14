@@ -2,6 +2,7 @@ import React from "react";
 import { useParams } from "@tanstack/react-router";
 import { Box } from "@/components/common/Box";
 import { Text } from "@/components/common/Text";
+import { Heading } from "@/components/common/Heading";
 import { Image } from "@/components/common/Image";
 import { Link } from "@/components/common/Link";
 import { cn } from "@/lib/utils";
@@ -35,9 +36,9 @@ export default function TopUpGameCard({ game }: Props): React.JSX.Element {
       {/* Scrim — darkens toward bottom for logo/region legibility */}
       <Box className="absolute inset-0 bg-linear-to-b from-black/10 via-black/20 to-black/80 pointer-events-none" />
 
-      {/* Game logo — positioned above the region pill; only when the category has one */}
+      {/* Game logo — sits above the bottom text block; only when the category has one */}
       {game.logoImage && (
-        <Box className="absolute inset-x-0 bottom-13 h-14 flex items-center justify-center px-4">
+        <Box className="absolute inset-x-0 bottom-16 h-14 flex items-center justify-center px-4">
           <Image
             src={game.logoImage}
             alt={`${game.title} logo`}
@@ -47,16 +48,21 @@ export default function TopUpGameCard({ game }: Props): React.JSX.Element {
         </Box>
       )}
 
-      {/* Region pill — gradient border, floating with mx-3 mb-3 inset */}
-      <Box className="absolute inset-x-2 bottom-3 p-px rounded-lg bg-linear-to-r from-[#9333EA] to-[#3B82F6]">
-        <Box className="rounded-[7px] bg-[#080814]/90 backdrop-blur-sm h-9 flex items-center justify-center">
-          <Text
-            as="span"
-            className="font-inter text-[12px] font-semibold leading-none text-white/90 tracking-wide"
-          >
-            {game.region}
-          </Text>
-        </Box>
+      {/* Game name + region, overlaid on the art (design_system §11.5) */}
+      <Box className="absolute inset-x-0 bottom-0 flex flex-col gap-[3px] px-4 py-3">
+        <Heading
+          as="h3"
+          level={6}
+          className="font-outfit font-bold text-[14px] leading-5 text-white line-clamp-2"
+        >
+          {game.title}
+        </Heading>
+        <Text
+          as="p"
+          className="font-inter font-normal text-[10px] leading-[15px] text-[#A1A1AA]"
+        >
+          {game.region}
+        </Text>
       </Box>
     </Link>
   );
