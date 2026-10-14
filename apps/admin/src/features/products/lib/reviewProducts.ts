@@ -51,6 +51,10 @@ export interface ReviewItem {
   subName: string;
   categoryName: string;
   subCategoryName: string;
+  /** A `PRODUCT_ACCESS_OPTIONS` value, or "" when not set. */
+  access: string;
+  /** A `PRODUCT_TAG_OPTIONS` value, or "" when not set. */
+  tag: string;
   hasLogo: boolean;
   discountType: "" | "percent" | "fixed";
   discountValue: number | null;
@@ -101,6 +105,10 @@ export interface ReviewFormInput {
   name: string;
   subName: string;
   subCategoryId: string;
+  /** A `PRODUCT_ACCESS_OPTIONS` value, or "" when not set. */
+  access: string;
+  /** A `PRODUCT_TAG_OPTIONS` value, or "" when not set. */
+  tag: string;
   points: string;
   pointsFlat: string;
   discountType: "" | "percent" | "fixed";
@@ -202,6 +210,8 @@ export function buildReviewItem({
     // The category the product actually lands in is the provider mapping's, not the filter's.
     categoryName: meta?.mappedCategoryName || categoryName || "",
     subCategoryName: subCategoryName ?? "",
+    access: form.access,
+    tag: form.tag,
     hasLogo: form.logo !== null,
     discountType: form.discountType,
     discountValue,

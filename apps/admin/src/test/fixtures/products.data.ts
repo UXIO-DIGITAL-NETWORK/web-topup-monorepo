@@ -51,6 +51,9 @@ export const PRODUCTS: Product[] = [
     game_name: "Mobile Legends: Bang Bang",
     category_name: "Mobile Legends: Indonesia",
     code: "MLBB-WDP-01",
+    // The supplier's own SKU, distinct from our internal code — the edit form
+    // shows both. Only this row carries one, so the "no mapping" case is covered too.
+    provider_sku_code: "mlweek",
     ...LIVE,
     status: "active",
     is_available: true,

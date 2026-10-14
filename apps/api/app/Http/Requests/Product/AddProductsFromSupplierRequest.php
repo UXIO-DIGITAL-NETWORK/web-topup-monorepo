@@ -34,6 +34,10 @@ class AddProductsFromSupplierRequest extends FormRequest
             'items.*.buyer_sku_code' => ['required', 'string', 'max:255'],
             'items.*.name' => ['nullable', 'string', 'max:255'],
             'items.*.sub_name' => ['nullable', 'string', 'max:255'],
+            // Which customer tier may buy it, and its storefront merchandising
+            // label — the same optional columns the product form writes.
+            'items.*.access' => ['nullable', 'string', 'max:255'],
+            'items.*.tag' => ['nullable', 'string', 'max:255'],
             // Kode internal milik admin (unik di tabel products) — wajib, supaya
             // identitas katalog tidak lagi menyelinap menyalin kode provider.
             // Sengaja tanpa rule `unique`: baris yang kodenya menempel ke produk
@@ -87,6 +91,8 @@ class AddProductsFromSupplierRequest extends FormRequest
                     'buyer_sku_code' => (string) $item['buyer_sku_code'],
                     'name' => $item['name'] ?? null,
                     'sub_name' => $item['sub_name'] ?? null,
+                    'access' => $item['access'] ?? null,
+                    'tag' => $item['tag'] ?? null,
                     'code' => trim((string) $item['code']),
                     'sub_category_id' => isset($item['sub_category_id']) ? (int) $item['sub_category_id'] : null,
                     'discount_type' => $item['discount_type'] ?? null,
@@ -113,6 +119,8 @@ class AddProductsFromSupplierRequest extends FormRequest
             'buyer_sku_code' => (string) $code,
             'name' => null,
             'sub_name' => null,
+            'access' => null,
+            'tag' => null,
             'code' => null,
             'sub_category_id' => null,
             'discount_type' => null,

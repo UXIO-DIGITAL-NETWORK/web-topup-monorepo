@@ -82,6 +82,13 @@ export interface Product {
   category_name: string;
   /** §6's `provider_sku`. */
   code: string;
+  /**
+   * The supplier's own SKU this product is served by (`supplier_products.buyer_sku_code`),
+   * distinct from our internal `code`. Present only when the API loaded the
+   * supplier mappings (the product list and detail do); null when the product
+   * has no mapping. Shown as a read-only detail on the edit form.
+   */
+  provider_sku_code?: string | null;
 
   /* Captured by the Add form (§4.6). All optional — every fixture predates
      them, and the reference marks only name, code and category as required. */
@@ -562,6 +569,10 @@ export interface AddProductsFromSupplierItem {
   sub_name?: string;
   sub_category_id?: string;
   code?: string;
+  /** Which customer tier may buy it — a `PRODUCT_ACCESS_OPTIONS` value. */
+  access?: string;
+  /** Storefront merchandising label — a `PRODUCT_TAG_OPTIONS` value. */
+  tag?: string;
   discount_type?: ProductDiscountType;
   discount_value?: number;
   point_percent?: number;

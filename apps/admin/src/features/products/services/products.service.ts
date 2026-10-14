@@ -25,6 +25,8 @@ interface ProductApiRow {
   name: string;
   sub_name: string | null;
   code: string;
+  /** The supplier mapping's own SKU; present when the API loaded the mappings. */
+  provider_sku_code?: string | null;
   logo_url: string | null;
   description: string | null;
   validasi_nickname: string | null;
@@ -91,6 +93,7 @@ const toProduct = (row: ProductApiRow): Product => ({
   game_name: row.category?.name ?? "",
   category_name: row.sub_category?.name ?? row.category?.name ?? "",
   code: row.code,
+  provider_sku_code: row.provider_sku_code ?? null,
   sub_name: row.sub_name ?? undefined,
   sub_category_name: row.sub_category?.name ?? undefined,
   nickname_validation: row.validasi_nickname ?? undefined,
@@ -338,6 +341,8 @@ export const productsService = {
       put("code", item.code);
       put("name", item.name);
       put("sub_name", item.sub_name);
+      put("access", item.access);
+      put("tag", item.tag);
       put("sub_category_id", item.sub_category_id ? toFk(item.sub_category_id) : undefined);
       put("discount_type", item.discount_type);
       put("discount_value", item.discount_value);
