@@ -9,10 +9,21 @@ use Exception;
 use Illuminate\Support\Facades\Log;
 
 /**
- * Only uxiolabs has a live balance-check integration (UxiolabsService).
- * Other suppliers (e.g. "VIP Reseller", "Internal System" — see
- * SupplierSeeder) have no such API, so their balance is null rather than
- * a fabricated number.
+ * The balances the platform can actually ask for.
+ *
+ * Only uxiolabs has a live balance-check integration (UxiolabsService). The
+ * other seeded rows ("VIP Reseller", "Internal System" — see SupplierSeeder)
+ * have no API behind them, so listing them put a permanent "—" on the Financial
+ * card: that reads as a channel that is down, rather than one that was never
+ * wired.
+ *
+ * They are left out of the list rather than deleted — `Internal System` is the
+ * platform's own supplier for products that come from no external provider
+ * (`is_system`, and protected by the API), and `supplier_products` references
+ * `suppliers` with cascadeOnDelete.
+ *
+ * A connected supplier that cannot be reached still reports null; that is a real
+ * signal and is kept.
  */
 class GetSupplierBalancesAction
 {
@@ -23,17 +34,14 @@ class GetSupplierBalancesAction
         return Supplier::query()
             ->orderBy('name')
             ->get()
+            ->filter(fn (Supplier $supplier) => UxiolabsSupplier::isNamed($supplier->name))
+            ->values()
             ->map(fn (Supplier $supplier) => [
                 'id' => $supplier->id,
                 'name' => $supplier->name,
-                'balance' => $this->isUxiolabs($supplier) ? $this->uxiolabsBalance() : null,
+                'balance' => $this->uxiolabsBalance(),
             ])
             ->all();
-    }
-
-    private function isUxiolabs(Supplier $supplier): bool
-    {
-        return UxiolabsSupplier::isNamed($supplier->name);
     }
 
     private function uxiolabsBalance(): ?float

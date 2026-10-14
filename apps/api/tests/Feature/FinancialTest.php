@@ -99,19 +99,21 @@ class FinancialTest extends TestCase
             ->assertJsonPath('data.0.held_balance', null);
     }
 
-    public function test_suppliers_returns_uxiolabs_balance_and_null_for_others(): void
+    public function test_suppliers_lists_only_the_channels_that_can_report_a_balance(): void
     {
         $this->actingAsAdmin();
         Supplier::factory()->create(['name' => 'Uxiolabs']);
+        // Seeded rows with no API behind them. They used to be listed as a
+        // permanent "—", which reads as a channel that is down.
         Supplier::factory()->create(['name' => 'VIP Reseller']);
         Supplier::factory()->create(['name' => 'Internal System']);
         Http::fake(['*/saldo' => Http::response(['status' => true, 'msg' => 'berhasil', 'data' => ['saldo' => 500000]], 200)]);
 
         $response = $this->getJson('/api/v1/financial/suppliers')->assertOk();
-        $suppliers = collect($response->json('data'))->keyBy('name');
 
-        $this->assertEquals(500000, $suppliers['Uxiolabs']['balance']);
-        $this->assertNull($suppliers['VIP Reseller']['balance']);
-        $this->assertNull($suppliers['Internal System']['balance']);
+        $response->assertJsonCount(1, 'data')
+            ->assertJsonPath('data.0.name', 'Uxiolabs');
+
+        $this->assertEquals(500000, $response->json('data.0.balance'));
     }
 }
