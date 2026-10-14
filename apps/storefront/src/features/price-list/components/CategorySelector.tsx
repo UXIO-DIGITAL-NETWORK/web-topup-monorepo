@@ -4,8 +4,10 @@ import { Search } from "lucide-react";
 import { Box } from "@/components/common/Box";
 import { Text } from "@/components/common/Text";
 import { Image } from "@/components/common/Image";
+import { gameCardArt } from "@/lib/games";
 import { cn } from "@/lib/utils";
 import { useGamesQuery } from "@/hooks/useGamesQuery";
+import { useSiteSettings } from "@/hooks/useSiteSettings";
 import type { Game } from "@/types/game.type";
 
 interface Props {
@@ -26,6 +28,10 @@ export default function CategorySelector({ activeGameId, onSelect }: Props): Rea
   const filteredGames: Game[] = (games ?? []).filter(
     (g) => g.title.toLowerCase().includes(needle) || g.region.toLowerCase().includes(needle),
   );
+
+  // The logo the admin uploaded for the site. A game with no thumbnail of its
+  // own paints this instead of the bundled stand-in.
+  const siteLogo = useSiteSettings().text("logo");
 
   const handleCardClick = (game: Game) => {
     onSelect(activeGameId === game.id ? null : game.id);
@@ -64,6 +70,7 @@ export default function CategorySelector({ activeGameId, onSelect }: Props): Rea
       <Box className="flex gap-3 overflow-x-auto no-scrollbar pb-2">
         {filteredGames.map((game) => {
           const isActive = activeGameId === game.id;
+          const art = gameCardArt(game, siteLogo);
 
           return (
             <Box
@@ -82,11 +89,12 @@ export default function CategorySelector({ activeGameId, onSelect }: Props): Rea
                     : "border border-[#9333EA]/50 shadow-[0_0_12px_rgba(147,51,234,0.15)]",
               )}
             >
-              {/* Background art — scales on hover */}
+              {/* Background art — scales on hover. A game with no thumbnail of
+                  its own paints the site's logo rather than the bundled stand-in. */}
               <Image
-                src={game.bgImage}
+                src={art.src}
                 alt={game.title}
-                objectFit="cover"
+                objectFit={art.objectFit}
                 className="absolute inset-0 w-full h-full transition-transform duration-500 ease-out group-hover:scale-110"
               />
 
@@ -100,7 +108,7 @@ export default function CategorySelector({ activeGameId, onSelect }: Props): Rea
 
               {/* Game logo — positioned above region pill; only when the category has one */}
               {game.logoImage && (
-                <Box className="absolute inset-x-0 bottom-13 h-14 flex items-center justify-center px-4">
+                <Box className="absolute inset-x-0 bottom-20 h-14 flex items-center justify-center px-4">
                   <Image
                     src={game.logoImage}
                     alt={`${game.title} logo`}
@@ -109,6 +117,17 @@ export default function CategorySelector({ activeGameId, onSelect }: Props): Rea
                   />
                 </Box>
               )}
+
+              {/* Game name — the region pill alone did not say which game this
+                  card was; the name is what the admin recognises. */}
+              <Box className="absolute inset-x-2 bottom-13 px-1">
+                <Text
+                  as="p"
+                  className="font-outfit font-bold text-[11px] leading-[14px] text-white line-clamp-2 text-center"
+                >
+                  {game.title}
+                </Text>
+              </Box>
 
               {/* Region pill — gradient border */}
               <Box className="absolute inset-x-2 bottom-3 p-px rounded-lg bg-linear-to-r from-[#9333EA] to-[#3B82F6]">

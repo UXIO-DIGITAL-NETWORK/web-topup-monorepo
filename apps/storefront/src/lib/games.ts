@@ -31,6 +31,23 @@ export function toGames(models: GameModel[]): Game[] {
 }
 
 /**
+ * The art a game card paints, and how it should fit.
+ *
+ * A game the admin has not given a thumbnail yet used to be handed the bundled
+ * stand-in — a picture of a *different* game, which on a category row reads as
+ * the wrong game rather than as "no artwork yet". The site's own logo is the
+ * honest default, and the bundled art stays the last resort for a site that has
+ * no logo either.
+ */
+export const gameCardArt = (
+  game: Game,
+  siteLogo?: string,
+): { src: string; objectFit: "cover" | "contain" } =>
+  game.bgImage !== placeholderArt || !siteLogo
+    ? { src: game.bgImage, objectFit: "cover" }
+    : { src: siteLogo, objectFit: "contain" };
+
+/**
  * Category types are admin-managed free text, so they are slugified into the
  * tab key rather than matched against a fixed list — a new type added in the
  * back office shows up without a frontend change.
