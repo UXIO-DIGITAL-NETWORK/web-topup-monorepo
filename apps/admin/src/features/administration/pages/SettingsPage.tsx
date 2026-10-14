@@ -199,6 +199,7 @@ export function SettingsPage() {
                             <FieldLabel
                               htmlFor={`setting-${setting.key}`}
                               tooltip={fieldHelp(setting.key)}
+                              optional
                             >
                               {setting.label ?? setting.key}
                             </FieldLabel>
@@ -297,6 +298,7 @@ export function SettingsPage() {
                               // `isPending` alone would put all three dropzones — logo,
                               // favicon and OG image — into the uploading state together.
                               uploading={uploadSetting.isPending && uploadSetting.variables?.key === setting.key}
+                              optional
                             />
                           </Box>
                         ) : (

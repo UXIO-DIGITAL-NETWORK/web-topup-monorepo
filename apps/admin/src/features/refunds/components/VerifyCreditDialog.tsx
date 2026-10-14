@@ -5,6 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { AlertTriangle } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { formatCurrency } from "@/utils/currency";
 import { completeRefundSchema, type CompleteRefundFormValues } from "../schemas/refund.schema";
 import type { Refund } from "../types/refund.type";
@@ -179,7 +179,10 @@ export function VerifyCreditDialog({ open, onOpenChange, refund, onConfirm, isPe
           )}
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="verify-note">{t("noteOptional")}</Label>
+            <FieldLabel
+              htmlFor="verify-note"
+              optional
+            >{t("noteOptional")}</FieldLabel>
             <Input
               id="verify-note"
               className="rounded-xl"

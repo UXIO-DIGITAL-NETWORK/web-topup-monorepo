@@ -23,6 +23,10 @@ interface SelectFieldProps {
   emptyLabel?: string;
   /** Optional explanation rendered as an info tooltip beside the label. */
   tooltip?: ReactNode;
+  /** Marks the field as required (red `*`) and sets `aria-required`. */
+  required?: boolean;
+  /** Marks the field as optional (`(Opsional)`); ignored when `required`. */
+  optional?: boolean;
 }
 
 /**
@@ -44,10 +48,17 @@ export function SelectField({
   disabled = false,
   emptyLabel = "No options available",
   tooltip,
+  required,
+  optional,
 }: SelectFieldProps) {
   return (
     <Box className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor={id} tooltip={tooltip}>
+      <FieldLabel
+        htmlFor={id}
+        tooltip={tooltip}
+        required={required}
+        optional={optional}
+      >
         {label}
       </FieldLabel>
       <Select
@@ -57,6 +68,7 @@ export function SelectField({
       >
         <SelectTrigger
           id={id}
+          aria-required={required || undefined}
           className="w-full rounded-xl"
         >
           <SelectValue placeholder={placeholder} />

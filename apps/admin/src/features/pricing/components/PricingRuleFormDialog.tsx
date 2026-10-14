@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -16,7 +17,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { pricingRuleSchema, type PricingRuleFormValues } from "../schemas/pricingRule.schema";
 import type { CategoryOption, PlanOption, PricingRule, PricingRuleInput } from "../types/pricingRule.type";
 
@@ -105,6 +105,7 @@ export function PricingRuleFormDialog({ open, onOpenChange, rule, categoryOption
                 value={field.value}
                 onChange={field.onChange}
                 error={errors.membership_plan_id?.message}
+                optional
               />
             )}
           />
@@ -120,18 +121,23 @@ export function PricingRuleFormDialog({ open, onOpenChange, rule, categoryOption
                 value={field.value}
                 onChange={field.onChange}
                 placeholder={t("allCategories")}
+                optional
               />
             )}
           />
 
           <Box className="grid grid-cols-2 gap-3">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="rule-percent">{t("markupPercent")}</Label>
+              <FieldLabel
+                htmlFor="rule-percent"
+                required
+              >{t("markupPercent")}</FieldLabel>
               <Input
                 id="rule-percent"
                 type="number"
                 step="any"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("markupPlaceholder")}
                 {...register("markup_percent", { valueAsNumber: true })}
               />
@@ -145,11 +151,15 @@ export function PricingRuleFormDialog({ open, onOpenChange, rule, categoryOption
               )}
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="rule-flat">{t("flatMarkup")}</Label>
+              <FieldLabel
+                htmlFor="rule-flat"
+                required
+              >{t("flatMarkup")}</FieldLabel>
               <Input
                 id="rule-flat"
                 type="number"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("flatPlaceholder")}
                 {...register("markup_flat", { valueAsNumber: true })}
               />

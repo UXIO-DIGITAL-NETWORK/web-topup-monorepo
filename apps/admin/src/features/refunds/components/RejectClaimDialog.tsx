@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { rejectRefundSchema, type RejectRefundFormValues } from "../schemas/refund.schema";
 
@@ -72,10 +72,14 @@ export function RejectClaimDialog({ open, onOpenChange, refundNumber, onConfirm,
           </DialogHeader>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="reject-claim-reason">{t("reason")}</Label>
+            <FieldLabel
+              htmlFor="reject-claim-reason"
+              required
+            >{t("reason")}</FieldLabel>
             <Textarea
               id="reject-claim-reason"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("rejectClaimPlaceholder")}
               {...register("reason")}
             />

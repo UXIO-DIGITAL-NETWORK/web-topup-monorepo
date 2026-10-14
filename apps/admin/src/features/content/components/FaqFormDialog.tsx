@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -97,10 +98,14 @@ export function FaqFormDialog({ open, onOpenChange, faqId }: FaqFormDialogProps)
           className="flex flex-col gap-4"
         >
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="faq-question">{t("colQuestion")}</Label>
+            <FieldLabel
+              htmlFor="faq-question"
+              required
+            >{t("colQuestion")}</FieldLabel>
             <Input
               id="faq-question"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("questionPlaceholder")}
               {...register("question")}
             />
@@ -115,11 +120,15 @@ export function FaqFormDialog({ open, onOpenChange, faqId }: FaqFormDialogProps)
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="faq-answer">{t("answer")}</Label>
+            <FieldLabel
+              htmlFor="faq-answer"
+              required
+            >{t("answer")}</FieldLabel>
             <Textarea
               id="faq-answer"
               rows={5}
               className="rounded-xl"
+              aria-required="true"
               {...register("answer")}
             />
             {errors.answer && (
@@ -144,11 +153,15 @@ export function FaqFormDialog({ open, onOpenChange, faqId }: FaqFormDialogProps)
                   value={field.value}
                   onChange={field.onChange}
                   error={errors.locale?.message}
+                  required
                 />
               )}
             />
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="faq-group">{t("group")}</Label>
+              <FieldLabel
+                htmlFor="faq-group"
+                optional
+              >{t("group")}</FieldLabel>
               <Input
                 id="faq-group"
                 className="rounded-xl"
@@ -157,14 +170,26 @@ export function FaqFormDialog({ open, onOpenChange, faqId }: FaqFormDialogProps)
               />
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="faq-sort">{t("order")}</Label>
+              <FieldLabel
+                htmlFor="faq-sort"
+                required
+              >{t("order")}</FieldLabel>
               <Input
                 id="faq-sort"
                 type="number"
                 min={0}
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 {...register("sortOrder", { valueAsNumber: true })}
               />
+              {errors.sortOrder && (
+                <Text
+                  variant="small"
+                  className="text-destructive"
+                >
+                  {errors.sortOrder.message}
+                </Text>
+              )}
             </Box>
           </Box>
 

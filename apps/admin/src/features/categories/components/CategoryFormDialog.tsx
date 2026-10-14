@@ -235,6 +235,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                         value={field.value}
                         onChange={field.onChange}
                         error={errors.categoryType?.message}
+                        required
                       />
                     )}
                   />
@@ -265,6 +266,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                         options={translateOptions(REGION_OPTIONS, t)}
                         value={field.value ?? ""}
                         onChange={field.onChange}
+                        optional
                       />
                     )}
                   />
@@ -273,10 +275,12 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <FieldLabel
                       htmlFor="category-name"
                       tooltip={t("tipCategoryName")}
+                      required
                     >{t("colCategoryName")}</FieldLabel>
                     <Input
                       id="category-name"
                       className="rounded-xl"
+                      aria-required="true"
                       {...register("name", { onBlur: handleNameBlur })}
                     />
                     {errors.name && (
@@ -293,10 +297,12 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <FieldLabel
                       htmlFor="category-code"
                       tooltip={t("tipCategoryCode")}
+                      required
                     >{t("categoryCode")}</FieldLabel>
                     <Input
                       id="category-code"
                       className="rounded-xl"
+                      aria-required="true"
                       {...register("code")}
                     />
                     {errors.code && (
@@ -313,6 +319,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <FieldLabel
                       htmlFor="category-sub-name"
                       tooltip={t("tipSubName")}
+                      optional
                     >{t("categorySubName")}</FieldLabel>
                     <Input
                       id="category-sub-name"
@@ -325,10 +332,12 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     <FieldLabel
                       htmlFor="category-slug"
                       tooltip={t("tipSlug")}
+                      required
                     >{t("categorySlug")}</FieldLabel>
                     <Input
                       id="category-slug"
                       className="rounded-xl"
+                      aria-required="true"
                       {...register("slug")}
                     />
                     {errors.slug && (
@@ -390,6 +399,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                       onChange={field.onChange}
                       error={errors.logo?.message}
                       uploading={isPending}
+                      optional
                     />
                   )}
                 />
@@ -406,6 +416,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                       onChange={field.onChange}
                       error={errors.thumbnail?.message}
                       uploading={isPending}
+                      optional
                     />
                   )}
                 />
@@ -422,6 +433,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                       onChange={field.onChange}
                       error={errors.banner?.message}
                       uploading={isPending}
+                      optional
                     />
                   )}
                 />
@@ -430,6 +442,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                   <FieldLabel
                     htmlFor="category-description"
                     tooltip={t("tipDescription")}
+                    optional
                   >{t("description")}</FieldLabel>
                   <Textarea
                     id="category-description"
@@ -452,6 +465,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                   <FieldLabel
                     htmlFor="meta-title"
                     tooltip={t("tipMetaTitle")}
+                    optional
                   >{t("metaTitle")}</FieldLabel>
                   <Input
                     id="meta-title"
@@ -465,6 +479,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                   <FieldLabel
                     htmlFor="meta-description"
                     tooltip={t("tipMetaDescription")}
+                    optional
                   >{t("metaDescription")}</FieldLabel>
                   <Textarea
                     id="meta-description"
@@ -473,6 +488,14 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                     maxLength={META_DESCRIPTION_MAX}
                     {...register("metaDescription")}
                   />
+                  {errors.metaDescription && (
+                    <Text
+                      variant="small"
+                      className="text-destructive"
+                    >
+                      {errors.metaDescription.message}
+                    </Text>
+                  )}
                   <Box className="flex justify-between">
                     <Text variant="small">
                       {metaDescriptionLength}/{META_DESCRIPTION_MAX} characters
@@ -493,6 +516,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                       onChange={field.onChange}
                       error={errors.ogImage?.message}
                       uploading={isPending}
+                      optional
                     />
                   )}
                 />
@@ -501,6 +525,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                   <FieldLabel
                     htmlFor="meta-keyword"
                     tooltip={t("tipMetaKeyword")}
+                    optional
                   >{t("metaKeyword")}</FieldLabel>
                   <Input
                     id="meta-keyword"
@@ -522,6 +547,7 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                       options={translateOptions(META_ROBOTS_OPTIONS, t)}
                       value={field.value ?? ""}
                       onChange={field.onChange}
+                      optional
                     />
                   )}
                 />

@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
@@ -88,11 +89,15 @@ export function AnnouncementFormDialog({ open, onOpenChange, announcementId }: A
           className="flex flex-col gap-4"
         >
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="announcement-content">{t("content")}</Label>
+            <FieldLabel
+              htmlFor="announcement-content"
+              required
+            >{t("content")}</FieldLabel>
             <Textarea
               id="announcement-content"
               rows={4}
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("announcementPlaceholder")}
               {...register("content")}
             />
@@ -116,6 +121,7 @@ export function AnnouncementFormDialog({ open, onOpenChange, announcementId }: A
                 options={[{ value: GLOBAL, label: t("globalAllGames") }, ...categoryOptions]}
                 value={field.value ?? GLOBAL}
                 onChange={field.onChange}
+                optional
               />
             )}
           />
@@ -129,6 +135,7 @@ export function AnnouncementFormDialog({ open, onOpenChange, announcementId }: A
             accept="image/jpeg,image/png,image/webp"
             formatsLabel="JPG, PNG or WEBP up to 2MB"
             uploading={isPending}
+            optional
           />
 
           <Controller

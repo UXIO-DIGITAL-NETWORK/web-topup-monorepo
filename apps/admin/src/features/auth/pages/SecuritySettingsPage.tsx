@@ -6,12 +6,12 @@ import { KeyRound, ShieldCheck, ShieldOff, Smartphone } from "lucide-react";
 import { toast } from "sonner";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Heading } from "@/components/common/Heading";
 import { PasswordInput } from "@/components/common/PasswordInput";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { readRememberChoice, useAuthStore } from "@/store/useAuthStore";
 import { authService } from "../services/auth.service";
 import { TwoFactorEnrolCard } from "../components/TwoFactorEnrolCard";
@@ -182,33 +182,45 @@ export function SecuritySettingsPage() {
         </Box>
 
         <Box className="flex flex-col gap-1.5">
-          <Label htmlFor="current-password">{t("currentPassword")}</Label>
+          <FieldLabel
+            htmlFor="current-password"
+            required
+          >{t("currentPassword")}</FieldLabel>
           <PasswordInput
             id="current-password"
             autoComplete="current-password"
             className="rounded-xl"
+            aria-required="true"
             value={currentPassword}
             onChange={(event) => setCurrentPassword(event.target.value)}
           />
         </Box>
 
         <Box className="flex flex-col gap-1.5">
-          <Label htmlFor="new-password">{t("newPassword")}</Label>
+          <FieldLabel
+            htmlFor="new-password"
+            required
+          >{t("newPassword")}</FieldLabel>
           <PasswordInput
             id="new-password"
             autoComplete="new-password"
             className="rounded-xl"
+            aria-required="true"
             value={newPassword}
             onChange={(event) => setNewPassword(event.target.value)}
           />
         </Box>
 
         <Box className="flex flex-col gap-1.5">
-          <Label htmlFor="confirm-password">{t("confirmPassword")}</Label>
+          <FieldLabel
+            htmlFor="confirm-password"
+            required
+          >{t("confirmPassword")}</FieldLabel>
           <PasswordInput
             id="confirm-password"
             autoComplete="new-password"
             className="rounded-xl"
+            aria-required="true"
             value={confirmPassword}
             onChange={(event) => setConfirmPassword(event.target.value)}
           />
@@ -273,23 +285,31 @@ export function SecuritySettingsPage() {
             ) : !secret ? (
               <Box className="flex flex-col gap-4">
                 <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor="rotate-password">{t("yourPassword")}</Label>
+                  <FieldLabel
+                    htmlFor="rotate-password"
+                    required
+                  >{t("yourPassword")}</FieldLabel>
                   <PasswordInput
                     id="rotate-password"
                     autoComplete="current-password"
                     className="rounded-xl"
+                    aria-required="true"
                     value={password}
                     onChange={(event) => setPassword(event.target.value)}
                   />
                 </Box>
                 <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor="rotate-code">{t("currentAuthenticatorCode")}</Label>
+                  <FieldLabel
+                    htmlFor="rotate-code"
+                    required
+                  >{t("currentAuthenticatorCode")}</FieldLabel>
                   <Input
                     id="rotate-code"
                     inputMode="numeric"
                     autoComplete="one-time-code"
                     maxLength={6}
                     className="rounded-xl font-mono"
+                    aria-required="true"
                     value={liveCode}
                     onChange={(event) => setLiveCode(event.target.value.replace(/\D/g, ""))}
                   />
@@ -340,11 +360,15 @@ export function SecuritySettingsPage() {
               <Text variant="muted">{t("turnOffHint")}</Text>
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="disable-password">{t("confirmYourPassword")}</Label>
+              <FieldLabel
+                htmlFor="disable-password"
+                required
+              >{t("confirmYourPassword")}</FieldLabel>
               <PasswordInput
                 id="disable-password"
                 autoComplete="current-password"
                 className="rounded-xl"
+                aria-required="true"
                 value={disablePassword}
                 onChange={(event) => setDisablePassword(event.target.value)}
               />

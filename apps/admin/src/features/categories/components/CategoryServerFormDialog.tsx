@@ -3,6 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CategoryServerOptionsBuilder } from "./CategoryServerOptionsBuilder";
 import { useCategoryOptions } from "../hooks/useCategoryOptions";
 import { useCategoryServer, useCreateCategoryServer, useUpdateCategoryServer } from "../hooks/useCategoryServers";
@@ -103,15 +103,20 @@ export function CategoryServerFormDialog({ open, onOpenChange, categoryServerId 
                 error={errors.category_id?.message}
                 disabled={categoriesLoading}
                 emptyLabel={categoriesLoading ? "Loading categories..." : "No categories available"}
+                required
               />
             )}
           />
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="category-server-name">{t("serverNameLabel")}</Label>
+            <FieldLabel
+              htmlFor="category-server-name"
+              required
+            >{t("serverNameLabel")}</FieldLabel>
             <Input
               id="category-server-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("serverNamePlaceholder")}
               {...register("name")}
             />

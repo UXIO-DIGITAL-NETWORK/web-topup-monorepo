@@ -4,6 +4,7 @@ import { Controller, useForm, useWatch } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -95,10 +96,14 @@ export function MembershipPlanFormDialog({ open, onOpenChange, plan, onSubmit, i
           </DialogHeader>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="plan-code">{t("code")}</Label>
+            <FieldLabel
+              htmlFor="plan-code"
+              required
+            >{t("code")}</FieldLabel>
             <Input
               id="plan-code"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("codePlaceholder")}
               {...register("code")}
             />
@@ -113,10 +118,14 @@ export function MembershipPlanFormDialog({ open, onOpenChange, plan, onSubmit, i
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="plan-name">{t("name")}</Label>
+            <FieldLabel
+              htmlFor="plan-name"
+              required
+            >{t("name")}</FieldLabel>
             <Input
               id="plan-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("namePlaceholder")}
               {...register("name")}
             />
@@ -132,11 +141,15 @@ export function MembershipPlanFormDialog({ open, onOpenChange, plan, onSubmit, i
 
           <Box className="grid grid-cols-2 gap-3">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="plan-price">{t("price")}</Label>
+              <FieldLabel
+                htmlFor="plan-price"
+                required
+              >{t("price")}</FieldLabel>
               <Input
                 id="plan-price"
                 type="number"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("pricePlaceholder")}
                 {...register("price", { valueAsNumber: true })}
               />
@@ -150,13 +163,18 @@ export function MembershipPlanFormDialog({ open, onOpenChange, plan, onSubmit, i
               )}
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="plan-duration">{t("duration")}</Label>
+              <FieldLabel
+                htmlFor="plan-duration"
+                required={!isLifetime}
+                optional={isLifetime}
+              >{t("duration")}</FieldLabel>
               <Input
                 id="plan-duration"
                 type="number"
                 className="rounded-xl"
                 placeholder={t("durationPlaceholder")}
                 disabled={isLifetime}
+                aria-required={!isLifetime || undefined}
                 {...register("duration_days", {
                   // A cleared or disabled number input reads back NaN, which is
                   // not the same thing as "no expiry" — normalise it to null so

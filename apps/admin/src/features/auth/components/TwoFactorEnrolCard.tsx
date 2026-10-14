@@ -3,6 +3,7 @@ import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -119,13 +120,14 @@ export function TwoFactorEnrolCard({
       </Box>
 
       <Box className="flex flex-col gap-1.5">
-        <Label>{codeLabel}</Label>
+        <FieldLabel required>{codeLabel}</FieldLabel>
         <InputOTP
           maxLength={6}
           value={code}
           onChange={onCodeChange}
           onComplete={onConfirm}
           disabled={isConfirming}
+          aria-required="true"
         >
           <InputOTPGroup>
             {[0, 1, 2, 3, 4, 5].map((index) => (

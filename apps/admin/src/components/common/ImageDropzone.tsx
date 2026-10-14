@@ -70,6 +70,10 @@ interface ImageDropzoneProps {
    * mutation's `isPending`.
    */
   uploading?: boolean;
+  /** Marks the field as required (red `*`) and sets `aria-required`. */
+  required?: boolean;
+  /** Marks the field as optional (`(Opsional)`); ignored when `required`. */
+  optional?: boolean;
 }
 
 export function ImageDropzone({
@@ -83,6 +87,8 @@ export function ImageDropzone({
   formatsLabel,
   tooltip,
   uploading,
+  required,
+  optional,
 }: ImageDropzoneProps) {
   const { t } = useTranslation("common");
   const [dragActive, setDragActive] = useState(false);
@@ -123,6 +129,8 @@ export function ImageDropzone({
       <FieldLabel
         htmlFor={id}
         tooltip={tooltip}
+        required={required}
+        optional={optional}
       >
         {label}
       </FieldLabel>
@@ -162,6 +170,7 @@ export function ImageDropzone({
           id={id}
           type="file"
           accept={accept}
+          aria-required={required || undefined}
           className="hidden"
           disabled={busy}
           onChange={(event) => void handleFiles(event.target.files)}

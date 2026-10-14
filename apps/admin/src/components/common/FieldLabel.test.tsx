@@ -28,4 +28,36 @@ describe("FieldLabel", () => {
     );
     expect(screen.getByRole("button", { name: "More information" })).toBeInTheDocument();
   });
+
+  it("renders a required marker that stays out of the accessible name", () => {
+    renderField(
+      <FieldLabel
+        htmlFor="x"
+        required
+      >
+        Category Code
+      </FieldLabel>,
+    );
+
+    expect(screen.getByText("Category Code")).toBeInTheDocument();
+    // aria-hidden keeps "*" out of the label's accessible name, so the
+    // label-text queries across the suite keep matching "Category Code".
+    expect(screen.getByText("*")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByText("(Optional)")).not.toBeInTheDocument();
+  });
+
+  it("renders an optional marker", () => {
+    renderField(
+      <FieldLabel
+        htmlFor="x"
+        optional
+      >
+        Sub Title
+      </FieldLabel>,
+    );
+
+    expect(screen.getByText("Sub Title")).toBeInTheDocument();
+    expect(screen.getByText("(Optional)")).toHaveAttribute("aria-hidden", "true");
+    expect(screen.queryByText("*")).not.toBeInTheDocument();
+  });
 });

@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { SelectField } from "@/components/common/SelectField";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -148,10 +149,14 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
         >
           <Box className="flex flex-col gap-4">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-title">{t("title")}</Label>
+              <FieldLabel
+                htmlFor="article-title"
+                required
+              >{t("title")}</FieldLabel>
               <Input
                 id="article-title"
                 className="rounded-xl"
+                aria-required="true"
                 placeholder={t("articleTitlePlaceholder")}
                 {...register("title")}
               />
@@ -179,6 +184,7 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
                     error={errors.articleCategoryId?.message}
                     disabled={categoriesLoading}
                     emptyLabel={categoriesLoading ? "Loading categories..." : "No categories available"}
+                    required
                   />
                 )}
               />
@@ -194,6 +200,7 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
                     value={field.value}
                     onChange={field.onChange}
                     error={errors.locale?.message}
+                    required
                   />
                 )}
               />
@@ -201,7 +208,10 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
 
             <Box className="grid gap-4 sm:grid-cols-2">
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="article-category-label">{t("badgeLabel")}</Label>
+                <FieldLabel
+                  htmlFor="article-category-label"
+                  optional
+                >{t("badgeLabel")}</FieldLabel>
                 <Input
                   id="article-category-label"
                   className="rounded-xl"
@@ -212,7 +222,10 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
               </Box>
 
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="article-slug">{t("slug")}</Label>
+                <FieldLabel
+                  htmlFor="article-slug"
+                  optional
+                >{t("slug")}</FieldLabel>
                 <Input
                   id="article-slug"
                   className="rounded-xl"
@@ -223,10 +236,14 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-author">{t("colAuthor")}</Label>
+              <FieldLabel
+                htmlFor="article-author"
+                required
+              >{t("colAuthor")}</FieldLabel>
               <Input
                 id="article-author"
                 className="rounded-xl"
+                aria-required="true"
                 {...register("authorName")}
               />
               {errors.authorName && (
@@ -240,7 +257,10 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-excerpt">{t("excerpt")}</Label>
+              <FieldLabel
+                htmlFor="article-excerpt"
+                optional
+              >{t("excerpt")}</FieldLabel>
               <Textarea
                 id="article-excerpt"
                 rows={3}
@@ -306,7 +326,10 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
 
             <Box className="grid gap-4 sm:grid-cols-2">
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="article-meta-title">{t("metaTitle")}</Label>
+                <FieldLabel
+                  htmlFor="article-meta-title"
+                  optional
+                >{t("metaTitle")}</FieldLabel>
                 <Input
                   id="article-meta-title"
                   className="rounded-xl"
@@ -314,7 +337,10 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
                 />
               </Box>
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="article-meta-robots">{t("metaRobots")}</Label>
+                <FieldLabel
+                  htmlFor="article-meta-robots"
+                  optional
+                >{t("metaRobots")}</FieldLabel>
                 <Input
                   id="article-meta-robots"
                   className="rounded-xl"
@@ -325,7 +351,10 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
             </Box>
 
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="article-meta-description">{t("metaDescription")}</Label>
+              <FieldLabel
+                htmlFor="article-meta-description"
+                optional
+              >{t("metaDescription")}</FieldLabel>
               <Textarea
                 id="article-meta-description"
                 rows={3}

@@ -15,7 +15,6 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { InputGroup, InputGroupAddon, InputGroupInput, InputGroupText } from "@/components/ui/input-group";
-import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/utils/currency";
@@ -322,10 +321,12 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                     <FieldLabel
                       htmlFor="product-name"
                       tooltip={t("tipProductName")}
+                      required
                     >{t("productName")}</FieldLabel>
                     <Input
                       id="product-name"
                       className="rounded-xl"
+                      aria-required="true"
                       {...register("name")}
                     />
                     {errors.name && (
@@ -348,6 +349,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         options={NICKNAME_VALIDATION_OPTIONS}
                         value={field.value ?? ""}
                         onChange={field.onChange}
+                        optional
                       />
                     )}
                   />
@@ -358,6 +360,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                     <FieldLabel
                       htmlFor="product-sub-name"
                       tooltip={t("tipSubName")}
+                      optional
                     >{t("subName")}</FieldLabel>
                     <Input
                       id="product-sub-name"
@@ -369,6 +372,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                     <FieldLabel
                       htmlFor="product-code"
                       tooltip={t("tipProductCode")}
+                      required
                     >{t("productCode")}</FieldLabel>
                     <Controller
                       control={control}
@@ -381,6 +385,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                           value={field.value}
                           onBlur={field.onBlur}
                           ref={field.ref}
+                          aria-required="true"
                           onChange={(event) => field.onChange(normalizeProductCode(event.target.value))}
                         />
                       )}
@@ -405,6 +410,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         options={translateOptions(PRODUCT_ACCESS_OPTIONS, t)}
                         value={field.value ?? ""}
                         onChange={field.onChange}
+                        optional
                       />
                     )}
                   />
@@ -422,6 +428,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         options={translateOptions(PRODUCT_TAG_OPTIONS, t)}
                         value={field.value ?? ""}
                         onChange={field.onChange}
+                        optional
                       />
                     )}
                   />
@@ -442,6 +449,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                           setValue("subCategory", "");
                         }}
                         error={errors.category?.message}
+                        required
                       />
                     )}
                   />
@@ -457,6 +465,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         value={field.value ?? ""}
                         onChange={field.onChange}
                         emptyLabel={t("chooseCategoryFirst")}
+                        optional
                       />
                     )}
                   />
@@ -485,6 +494,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       value={field.value}
                       onChange={field.onChange}
                       error={errors.logo?.message}
+                      optional
                       // Only create/update carry the file: `setMargin` is a
                       // separate request on this same form and uploads nothing.
                       uploading={createProduct.isPending || updateProduct.isPending}
@@ -493,7 +503,10 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                 />
 
                 <Box className="flex flex-col gap-1.5">
-                  <Label htmlFor="product-description">{t("description")}</Label>
+                  <FieldLabel
+                    htmlFor="product-description"
+                    optional
+                  >{t("description")}</FieldLabel>
                   <Textarea
                     id="product-description"
                     className="rounded-xl"
@@ -553,9 +566,12 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       >
                         {/* Two plans may share a display name, so the code
                             disambiguates — as on the provider screen. */}
-                        <Label htmlFor={`product-margin-${plan.value}`}>
+                        <FieldLabel
+                          htmlFor={`product-margin-${plan.value}`}
+                          optional
+                        >
                           {plan.label} ({plan.code}) margin (%){plan.is_default ? " · default tier" : ""}
-                        </Label>
+                        </FieldLabel>
                         <Input
                           id={`product-margin-${plan.value}`}
                           className="rounded-xl tabular-nums"
@@ -588,7 +604,10 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
 
                 <Box className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                   <Box className="flex flex-col gap-1.5">
-                    <Label htmlFor="product-price-min">{t("lowerLimit")}</Label>
+                    <FieldLabel
+                      htmlFor="product-price-min"
+                      optional
+                    >{t("lowerLimit")}</FieldLabel>
                     <Input
                       id="product-price-min"
                       className="rounded-xl tabular-nums"
@@ -604,7 +623,10 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                     </Text>
                   </Box>
                   <Box className="flex flex-col gap-1.5">
-                    <Label htmlFor="product-price-max">{t("upperLimit")}</Label>
+                    <FieldLabel
+                      htmlFor="product-price-max"
+                      optional
+                    >{t("upperLimit")}</FieldLabel>
                     <Input
                       id="product-price-max"
                       className="rounded-xl tabular-nums"
@@ -640,13 +662,17 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                         ]}
                         value={field.value || "none"}
                         onChange={(next) => field.onChange(next === "none" ? "" : next)}
+                        optional
                       />
                     )}
                   />
                   <Box className="flex flex-col gap-1.5">
-                    <Label htmlFor="product-discount-value">
+                    <FieldLabel
+                      htmlFor="product-discount-value"
+                      optional
+                    >
                       {watch("discountType") === "percent" ? t("discountPercentOption") : t("discountFixedOption")}
-                    </Label>
+                    </FieldLabel>
                     <Input
                       id="product-discount-value"
                       className="rounded-xl tabular-nums"
@@ -669,6 +695,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                     <FieldLabel
                       htmlFor="product-points"
                       tooltip={t("tipPoints")}
+                      optional
                     >{t("points")}</FieldLabel>
                     <InputGroup className="rounded-xl">
                       <InputGroupInput
@@ -695,6 +722,7 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                     <FieldLabel
                       htmlFor="product-points-flat"
                       tooltip={t("tipBonusPoints")}
+                      optional
                     >{t("bonusPoints")}</FieldLabel>
                     <InputGroup className="rounded-xl">
                       <InputGroupInput

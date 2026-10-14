@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -14,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { refundSchema, type RefundFormValues } from "../schemas/refund.schema";
 
@@ -74,10 +74,14 @@ export function RefundDialog({ open, onOpenChange, invoiceNo, onConfirm, isPendi
           </DialogHeader>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="refund-reason">{t("reason")}</Label>
+            <FieldLabel
+              htmlFor="refund-reason"
+              required
+            >{t("reason")}</FieldLabel>
             <Textarea
               id="refund-reason"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("refundReasonPlaceholder")}
               {...register("reason")}
             />

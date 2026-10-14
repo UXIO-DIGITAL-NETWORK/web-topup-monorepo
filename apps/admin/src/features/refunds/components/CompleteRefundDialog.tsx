@@ -4,6 +4,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import {
@@ -15,7 +16,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Spinner } from "@/components/ui/spinner";
 import { formatCurrency } from "@/utils/currency";
 import { completeRefundSchema, type CompleteRefundFormValues } from "../schemas/refund.schema";
@@ -112,7 +112,10 @@ export function CompleteRefundDialog({ open, onOpenChange, refund, onConfirm, is
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="refund-proof">{t("transferReceiptOptional")}</Label>
+            <FieldLabel
+              htmlFor="refund-proof"
+              optional
+            >{t("transferReceiptOptional")}</FieldLabel>
             <input
               ref={fileInputRef}
               id="refund-proof"
@@ -148,7 +151,10 @@ export function CompleteRefundDialog({ open, onOpenChange, refund, onConfirm, is
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="refund-note">{t("noteOptional")}</Label>
+            <FieldLabel
+              htmlFor="refund-note"
+              optional
+            >{t("noteOptional")}</FieldLabel>
             <Input
               id="refund-note"
               className="rounded-xl"

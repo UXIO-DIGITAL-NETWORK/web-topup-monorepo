@@ -3,6 +3,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -91,10 +92,14 @@ export function CategoryTypeFormDialog({ open, onOpenChange, categoryTypeId }: C
           className="flex flex-col gap-4"
         >
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="category-type-name">{t("typeNameLabel")}</Label>
+            <FieldLabel
+              htmlFor="category-type-name"
+              required
+            >{t("typeNameLabel")}</FieldLabel>
             <Input
               id="category-type-name"
               className="rounded-xl"
+              aria-required="true"
               placeholder={t("typeNamePlaceholder")}
               {...register("name")}
             />

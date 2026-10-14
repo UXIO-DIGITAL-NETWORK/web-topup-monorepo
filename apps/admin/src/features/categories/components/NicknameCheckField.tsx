@@ -49,6 +49,7 @@ export function NicknameCheckField({ enabled, onEnabledChange, value, onChange }
             <FieldLabel
               htmlFor="cek-username-url"
               tooltip="A third-party lookup endpoint. Use {user_id}, {server_id} or {customer_no} placeholders, e.g. https://api.example.com/check?id={user_id}."
+              optional
             >{t("lookupUrl")}</FieldLabel>
             <Input
               id="cek-username-url"

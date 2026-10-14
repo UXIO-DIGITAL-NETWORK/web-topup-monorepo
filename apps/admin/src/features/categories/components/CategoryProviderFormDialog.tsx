@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -14,7 +15,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -229,13 +229,17 @@ export function CategoryProviderFormDialog({
             name="supplierId"
             render={({ field }) => (
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="category-provider-provider">{t("provider")}</Label>
+                <FieldLabel
+                  htmlFor="category-provider-provider"
+                  required
+                >{t("provider")}</FieldLabel>
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
                 >
                   <SelectTrigger
                     id="category-provider-provider"
+                    aria-required="true"
                     className="w-full rounded-xl"
                   >
                     <SelectValue placeholder={t("selectProvider")} />
@@ -274,7 +278,10 @@ export function CategoryProviderFormDialog({
                 {/* The button sits beside the Label, never inside it — putting it
                     within would change the select's accessible name. */}
                 <Box className="flex items-center justify-between gap-2">
-                  <Label htmlFor="category-provider-category">{t("category")}</Label>
+                  <FieldLabel
+                    htmlFor="category-provider-category"
+                    required
+                  >{t("category")}</FieldLabel>
                   {!creatingCategory && (
                     <Button
                       type="button"
@@ -293,6 +300,7 @@ export function CategoryProviderFormDialog({
                 >
                   <SelectTrigger
                     id="category-provider-category"
+                    aria-required="true"
                     className="w-full rounded-xl"
                   >
                     <SelectValue placeholder={t("selectCategory")} />
@@ -331,7 +339,10 @@ export function CategoryProviderFormDialog({
             name="providerCategory"
             render={({ field }) => (
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor="category-provider-provider-category">{t("colProviderCategory")}</Label>
+                <FieldLabel
+                  htmlFor="category-provider-provider-category"
+                  required
+                >{t("colProviderCategory")}</FieldLabel>
                 <Select
                   value={field.value}
                   onValueChange={field.onChange}
@@ -339,6 +350,7 @@ export function CategoryProviderFormDialog({
                 >
                   <SelectTrigger
                     id="category-provider-provider-category"
+                    aria-required="true"
                     className="w-full rounded-xl"
                   >
                     <SelectValue

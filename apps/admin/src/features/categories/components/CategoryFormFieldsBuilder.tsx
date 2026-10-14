@@ -3,6 +3,7 @@ import { Controller, useFieldArray, type Control, type FieldErrors, type UseForm
 import { Info, Plus, Trash2 } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
@@ -61,9 +62,13 @@ export function CategoryFormFieldsBuilder({ control, register, errors }: Categor
               className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_auto_auto]"
             >
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor={`order-form-field-key-${index}`}>{t("key")}</Label>
+                <FieldLabel
+                  htmlFor={`order-form-field-key-${index}`}
+                  required
+                >{t("key")}</FieldLabel>
                 <Input
                   id={`order-form-field-key-${index}`}
+                  aria-required="true"
                   placeholder="user_id"
                   {...register(`orderFormFields.${index}.key`)}
                 />
@@ -78,7 +83,10 @@ export function CategoryFormFieldsBuilder({ control, register, errors }: Categor
               </Box>
 
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor={`order-form-field-label-${index}`}>{t("label")}</Label>
+                <FieldLabel
+                  htmlFor={`order-form-field-label-${index}`}
+                  optional
+                >{t("label")}</FieldLabel>
                 <Input
                   id={`order-form-field-label-${index}`}
                   placeholder={t("userIdPlaceholder")}

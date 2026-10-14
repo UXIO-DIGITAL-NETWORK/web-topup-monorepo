@@ -4,6 +4,7 @@ import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { ImageDropzone } from "@/components/common/ImageDropzone";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -108,10 +109,14 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
         >
           <Box className="grid gap-4 sm:grid-cols-2">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="testimonial-author">{t("authorName")}</Label>
+              <FieldLabel
+                htmlFor="testimonial-author"
+                required
+              >{t("authorName")}</FieldLabel>
               <Input
                 id="testimonial-author"
                 className="rounded-xl"
+                aria-required="true"
                 {...register("authorName")}
               />
               {errors.authorName && (
@@ -124,7 +129,10 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
               )}
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="testimonial-title">{t("authorTitle")}</Label>
+              <FieldLabel
+                htmlFor="testimonial-title"
+                optional
+              >{t("authorTitle")}</FieldLabel>
               <Input
                 id="testimonial-title"
                 className="rounded-xl"
@@ -135,11 +143,15 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
           </Box>
 
           <Box className="flex flex-col gap-1.5">
-            <Label htmlFor="testimonial-content">{t("testimonial")}</Label>
+            <FieldLabel
+              htmlFor="testimonial-content"
+              required
+            >{t("testimonial")}</FieldLabel>
             <Textarea
               id="testimonial-content"
               rows={4}
               className="rounded-xl"
+              aria-required="true"
               {...register("content")}
             />
             {errors.content && (
@@ -154,7 +166,10 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
 
           <Box className="grid gap-4 sm:grid-cols-3">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="testimonial-game">{t("game")}</Label>
+              <FieldLabel
+                htmlFor="testimonial-game"
+                optional
+              >{t("game")}</FieldLabel>
               <Input
                 id="testimonial-game"
                 className="rounded-xl"
@@ -162,7 +177,10 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
               />
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="testimonial-rating">{t("rating")}</Label>
+              <FieldLabel
+                htmlFor="testimonial-rating"
+                optional
+              >{t("rating")}</FieldLabel>
               <Input
                 id="testimonial-rating"
                 type="number"
@@ -181,14 +199,26 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
               )}
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="testimonial-sort">{t("order")}</Label>
+              <FieldLabel
+                htmlFor="testimonial-sort"
+                required
+              >{t("order")}</FieldLabel>
               <Input
                 id="testimonial-sort"
                 type="number"
                 min={0}
                 className="rounded-xl tabular-nums"
+                aria-required="true"
                 {...register("sortOrder", { valueAsNumber: true })}
               />
+              {errors.sortOrder && (
+                <Text
+                  variant="small"
+                  className="text-destructive"
+                >
+                  {errors.sortOrder.message}
+                </Text>
+              )}
             </Box>
           </Box>
 
@@ -201,6 +231,7 @@ export function TestimonialFormDialog({ open, onOpenChange, testimonialId }: Tes
             accept="image/jpeg,image/png,image/webp"
             formatsLabel="JPG, PNG or WEBP up to 2MB"
             uploading={isPending}
+            optional
           />
 
           <Box className="flex flex-col gap-3 sm:flex-row sm:gap-8">

@@ -4,10 +4,10 @@ import { useFieldArray, type Control, type FieldErrors, type UseFormRegister } f
 import { Plus, Trash2 } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { CategoryServerFormValues } from "../schemas/categoryServerForm.schema";
 import { parseBulkOptions } from "../utils/parseBulkOptions";
@@ -91,10 +91,14 @@ export function CategoryServerOptionsBuilder({ control, register, errors }: Cate
               className="grid grid-cols-1 items-end gap-3 rounded-xl border border-border p-3 sm:grid-cols-[1fr_1fr_auto]"
             >
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor={`category-server-option-name-${index}`}>{t("name")}</Label>
+                <FieldLabel
+                  htmlFor={`category-server-option-name-${index}`}
+                  required
+                >{t("name")}</FieldLabel>
                 <Input
                   id={`category-server-option-name-${index}`}
                   className="rounded-xl"
+                  aria-required="true"
                   placeholder={t("asiaPlaceholder")}
                   {...register(`options.${index}.name`)}
                 />
@@ -109,10 +113,14 @@ export function CategoryServerOptionsBuilder({ control, register, errors }: Cate
               </Box>
 
               <Box className="flex flex-col gap-1.5">
-                <Label htmlFor={`category-server-option-value-${index}`}>{t("value")}</Label>
+                <FieldLabel
+                  htmlFor={`category-server-option-value-${index}`}
+                  required
+                >{t("value")}</FieldLabel>
                 <Input
                   id={`category-server-option-value-${index}`}
                   className="rounded-xl"
+                  aria-required="true"
                   placeholder="os_asia"
                   {...register(`options.${index}.value`)}
                 />
@@ -146,7 +154,10 @@ export function CategoryServerOptionsBuilder({ control, register, errors }: Cate
         <Box className="flex flex-col gap-1.5">
           <Box className="flex flex-col gap-3 rounded-xl border border-border p-3">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="category-server-bulk">{t("bulk")}</Label>
+              <FieldLabel
+                htmlFor="category-server-bulk"
+                optional
+              >{t("bulk")}</FieldLabel>
               <Textarea
                 id="category-server-bulk"
                 className="rounded-xl"

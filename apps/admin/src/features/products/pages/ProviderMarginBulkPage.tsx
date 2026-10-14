@@ -3,11 +3,11 @@ import { useMemo, useState } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
 import { Box } from "@/components/common/Box";
+import { FieldLabel } from "@/components/common/FieldLabel";
 import { Heading } from "@/components/common/Heading";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { PlanPriceCard } from "../components/PlanPriceCard";
 import { ProductPriceCell } from "../components/ProductPriceCell";
@@ -192,9 +192,12 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
                 <Box key={plan.value} className="flex flex-col gap-1.5">
                   {/* Two plans may legitimately share a display name (the default
                       "Basic" tier and the paid one), so the code disambiguates. */}
-                  <Label htmlFor={`margin-${plan.value}`}>
+                  <FieldLabel
+                    htmlFor={`margin-${plan.value}`}
+                    optional
+                  >
                     {plan.label} ({plan.code}) margin (%){plan.is_default ? " · default tier" : ""}
-                  </Label>
+                  </FieldLabel>
                   <Input
                     id={`margin-${plan.value}`}
                     type="number"
@@ -209,7 +212,10 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
           </Box>
           <Box className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="price-min">{t("lowerLimit")}</Label>
+              <FieldLabel
+                htmlFor="price-min"
+                optional
+              >{t("lowerLimit")}</FieldLabel>
               <Input
                 id="price-min"
                 type="number"
@@ -223,7 +229,10 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               </Text>
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="price-max">{t("upperLimit")}</Label>
+              <FieldLabel
+                htmlFor="price-max"
+                optional
+              >{t("upperLimit")}</FieldLabel>
               <Input
                 id="price-max"
                 type="number"
@@ -243,7 +252,10 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               Promote copies them across, as it does the price window above. */}
           <Box className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="point-percent">{t("pointsPercent")}</Label>
+              <FieldLabel
+                htmlFor="point-percent"
+                optional
+              >{t("pointsPercent")}</FieldLabel>
               <Input
                 id="point-percent"
                 type="number"
@@ -259,7 +271,10 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               </Text>
             </Box>
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="point-flat">{t("bonusPoints")}</Label>
+              <FieldLabel
+                htmlFor="point-flat"
+                optional
+              >{t("bonusPoints")}</FieldLabel>
               <Input
                 id="point-flat"
                 type="number"
@@ -280,7 +295,10 @@ export default function ProviderMarginBulkPage({ ids }: { ids: string[] }) {
               many of this SKU may be sold today. */}
           <Box className="mt-4 grid grid-cols-1 gap-4 border-t border-border pt-4">
             <Box className="flex flex-col gap-1.5">
-              <Label htmlFor="daily-order-limit">{t("dailyOrderLimit")}</Label>
+              <FieldLabel
+                htmlFor="daily-order-limit"
+                optional
+              >{t("dailyOrderLimit")}</FieldLabel>
               <Input
                 id="daily-order-limit"
                 type="number"
