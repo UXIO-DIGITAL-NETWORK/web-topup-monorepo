@@ -183,7 +183,6 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
                     onChange={field.onChange}
                     error={errors.articleCategoryId?.message}
                     disabled={categoriesLoading}
-                    emptyLabel={categoriesLoading ? "Loading categories..." : "No categories available"}
                     required
                   />
                 )}
@@ -242,6 +241,7 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
               >{t("colAuthor")}</FieldLabel>
               <Input
                 id="article-author"
+                placeholder={t("authorNamePlaceholder")}
                 className="rounded-xl"
                 aria-required="true"
                 {...register("authorName")}
@@ -332,6 +332,7 @@ export function ArticleFormDialog({ open, onOpenChange, type, articleId }: Artic
                 >{t("metaTitle")}</FieldLabel>
                 <Input
                   id="article-meta-title"
+                  placeholder={t("metaTitlePlaceholder")}
                   className="rounded-xl"
                   {...register("metaTitle")}
                 />

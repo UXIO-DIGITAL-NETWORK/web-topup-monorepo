@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { useTranslation } from "react-i18next";
 
 import { Box } from "@/components/common/Box";
 import { FieldLabel } from "@/components/common/FieldLabel";
@@ -44,13 +45,21 @@ export function SelectField({
   value,
   onChange,
   error,
-  placeholder = "Type to search...",
+  placeholder,
   disabled = false,
-  emptyLabel = "No options available",
+  emptyLabel,
   tooltip,
   required,
   optional,
 }: SelectFieldProps) {
+  const { t } = useTranslation("common");
+
+  // Both strings are the control's own chrome, not the caller's content, so they
+  // are translated here instead of defaulting to an English literal: a caller
+  // that passed neither used to render "Type to search..." in every language.
+  const placeholderText = placeholder ?? t("select.placeholder");
+  const emptyText = emptyLabel ?? t("select.empty");
+
   return (
     <Box className="flex flex-col gap-1.5">
       <FieldLabel
@@ -71,7 +80,7 @@ export function SelectField({
           aria-required={required || undefined}
           className="w-full rounded-xl"
         >
-          <SelectValue placeholder={placeholder} />
+          <SelectValue placeholder={placeholderText} />
         </SelectTrigger>
         <SelectContent>
           {options.length === 0 ? (
@@ -80,7 +89,7 @@ export function SelectField({
                 variant="small"
                 className="text-muted-foreground"
               >
-                {emptyLabel}
+                {emptyText}
               </Text>
             </Box>
           ) : (

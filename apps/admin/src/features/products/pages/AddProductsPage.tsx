@@ -815,6 +815,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <Input
                                         id={`${code}-name`}
                                         className="rounded-xl"
+                                        placeholder={t("rowNamePlaceholder")}
                                         aria-label={`${code} name`}
                                         aria-required="true"
                                         value={form.name}
@@ -832,6 +833,7 @@ export default function AddProductsPage({ mode = "single" }: AddProductsPageProp
                                       <Input
                                         id={`${code}-code`}
                                         className="rounded-xl"
+                                        placeholder={t("rowCodePlaceholder")}
                                         aria-label={`${code} internal code`}
                                         aria-required="true"
                                         value={form.code}

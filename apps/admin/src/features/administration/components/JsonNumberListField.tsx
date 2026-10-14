@@ -72,6 +72,7 @@ export function JsonNumberListField({ id, value, onChange }: JsonNumberListField
             id={index === 0 ? id : `${id}-${index}`}
             type="number"
             inputMode="numeric"
+            placeholder="0"
             min={0}
             className="rounded-xl"
             value={amount}

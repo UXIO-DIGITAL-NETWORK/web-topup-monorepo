@@ -33,7 +33,12 @@
     "formats": "JPG, JPEG, PNG, WEBP — optimised automatically",
     "unsupportedType": "That file type is not supported here.",
     "uploading": "Uploading…",
-    "preview": "Preview"
+    "preview": "Preview",
+    "browse": "Browse files"
+  },
+  "select": {
+    "placeholder": "Type to search...",
+    "empty": "No options available"
   },
   "confirm": {
     "delete": "Delete",

@@ -78,7 +78,6 @@ export function ProductMixBuilder({ control, register, errors, currentProductId 
                     label={t("mainProduct")}
                     options={options}
                     disabled={isLoading}
-                    emptyLabel={isLoading ? "Loading products..." : "No products available"}
                     value={select.value}
                     onChange={select.onChange}
                     error={errors.productMix?.[index]?.mainProduct?.message}
