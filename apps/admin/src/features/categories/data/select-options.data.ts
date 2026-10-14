@@ -6,11 +6,6 @@ export const CATEGORY_TYPE_OPTIONS: SelectOptionKey[] = [
   { value: "Voucher", labelKey: "colVoucher" },
 ];
 
-export const REGION_OPTIONS: SelectOptionKey[] = [
-  { value: "Southeast Asia", labelKey: "optSoutheastAsia" },
-  { value: "Global", labelKey: "optGlobal" },
-];
-
 /**
  * Category Provider's `Provider` select (§4.5 line 247). Mirrors the supplier
  * names in `features/financial/data/suppliers.data.ts` and the `type:
