@@ -133,7 +133,7 @@
   "detail": "Detail",
   "mediaSeo": "Media & SEO",
   "basicInformation": "Informasi dasar",
-  "basicInformationHint": "Tipe, cek username, dan identitas kategori di storefront.",
+  "basicInformationHint": "Tipe dan identitas kategori di storefront.",
   "categorySubName": "Sub Nama Kategori",
   "categorySlug": "Slug Kategori",
   "categoryForm": "Formulir kategori",

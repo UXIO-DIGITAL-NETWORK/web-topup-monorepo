@@ -88,9 +88,10 @@ export function SubCategoryFormDialog({ open, onOpenChange, subCategoryId }: Sub
       category_id: values.categoryId,
       name: values.name,
       currency_name: values.currencyName,
-      // ponytail: file name stands in for the uploaded URL (UI-first, no
-      // backend); swap to the URL returned by the §4.9 upload helper.
-      logo_url: values.logo?.name,
+      // The file itself, not its name: the service turns this into the multipart
+      // `logo` part the API stores. Null when nothing was picked — the field is
+      // optional on both sides.
+      logo: values.logo ?? null,
       description: values.description || undefined,
       status: "active" as const,
     };

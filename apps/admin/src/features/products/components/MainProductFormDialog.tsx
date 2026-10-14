@@ -20,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatCurrency } from "@/utils/currency";
 import { PlanPriceCard } from "./PlanPriceCard";
 import { ProductMixBuilder } from "./ProductMixBuilder";
-import { NICKNAME_VALIDATION_OPTIONS, PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
+import { PRODUCT_TAG_OPTIONS } from "../data/select-options.data";
 import { useCreateProduct, useProduct, useSetProductMargin, useSetProductMix, useUpdateProduct } from "../hooks/useProducts";
 import { useProductSelectOptions } from "../hooks/useProductSelectOptions";
 import { useMarginPlanOptions } from "../hooks/useProviderProducts";
@@ -185,6 +185,9 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
       code: values.code,
       category_id: values.category,
       sub_category_id: values.subCategory || undefined,
+      // Kept although the form no longer shows the field: the value loaded from
+      // the record rides back unchanged, so an edit cannot wipe it — the API
+      // writes `validasi_nickname` unconditionally.
       nickname_validation: values.nicknameValidation || undefined,
       tag: values.tag || undefined,
       description: values.description || undefined,
@@ -335,21 +338,6 @@ export function MainProductFormDialog({ open, onOpenChange, productId }: MainPro
                       </Text>
                     )}
                   </Box>
-                  <Controller
-                    control={control}
-                    name="nicknameValidation"
-                    render={({ field }) => (
-                      <SelectField
-                        id="product-nickname-validation"
-                        label={t("nicknameValidation")}
-                        tooltip={t("tipNickname")}
-                        options={NICKNAME_VALIDATION_OPTIONS}
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
-                        optional
-                      />
-                    )}
-                  />
                 </Box>
 
                 <Box className="grid grid-cols-1 gap-4 sm:grid-cols-3">

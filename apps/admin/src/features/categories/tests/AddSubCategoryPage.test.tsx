@@ -2,7 +2,7 @@ import { describe, it, expect, vi, afterEach } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { waitForElementToBeRemoved } from "@testing-library/react";
 
-import { renderRoute, screen, within } from "@/test/test-utils";
+import { fireEvent, renderRoute, screen, waitFor, within } from "@/test/test-utils";
 import { subCategoriesService } from "../services/subCategories.service";
 
 const LIST_PATH = "/admin/categories-preview/sub-category";
@@ -108,5 +108,46 @@ describe("AddSubCategoryDialog", () => {
     );
     if (screen.queryByRole("dialog", { name: "Add Sub Category" })) await waitForElementToBeRemoved(dialog);
     expect(await screen.findByText("Mobile Legends: Philippines")).toBeInTheDocument();
+  });
+
+  /* The logo has to travel as a file part. Sending its name as `logo_url` left
+     the API with no file at all, so every create failed — with a logo or without. */
+  it("sends the picked logo as a file, not just its name", async () => {
+    const createSpy = vi.spyOn(subCategoriesService, "create");
+    const user = userEvent.setup();
+    const dialog = await openAdd(user);
+
+    await user.click(within(dialog).getByRole("combobox", { name: "Category" }));
+    await user.click(await screen.findByRole("option", { name: "Mobile Legends" }));
+    await user.type(within(dialog).getByLabelText("Sub Category Name"), "With Logo");
+    await user.type(within(dialog).getByLabelText("Currency Name"), "Diamonds");
+
+    const logo = new File(["logo"], "logo.png", { type: "image/png" });
+    fireEvent.change(within(dialog).getByLabelText("Logo"), { target: { files: [logo] } });
+
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() => expect(createSpy).toHaveBeenCalled());
+    const sent = vi.mocked(createSpy).mock.calls[0][0];
+    expect(sent.logo).toBeInstanceOf(File);
+    expect((sent.logo as File).name).toBe("logo.png");
+  });
+
+  /* Optional on both sides now: a sub category is creatable before its artwork
+     exists. This is the 422 "logo wajib diisi." that started it. */
+  it("creates a sub category without any logo", async () => {
+    const createSpy = vi.spyOn(subCategoriesService, "create");
+    const user = userEvent.setup();
+    const dialog = await openAdd(user);
+
+    await user.click(within(dialog).getByRole("combobox", { name: "Category" }));
+    await user.click(await screen.findByRole("option", { name: "Mobile Legends" }));
+    await user.type(within(dialog).getByLabelText("Sub Category Name"), "No Logo");
+    await user.type(within(dialog).getByLabelText("Currency Name"), "Diamonds");
+    await user.click(within(dialog).getByRole("button", { name: "Save" }));
+
+    await waitFor(() =>
+      expect(createSpy).toHaveBeenCalledWith(expect.objectContaining({ logo: null })),
+    );
   });
 });

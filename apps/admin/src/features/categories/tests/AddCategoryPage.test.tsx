@@ -54,7 +54,7 @@ describe("AddCategoryDialog", () => {
     const dialog = await openAdd(user);
 
     expect(within(dialog).getByRole("heading", { name: "Basic information" })).toBeInTheDocument();
-    expect(within(dialog).getByText("Type, username check, and category identity on the storefront.")).toBeInTheDocument();
+    expect(within(dialog).getByText("Type and category identity on the storefront.")).toBeInTheDocument();
 
     expect(within(dialog).getByRole("heading", { name: "Category form" })).toBeInTheDocument();
     expect(within(dialog).getByText("Input fields shown to buyers when ordering.")).toBeInTheDocument();
@@ -66,7 +66,6 @@ describe("AddCategoryDialog", () => {
 
     for (const label of [
       "Category Type",
-      "Cek Username",
       "Region",
       "Category Name",
       "Category Sub Name",

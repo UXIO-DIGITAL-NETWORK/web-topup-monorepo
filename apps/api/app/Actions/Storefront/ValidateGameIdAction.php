@@ -33,9 +33,23 @@ class ValidateGameIdAction
 {
     private const TIMEOUT_SECONDS = 4;
 
+    /**
+     * TEMPORARILY OFF (2026-10-14) — the operator asked for the nickname check to
+     * be out of the way for now. The storefront's button is driven by
+     * GameDetailResource's flag, which is off too; this constant is defence in
+     * depth, so a stale client bundle or a direct call to the endpoint cannot
+     * reach the provider either. Restore by flipping this to true and bringing
+     * back the flag in GameDetailResource.
+     */
+    private const ENABLED = false;
+
     /** @return array{nickname: string|null, validated: bool, supported: bool} */
     public function execute(Category $game, string $userId, ?string $serverId): array
     {
+        if (! self::ENABLED) {
+            return $this->unsupported();
+        }
+
         $provider = trim((string) $game->validasi_nickname);
 
         if ($provider === '') {

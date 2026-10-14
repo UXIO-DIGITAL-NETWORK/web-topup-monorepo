@@ -168,7 +168,7 @@ class StorefrontOrderTest extends TestCase
         $this->assertNotNull($game->fresh());
     }
 
-    public function test_validate_id_returns_the_nickname_from_a_configured_provider(): void
+    public function test_validate_id_stays_unsupported_while_the_feature_is_off(): void
     {
         Category::factory()->create([
             'slug' => 'mobile-legends',
@@ -177,13 +177,18 @@ class StorefrontOrderTest extends TestCase
 
         Http::fake(['provider.test/*' => Http::response(['data' => ['nickname' => 'Ramonezz']])]);
 
+        // The lookup is switched off platform-wide for now: the endpoint answers
+        // "no nickname available" and never reaches the provider.
         $this->postJson('/api/v1/games/mobile-legends/validate-id', [
             'target_uid' => '337850017',
             'target_server' => '9423',
         ])
             ->assertOk()
-            ->assertJsonPath('data.nickname', 'Ramonezz')
-            ->assertJsonPath('data.validated', true);
+            ->assertJsonPath('data.nickname', null)
+            ->assertJsonPath('data.validated', false)
+            ->assertJsonPath('data.supported', false);
+
+        Http::assertNothingSent();
     }
 
     public function test_validate_id_survives_a_provider_outage(): void
@@ -230,12 +235,10 @@ class StorefrontOrderTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_game_detail_flags_when_a_username_check_is_available(): void
+    public function test_game_detail_offers_no_username_check_while_the_feature_is_off(): void
     {
         Category::factory()->create(['slug' => 'free-fire', 'status' => true, 'validasi_nickname' => 'https://api.example.com/validate/ff']);
         Category::factory()->create(['slug' => 'plain-game', 'status' => true, 'validasi_nickname' => null]);
-        // Provider configured but the operator switched the check off — the master
-        // toggle wins, so the storefront must not offer the button.
         Category::factory()->create([
             'slug' => 'disabled-game',
             'status' => true,
@@ -243,7 +246,9 @@ class StorefrontOrderTest extends TestCase
             'nickname_check_enabled' => false,
         ]);
 
-        $this->getJson('/api/v1/games/free-fire')->assertOk()->assertJsonPath('data.supports_nickname_check', true);
+        // The check is switched off platform-wide for now, so even the game with
+        // a provider configured AND the master toggle on is offered nothing.
+        $this->getJson('/api/v1/games/free-fire')->assertOk()->assertJsonPath('data.supports_nickname_check', false);
         $this->getJson('/api/v1/games/plain-game')->assertOk()->assertJsonPath('data.supports_nickname_check', false);
         $this->getJson('/api/v1/games/disabled-game')->assertOk()->assertJsonPath('data.supports_nickname_check', false);
     }

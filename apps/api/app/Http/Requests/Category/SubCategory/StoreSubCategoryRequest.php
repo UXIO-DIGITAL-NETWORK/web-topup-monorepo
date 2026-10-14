@@ -19,8 +19,10 @@ class StoreSubCategoryRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'currency_name' => ['nullable', 'string', 'max:255'],
             'description' => ['nullable', 'string'],
-            // FIX: Ubah validasi string menjadi validasi file gambar (maksimal 2MB)
-            'logo' => ['required', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
+            // Optional: a sub category is a grouping label, not a storefront
+            // card, so nothing stops one being created before its artwork
+            // exists. When a file IS sent it is still validated as an image.
+            'logo' => ['nullable', 'image', 'mimes:jpeg,png,jpg,webp', 'max:2048'],
             'status' => ['required', 'boolean'],
         ];
     }

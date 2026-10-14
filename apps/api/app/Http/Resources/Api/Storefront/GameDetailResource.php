@@ -21,13 +21,21 @@ class GameDetailResource extends GameResource
             // field #2 to target_server — checkout accepts nothing else.
             'order_form_fields' => OrderFormFields::for($this->resource),
 
-            // Whether the storefront should offer a "Cek Username" action. Two
-            // conditions: the operator has enabled the check for this game (the
-            // master switch), AND a provider is configured (a lookup URL or a paid
-            // lookup URL) to actually resolve the name. Disabling keeps the
-            // provider config so it can be turned back on without re-entry.
-            'supports_nickname_check' => (bool) $this->nickname_check_enabled
-                && trim((string) $this->validasi_nickname) !== '',
+            // Whether the storefront should offer a "Cek Username" action.
+            //
+            // TEMPORARILY OFF (2026-10-14): the operator asked for the nickname
+            // check to be out of the way for now, on the product form, the
+            // category form and the storefront alike. Turning it off here is the
+            // whole switch — the checkout page only offers the button when this
+            // is true, so no storefront build had to change.
+            //
+            // To restore, bring back the original condition and drop the `false`:
+            //   (bool) $this->nickname_check_enabled
+            //       && trim((string) $this->validasi_nickname) !== ''
+            //
+            // The columns and the admin's stored values are deliberately left in
+            // place, so switching back needs no re-entry of provider URLs.
+            'supports_nickname_check' => false,
 
             'meta' => [
                 'title' => $this->meta_title,

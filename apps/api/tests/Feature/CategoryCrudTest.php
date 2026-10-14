@@ -169,7 +169,7 @@ class CategoryCrudTest extends TestCase
         $this->assertDatabaseCount('categories', 0);
     }
 
-    public function test_nickname_check_enabled_toggle_persists_and_gates_the_storefront_flag(): void
+    public function test_nickname_check_toggle_still_persists_while_the_storefront_flag_is_off(): void
     {
         $this->actingAsAdmin();
         $type = CategoryType::factory()->create();
@@ -191,6 +191,8 @@ class CategoryCrudTest extends TestCase
             'nickname_check_enabled' => false,
         ])->assertOk();
 
+        // The stored values survive, so switching the feature back on needs no
+        // re-entry of the provider URL.
         $this->assertDatabaseHas('categories', [
             'id' => $category->id,
             'nickname_check_enabled' => false,
@@ -200,7 +202,8 @@ class CategoryCrudTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.supports_nickname_check', false);
 
-        // Flip it back on — the storefront offers the check again.
+        // Flip it back on: it is stored again, but the storefront still gets
+        // nothing while the platform-wide switch is off.
         $this->putJson("/api/v1/categories/{$category->id}", [
             'type_id' => $type->id,
             'name' => $category->name,
@@ -211,9 +214,13 @@ class CategoryCrudTest extends TestCase
             'nickname_check_enabled' => true,
         ])->assertOk();
 
+        $this->assertDatabaseHas('categories', [
+            'id' => $category->id,
+            'nickname_check_enabled' => true,
+        ]);
         $this->getJson('/api/v1/games/free-fire')
             ->assertOk()
-            ->assertJsonPath('data.supports_nickname_check', true);
+            ->assertJsonPath('data.supports_nickname_check', false);
     }
 
     public function test_order_form_fields_accepts_a_json_string_from_multipart(): void

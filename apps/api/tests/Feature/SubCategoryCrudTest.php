@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\Category;
 use App\Models\Role;
-use App\Models\SubCategory;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -55,23 +54,33 @@ class SubCategoryCrudTest extends TestCase
         $this->assertDatabaseCount('sub_categories', 0);
     }
 
-    public function test_store_requires_a_logo_but_update_does_not(): void
+    public function test_store_and_update_both_accept_a_missing_logo(): void
     {
         $this->actingAsAdmin();
         $category = Category::factory()->create();
 
-        $this->postJson('/api/v1/sub-categories', [
+        // The form marks the logo optional, so a sub category has to be creatable
+        // before its artwork exists — this used to 422 on a required `logo` rule.
+        $created = $this->postJson('/api/v1/sub-categories', [
             'category_id' => $category->id,
             'name' => 'No logo',
             'status' => true,
-        ])->assertUnprocessable()->assertJsonValidationErrors(['logo']);
+        ])->assertCreated()->assertJsonPath('data.name', 'No logo')->json('data');
 
-        $subCategory = SubCategory::factory()->create(['category_id' => $category->id]);
+        $this->assertDatabaseHas('sub_categories', [
+            'id' => $created['id'],
+            'logo' => null,
+        ]);
 
-        $this->putJson("/api/v1/sub-categories/{$subCategory->id}", [
+        $this->putJson("/api/v1/sub-categories/{$created['id']}", [
             'category_id' => $category->id,
             'name' => 'Still no logo',
             'status' => true,
-        ])->assertOk();
+        ])->assertOk()->assertJsonPath('data.name', 'Still no logo');
+
+        $this->assertDatabaseHas('sub_categories', [
+            'id' => $created['id'],
+            'logo' => null,
+        ]);
     }
 }

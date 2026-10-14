@@ -22,7 +22,6 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Textarea } from "@/components/ui/textarea";
 import { CategoryFormFieldsBuilder } from "./CategoryFormFieldsBuilder";
-import { NicknameCheckField } from "./NicknameCheckField";
 
 import { META_ROBOTS_OPTIONS } from "../data/select-options.data";
 import { useCategory, useCreateCategory, useUpdateCategory } from "../hooks/useCategories";
@@ -117,7 +116,6 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
       : undefined,
   });
 
-  const nicknameCheckEnabled = watch("accountNicknameCheckEnabled");
   const metaDescriptionLength = (watch("metaDescription") ?? "").length;
   const metaDescriptionPercent = Math.round((metaDescriptionLength / META_DESCRIPTION_MAX) * 100);
 
@@ -236,21 +234,6 @@ export function CategoryFormDialog({ open, onOpenChange, categoryId }: CategoryF
                         onChange={field.onChange}
                         error={errors.categoryType?.message}
                         required
-                      />
-                    )}
-                  />
-
-                  <Controller
-                    control={control}
-                    name="accountNicknameValidation"
-                    render={({ field }) => (
-                      <NicknameCheckField
-                        enabled={nicknameCheckEnabled}
-                        onEnabledChange={(next) =>
-                          setValue("accountNicknameCheckEnabled", next, { shouldDirty: true })
-                        }
-                        value={field.value ?? ""}
-                        onChange={field.onChange}
                       />
                     )}
                   />
