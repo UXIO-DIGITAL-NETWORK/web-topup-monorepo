@@ -3,6 +3,7 @@ import { useState } from "react";
 import {
   Archive,
   ArchiveRestore,
+  EyeOff,
   MoreVertical,
   Pencil,
   RefreshCcw,
@@ -113,7 +114,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
                 disabled={nextPublished && !product.can_publish}
                 onSelect={() => setPublishOpen(true)}
               >
-                {nextPublished ? <Rocket /> : <Archive />}
+                {nextPublished ? <Rocket /> : <EyeOff />}
                 <Box className="flex flex-col items-start">
                   {nextPublished ? "Publish" : "Unpublish"}
                   {nextPublished && product.publish_blocked_reason && (
@@ -156,7 +157,7 @@ export function ProductRowActions({ product }: ProductRowActionsProps) {
       <DeleteConfirmDialog
         open={publishOpen}
         onOpenChange={setPublishOpen}
-        icon={nextPublished ? <Rocket /> : <Archive />}
+        icon={nextPublished ? <Rocket /> : <EyeOff />}
         confirmLabel={nextPublished ? "Publish" : "Unpublish"}
         title={nextPublished ? "Publish this product?" : "Unpublish this product?"}
         description={

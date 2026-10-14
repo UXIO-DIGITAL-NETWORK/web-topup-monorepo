@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Archive, ChevronDown, Eye, ImageIcon, Plus, RefreshCcw, RefreshCw, Search } from "lucide-react";
+import { Archive, ChevronDown, Eye, EyeOff, ImageIcon, Plus, RefreshCcw, RefreshCw, Search } from "lucide-react";
 import { toast } from "sonner";
 
 import { Box } from "@/components/common/Box";
@@ -286,7 +286,7 @@ export function MainProductToolbar({
               },
               { label: t("uxiolabsUpdate"), icon: <RefreshCcw className="size-4" />, onSelect: onBulkUxiolabs },
               { label: t("showPrice"), icon: <Eye className="size-4" />, onSelect: onBulkShowPrice },
-              { label: t("unpublish"), icon: <Archive className="size-4" />, onSelect: onBulkUnpublish },
+              { label: t("unpublish"), icon: <EyeOff className="size-4" />, onSelect: onBulkUnpublish },
               { label: t("archive"), icon: <Archive className="size-4" />, onSelect: onBulkArchive },
             ]}
           />
