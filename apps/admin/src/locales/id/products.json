@@ -139,6 +139,8 @@
   "tabMainProducts": "Produk Utama",
   "tabProductProvider": "Produk Penyedia",
   "tabPriceChangeLog": "Log Perubahan Harga",
+  "tabArchived": "Arsip",
+  "archivedSubtitle": "Produk yang diarsipkan — keluar dari katalog, tetapi barisnya tetap disimpan agar riwayat pesanan tetap utuh. Pulihkan untuk mengembalikannya ke katalog.",
   "addProductsFailed": "Gagal menambahkan produk",
   "productCreated": "Produk dibuat",
   "productCreateFailed": "Gagal membuat produk",

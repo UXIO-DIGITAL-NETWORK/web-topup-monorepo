@@ -6,12 +6,13 @@ import { useAuthStore } from "@/store/useAuthStore";
 import { productsService } from "../services/products.service";
 
 const LIST_PATH = "/admin/products-preview/main";
+const ARCHIVED_PATH = "/admin/products-preview/archived";
 const FIRST_ROW = "Weekly Diamond Pass (One Week)";
 /** The one fixture row that is not live — it reads Draft. */
 const INACTIVE_ROW = "Diamond Top Up 355";
 /** Promoted, but the provider has the SKU switched off. */
 const BLOCKED_ROW = "Genesis Crystal 60";
-/** Soft-deleted; only reachable through the Archived filter. */
+/** Soft-deleted; only reachable through the Archived tab. */
 const ARCHIVED_ROW = "Blessing of the Welkin Moon";
 /** The one fixture row that ships `is_price_hidden`. */
 const HIDDEN_ROW = "Diamond Top Up 86";
@@ -95,11 +96,8 @@ describe("Main Products row actions", () => {
   it("an archived row offers only Restore", async () => {
     const spy = vi.spyOn(productsService, "restore").mockResolvedValue(undefined);
     const user = userEvent.setup();
-    await renderRoute(LIST_PATH);
-
-    // Archived rows are out of the list until the dedicated Archived button asks
-    // for them — it is no longer an option in the Status dropdown.
-    await user.click(await screen.findByRole("button", { name: "Archived" }));
+    // Archived rows are out of the main list — they live on their own tab.
+    await renderRoute(ARCHIVED_PATH);
 
     await openRowMenu(user, ARCHIVED_ROW);
     const items = await screen.findAllByRole("menuitem");

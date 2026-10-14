@@ -29,13 +29,20 @@ describe("MainProductsPage", () => {
     expect(screen.queryByText(/lorem ipsum/i)).not.toBeInTheDocument();
   });
 
-  it("shows the two remaining tabs, and no Provider tab", async () => {
+  it("shows the remaining tabs — Main Products, Archived, Price Change Log — and no Provider tab", async () => {
     await renderRoute(LIST_PATH);
 
     expect(await screen.findByRole("tab", { name: "Main Products" })).toBeInTheDocument();
-    const priceLogTab = await screen.findByRole("tab", { name: "Price Change Log" });
-    // The preview base is still honoured for the tab that remains.
-    expect(priceLogTab).toHaveAttribute("href", "/admin/products-preview/price-log");
+
+    // The preview base is still honoured for every tab link.
+    expect(await screen.findByRole("tab", { name: "Archived" })).toHaveAttribute(
+      "href",
+      "/admin/products-preview/archived",
+    );
+    expect(await screen.findByRole("tab", { name: "Price Change Log" })).toHaveAttribute(
+      "href",
+      "/admin/products-preview/price-log",
+    );
 
     // The pool's tab is gone: picking from a provider happens on this list now.
     expect(screen.queryByRole("tab", { name: "Product Provider" })).not.toBeInTheDocument();
@@ -49,6 +56,8 @@ describe("MainProductsPage", () => {
     expect(screen.getByLabelText("Price")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Refresh" })).toBeInTheDocument();
     expect(screen.getByRole("button", { name: /Add Main Products/i })).toBeInTheDocument();
+    // Archived is a tab now, not a filter button beside these controls.
+    expect(screen.queryByRole("button", { name: "Archived" })).not.toBeInTheDocument();
   });
 
   it("'+ Add Main Products' opens a menu offering Single and Bulk", async () => {

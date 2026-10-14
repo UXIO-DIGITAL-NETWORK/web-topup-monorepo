@@ -22,15 +22,19 @@ import type { ProductListParams } from "../types/product.type";
 const DEFAULT_PAGE_SIZE = 10;
 
 /**
- * Main Products list (product_requirements.md §4.6) — the first of the two
- * Product tabs, and the only one with a reference frame.
+ * Main Products list (product_requirements.md §4.6) — the first Product tab, and
+ * the only one with a reference frame.
  *
  * Two corrections to that reference, both the same defect classes confirmed
  * across five Category references: the header subcopy is real copy rather than
  * "lorem ipsum dolor sit amet", and the footer counts products rather than the
  * copy-pasted "9999999 transactions".
+ *
+ * The same list also serves the Archived tab (`archivedOnly`): it differs only
+ * in that the publish_state is pinned to `archived`, the header says so, and the
+ * toolbar drops its Status filter and selection action bar.
  */
-export default function MainProductsPage() {
+function ProductsListPage({ archivedOnly = false }: { archivedOnly?: boolean }) {
   const { t } = useTranslation("products");
   const navigate = useNavigate();
   const { pathname } = useLocation();
@@ -59,12 +63,13 @@ export default function MainProductsPage() {
       search: search || undefined,
       category_id: categoryId,
       price,
-      publish_state: publishState as ProductListParams["publish_state"],
+      // The Archived tab pins the state; the main list lets the Status filter pick.
+      publish_state: (archivedOnly ? "archived" : publishState) as ProductListParams["publish_state"],
       provider_inactive: providerInactive || undefined,
       page,
       per_page: pageSize,
     }),
-    [search, categoryId, price, publishState, providerInactive, page, pageSize],
+    [search, categoryId, price, publishState, providerInactive, page, pageSize, archivedOnly],
   );
   const { data, isLoading, isError, refetch } = useProductList(params);
   const setProductPublished = useSetProductPublished();
@@ -97,8 +102,8 @@ export default function MainProductsPage() {
         <Heading
           level={1}
           variant="section"
-        >{t("tabMainProducts")}</Heading>
-        <Text variant="muted">{t("mainProductsSubtitle")}</Text>
+        >{archivedOnly ? t("tabArchived") : t("tabMainProducts")}</Heading>
+        <Text variant="muted">{archivedOnly ? t("archivedSubtitle") : t("mainProductsSubtitle")}</Text>
       </Box>
 
       <Box className="rounded-2xl border border-border bg-card p-4">
@@ -127,6 +132,7 @@ export default function MainProductsPage() {
           }}
           onBulkUnpublish={() => setBulkUnpublishOpen(true)}
           onBulkArchive={() => setBulkArchiveOpen(true)}
+          archivedView={archivedOnly}
         />
       </Box>
 
@@ -208,4 +214,18 @@ export default function MainProductsPage() {
       />
     </Box>
   );
+}
+
+/** The Main Products tab (the default list). */
+export default function MainProductsPage() {
+  return <ProductsListPage />;
+}
+
+/**
+ * The Archived tab. Same list, narrowed to archived rows — archived products are
+ * out of the catalogue but the row survives for order history, so this is where
+ * they are found and restored from.
+ */
+export function ArchivedProductsPage() {
+  return <ProductsListPage archivedOnly />;
 }
