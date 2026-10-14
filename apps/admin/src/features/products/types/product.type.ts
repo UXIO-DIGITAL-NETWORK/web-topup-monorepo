@@ -469,6 +469,10 @@ export interface PoolCandidate {
 
 export type PoolSort = "name_asc" | "name_desc" | "cost_asc" | "cost_desc";
 
+/** Which provider services a candidate list may include: every one, only the
+ * live ones, or only the switched-off ones. */
+export type PoolAvailability = "all" | "available" | "unavailable";
+
 export interface PoolCandidateListParams {
   search?: string;
   provider_category?: string;
@@ -476,7 +480,7 @@ export interface PoolCandidateListParams {
   /** "new" (default) | "not_pooled" | "all". */
   pool_state?: string;
   /** "available" (default) | "unavailable" | "all". */
-  availability?: string;
+  availability?: PoolAvailability;
   /** Supplier cost bounds in whole rupiah, both inclusive. */
   cost_min?: number;
   cost_max?: number;

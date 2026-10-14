@@ -71,6 +71,7 @@
   "tipProductCode": "SKU internal unik untuk produk ini (misal mlbb-86). Tidak boleh bentrok dengan produk lain. Spasi otomatis diganti dengan garis bawah (_) agar kode konsisten — mis. “VIP 10” menjadi “VIP_10”.",
   "tipProviderCode": "Kode layanan dari Uxiotopup. Read-only — dipakai sebagai kunci integrasi, tidak bisa diubah.",
   "tipTag": "Badge pemasaran opsional yang tampil di produk (misal Hot, Promo).",
+  "tipAvailability": "Saring daftar ke layanan yang tersedia di provider saat ini, atau yang sudah dinonaktifkan.",
   "tipCategory": "Game tempat produk ini bernaung.",
   "tipSubCategory": "Pengelompokan opsional di dalam game (misal grup nominal). Pilih kategori dulu.",
   "tipPoints": "Poin loyalitas yang dihasilkan produk ini, sebagai persentase penjualan. Kosongkan untuk memakai pengaturan poin global; isi 0 untuk produk yang tidak menghasilkan poin.",

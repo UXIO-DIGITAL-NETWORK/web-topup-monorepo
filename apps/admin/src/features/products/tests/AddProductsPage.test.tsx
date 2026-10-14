@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 
 import { renderRoute, screen, waitFor, within } from "@/test/test-utils";
 import { productsService } from "../services/products.service";
+import { providerPoolService } from "../services/providerPool.service";
 
 const LIST_PATH = "/admin/products-preview/main";
 const ADD_PATH = "/admin/products-preview/main/add";
@@ -80,6 +81,23 @@ describe("AddProductsPage", () => {
     expect(await screen.findByText("VAL120")).toBeInTheDocument();
     expect(screen.getByText(NOT_ADDED)).toBeInTheDocument();
     expect(screen.getByText("Page 1 of 1")).toBeInTheDocument();
+  });
+
+  /* The pool shows every mapped SKU by default; the admin narrows it to the
+     services the provider still offers (or to the dead ones) from the strip. */
+  it("narrows the candidate list by provider availability", async () => {
+    const spy = vi.spyOn(providerPoolService, "candidates");
+    const user = userEvent.setup();
+    await openPage();
+
+    await user.click(screen.getByRole("combobox", { name: "Availability" }));
+    await user.click(await screen.findByRole("option", { name: "Available" }));
+
+    await waitFor(() => {
+      expect(spy.mock.calls.at(-1)?.[0]).toMatchObject({
+        availability: "available",
+      });
+    });
   });
 
   /**

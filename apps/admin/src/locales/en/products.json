@@ -71,6 +71,7 @@
   "tipProductCode": "A unique internal SKU for this product (e.g. mlbb-86). Must not clash with another product. Any space is replaced with an underscore (_) to keep codes consistent — e.g. “VIP 10” becomes “VIP_10”.",
   "tipProviderCode": "The service code from Uxiotopup. Read-only — used as the integration key, cannot be changed.",
   "tipTag": "An optional marketing badge shown on the product (e.g. Hot, Promo).",
+  "tipAvailability": "Narrow the list to services the provider currently offers, or to the ones it has switched off.",
   "tipCategory": "The game this product belongs to.",
   "tipSubCategory": "An optional grouping within the game (e.g. a denomination group). Pick a category first.",
   "tipPoints": "Loyalty points this product earns, as a percentage of the sale. Leave empty to use the global points setting; enter 0 for a product that earns nothing.",
