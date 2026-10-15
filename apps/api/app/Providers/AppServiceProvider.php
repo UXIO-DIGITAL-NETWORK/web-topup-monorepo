@@ -113,6 +113,13 @@ class AppServiceProvider extends ServiceProvider
             return Limit::perMinute(10)->by($request->user()?->id ?: $request->ip());
         });
 
+        // Looser than checkout on purpose: the checkout screen re-checks the item
+        // every time a buyer picks a package, and sharing checkout's 10/minute
+        // would spend the checkout budget just by browsing.
+        RateLimiter::for('recheck', function (Request $request) {
+            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+        });
+
         // Generous on purpose: legitimate gateway retry bursts must never be
         // dropped — signature verification is the real gate on these routes.
         RateLimiter::for('webhooks', function (Request $request) {

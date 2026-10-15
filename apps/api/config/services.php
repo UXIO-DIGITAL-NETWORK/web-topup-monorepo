@@ -75,6 +75,11 @@ return [
         // The webhook carries no signature — the only authentication is the
         // source IP. Comma-separated to allow extra IPs without a deploy.
         'callback_ips' => env('UXIOTOPUP_CALLBACK_IP', '103.146.202.50'),
+        // How stale the stored price list may be before a checkout re-check that
+        // could not reach the provider refuses to let the sale through. Matches
+        // the sweep cadence on purpose: "fresher than one sync interval" is the
+        // point at which we still know what the price is.
+        'recheck_fresh_minutes' => (int) env('UXIOTOPUP_RECHECK_FRESH_MINUTES', 5),
     ],
 
     'supplier' => [

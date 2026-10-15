@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\PriceChangeLogSource;
 use App\Enums\PriceChangeLogStatus;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -16,6 +17,7 @@ class PriceChangeLog extends Model
 
     protected $casts = [
         'status' => PriceChangeLogStatus::class,
+        'source' => PriceChangeLogSource::class,
         'old_cost' => 'integer',
         'new_cost' => 'integer',
         'old_price_member' => 'integer',
