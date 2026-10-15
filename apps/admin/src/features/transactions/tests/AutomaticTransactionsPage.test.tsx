@@ -155,6 +155,9 @@ describe("AutomaticTransactionsPage", () => {
     expect(screen.getByText("19 Diamond (17 + 2 Bonus)")).toBeInTheDocument();
     expect((await screen.findAllByText("Mobile Legends Indonesia")).length).toBeGreaterThan(0);
     expect(screen.getByText("Rp 4.752")).toBeInTheDocument();
+    // The membership price list the figure was billed on. Absent on older
+    // orders, which is why the fixture only tiers the first row.
+    expect(screen.getByText("Member")).toBeInTheDocument();
   });
 
   it("opens a row's action menu with all 9 items, in order", async () => {

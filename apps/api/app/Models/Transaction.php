@@ -67,6 +67,18 @@ class Transaction extends Model
     }
 
     /**
+     * The membership tier whose price list this order was billed against.
+     *
+     * `withTrashed()` for the same reason `product()` has it: a plan retired
+     * after the sale must still explain the figure it produced. Null on orders
+     * written before the column existed.
+     */
+    public function membershipPlan()
+    {
+        return $this->belongsTo(MembershipPlan::class)->withTrashed();
+    }
+
+    /**
      * The supplier orders placed for this transaction — one per component of a
      * mix product, and exactly one for everything else.
      *

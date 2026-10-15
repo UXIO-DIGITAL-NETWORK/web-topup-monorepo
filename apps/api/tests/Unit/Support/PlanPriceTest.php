@@ -22,6 +22,15 @@ class PlanPriceTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // The fallback warning is throttled process-wide, so a test that reached
+        // the fallback first would silence this one's assertion.
+        PlanPrice::forgetFallbackWarning();
+    }
+
     private function plan(string $code, int $sortOrder = 2): MembershipPlan
     {
         return MembershipPlan::create([

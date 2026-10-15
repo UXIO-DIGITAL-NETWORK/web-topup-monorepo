@@ -42,6 +42,17 @@ class TransactionResource extends JsonResource
             // What the order cost us at checkout. Null on rows written before
             // the column existed — the admin renders that as an absence.
             'cost_price' => $this->cost_price,
+            // Which membership price list the figure came from. Null on older
+            // rows (unrecoverable) and on the legacy price_member fallback.
+            'membership_plan_id' => $this->membership_plan_id,
+            'membership_plan' => $this->whenLoaded(
+                'membershipPlan',
+                fn () => $this->membershipPlan === null ? null : [
+                    'id' => $this->membershipPlan->id,
+                    'code' => $this->membershipPlan->code,
+                    'name' => $this->membershipPlan->localizedName(),
+                ]
+            ),
             // Three status fields that are easy to confuse, so: `status` is the
             // order's combined lifecycle (unchanged, still what every guard reads);
             // `provider_status` is the supplier's half alone, normalized;

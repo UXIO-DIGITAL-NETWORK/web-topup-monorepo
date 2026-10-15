@@ -41,6 +41,7 @@ const detail: TransactionDetail = {
   channel_fee: 752,
   amount_total: 4752,
   margin: 47,
+  plan: { code: "member", name: "Member" },
   payment_method: "QRIS",
   payment: {
     reference_id: "PAY-REF-01",
@@ -95,6 +96,9 @@ describe("TransactionDetailDialog", () => {
     expect(within(dialog).getByText("PAY-REF-01")).toBeInTheDocument();
     expect(within(dialog).getByText("QRIS")).toBeInTheDocument();
     expect(within(dialog).getByText("Automatic")).toBeInTheDocument();
+    // Which price list produced Nominal Dasar.
+    expect(within(dialog).getByText("Plan Price")).toBeInTheDocument();
+    expect(within(dialog).getByText("Member")).toBeInTheDocument();
   });
 
   // amount_fee and channel_fee are the same number on every row written since

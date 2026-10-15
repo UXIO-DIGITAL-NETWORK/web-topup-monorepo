@@ -131,7 +131,10 @@ class CheckoutAction
         // Shared with the public catalog so the quoted price and the billed
         // price come from one implementation. Guests resolve to the default
         // plan, which is the free tier every account starts on.
-        $sellingPrice = PlanPrice::for($product, $user);
+        // The tier travels with the price: the admin reads "sold on the VIP list"
+        // beside the figure, and nothing can recover it afterwards — the
+        // customer's plan may have changed by the time anyone asks.
+        ['price' => $sellingPrice, 'planId' => $pricingPlanId] = PlanPrice::forWithPlan($product, $user);
 
         // ── 4. Supplier & margin guard ───────────────────────────────────────
         // A mix has no supplier of its own — it is delivered by its components —
@@ -429,7 +432,7 @@ class CheckoutAction
             $dto, $user, $product, $channel, $activeSupplier, $quotaTargets, $invoiceNumber, $referenceId,
             $targetNickname, $targetValues, $targetUid, $targetServer,
             $discount, $sellingPrice, $adminFee, $channelFee, $gatewayFee,
-            $taxAmount, $taxPercent, $cost, $margin, $grossAmount, $callGateway, $gatewayInsideTx,
+            $taxAmount, $taxPercent, $cost, $margin, $pricingPlanId, $grossAmount, $callGateway, $gatewayInsideTx,
             $pointsSpent, $pointsSpentAmount, $isExternal,
             &$paymentInstructions, &$pgTransactionId, &$transactionStatus,
         ) {
@@ -528,6 +531,9 @@ class CheckoutAction
                 // what this particular sale earned, and `margin` cannot be
                 // inverted back into a cost once points have moved amount_base.
                 'cost_price' => $cost,
+                // Which price list the customer was billed on. Null only when
+                // no plan price existed and `price_member` answered.
+                'membership_plan_id' => $pricingPlanId,
                 'status' => TransactionStatus::PENDING,
             ]);
 
