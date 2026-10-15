@@ -84,9 +84,9 @@ describe("AddCategoryDialog", () => {
     const dialog = await openAdd(user);
 
     expect(within(dialog).getByText(/ID each game requires/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/unique within a category/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/Up to 5 fields/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/Example: Mobile Legends/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Example result for Mobile Legends/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Label: User ID/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Label: Zone ID/)).toBeInTheDocument();
   });
 
   it("shows the empty-forms message before any field is added", async () => {
