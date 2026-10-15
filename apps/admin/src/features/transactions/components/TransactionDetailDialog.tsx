@@ -292,6 +292,9 @@ export function TransactionDetailDialog({ transactionId, open, onOpenChange }: T
               <Row label={t("baseAmount")}>
                 <Value>{money(data.amount_base)}</Value>
               </Row>
+              <Row label={t("planPrice")}>
+                <Value>{data.plan?.name ?? EM_DASH}</Value>
+              </Row>
               {data.discount_amount > 0 ? (
                 <Row label={t("promoDiscount")}>
                   <Value>{`${money(data.discount_amount)} (already applied)`}</Value>

@@ -75,6 +75,16 @@ export interface ActivityLogEntry {
   created_at: string;
 }
 
+/**
+ * The membership price list an order was billed against.
+ *
+ * `code` is the stable identity; `name` is the plan's display name for the admin.
+ */
+export interface TransactionPlanRef {
+  code: string;
+  name: string;
+}
+
 export interface Transaction {
   id: string;
   invoice_no: string;
@@ -92,6 +102,11 @@ export interface Transaction {
   cost: number;
   /** What the order cost us — the supplier price frozen at checkout. Absent on rows written before the column existed. */
   cost_price?: number;
+  /**
+   * Which membership price list priced this order. Absent on older rows (the
+   * plan cannot be recovered) and on the legacy base-price fallback.
+   */
+  plan?: TransactionPlanRef;
   profit?: number;
   admin_fee?: number;
   /** Provider/destination account reference. */
@@ -196,6 +211,8 @@ export interface TransactionDetail {
   margin: number;
   /** Supplier cost frozen at checkout; absent on rows written before the column existed. */
   cost_price?: number;
+  /** Which membership price list priced this order; absent on older rows. */
+  plan?: TransactionPlanRef;
   payment_method: string;
   payment: TransactionDetailPayment;
   supplier: TransactionDetailSupplier;

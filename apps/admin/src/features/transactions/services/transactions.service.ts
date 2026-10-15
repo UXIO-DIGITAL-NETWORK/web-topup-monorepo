@@ -138,6 +138,8 @@ interface TransactionApiRow {
   margin: number;
   /** Supplier cost frozen at checkout; null on rows written before the column existed. */
   cost_price?: number | null;
+  /** Which membership price list priced the order; null on older rows and on the base-price fallback. */
+  membership_plan?: { id: number; code: string; name: string } | null;
   status: string;
   sn: string | null;
   proof_url: string | null;
@@ -215,6 +217,15 @@ const toCustomer = (row: TransactionApiRow): TransactionCustomer => ({
 const toTargetRef = (row: TransactionApiRow): string | undefined =>
   [row.target_uid, row.target_server].filter(Boolean).join(" / ") || undefined;
 
+/**
+ * The tier is absent on older orders on purpose — the plan that priced them
+ * cannot be recovered — so an absence must stay an absence, not become a guess.
+ */
+const toPlan = (row: TransactionApiRow): Transaction["plan"] =>
+  row.membership_plan
+    ? { code: row.membership_plan.code, name: row.membership_plan.name }
+    : undefined;
+
 const toInvoiceStatus = (row: TransactionApiRow): TransactionStatus => INVOICE_STATUS[row.status] ?? "pending";
 
 const toPaymentStatus = (row: TransactionApiRow): PaymentStatus => {
@@ -269,6 +280,7 @@ const toTransaction = (row: TransactionApiRow): Transaction => {
     cost: row.amount_total,
     profit: row.margin,
     cost_price: row.cost_price ?? undefined,
+    plan: toPlan(row),
     admin_fee: row.amount_fee,
     target_ref: toTargetRef(row),
     nickname: row.target_nickname ?? undefined,
@@ -315,6 +327,7 @@ const toTransactionDetail = (row: TransactionDetailApiRow): TransactionDetail =>
   amount_total: row.amount_total,
   margin: row.margin,
   cost_price: row.cost_price ?? undefined,
+  plan: toPlan(row),
   payment_method: row.payment_channel?.name ?? "",
   payment: {
     reference_id: row.payment?.reference_id ?? undefined,

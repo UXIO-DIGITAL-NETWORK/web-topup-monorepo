@@ -422,6 +422,11 @@ const toApiTransaction = (row: (typeof TRANSACTIONS)[number], index: number): Ro
   channel_fee: row.admin_fee ?? 0,
   discount_amount: 0,
   is_manual: false,
+  // Derived from the row's position, not a new fixture field: the first order
+  // carries a membership tier so the badge has something to render, and the rest
+  // stay absent — which is exactly what an order written before the column
+  // existed looks like.
+  membership_plan: index === 0 ? { id: 1, code: "member", name: "Member" } : null,
   supplier_trx_id: `SUP-${index + 1}`,
   supplier_status: row.invoice_status === "success" ? "success" : "pending",
   supplier: { id: index + 1, name: "Uxiolabs" },

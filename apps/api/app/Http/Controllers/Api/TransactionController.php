@@ -43,7 +43,7 @@ class TransactionController extends Controller
      * implies `product`; it is what the admin renders as the order's "Game",
      * and ProductResource only emits `category` when it is loaded.
      */
-    private const RELATIONS = ['user', 'product.category', 'supplier', 'payment', 'paymentChannel', 'supplierOrders.product', 'supplierOrders.supplier', 'supplierOrders.retriedBy'];
+    private const RELATIONS = ['user', 'product.category', 'membershipPlan', 'supplier', 'payment', 'paymentChannel', 'supplierOrders.product', 'supplierOrders.supplier', 'supplierOrders.retriedBy'];
 
     public function statusCounts(GetTransactionStatusCountsAction $action)
     {

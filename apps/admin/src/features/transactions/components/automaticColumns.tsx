@@ -123,6 +123,17 @@ export const automaticColumnsFor = (t: TFunction<"transactions">): ColumnDef<Tra
         >
           {formatCurrency(row.original.cost, { fractionDigits: 0 })}
         </Text>
+        {/* Which price list produced the figure above. Absent on older orders,
+            where the plan that priced them cannot be recovered. */}
+        {row.original.plan && (
+          <Badge
+            variant="outline"
+            title={t("planPrice")}
+            className="mt-0.5 w-fit text-xs font-normal"
+          >
+            {row.original.plan.name}
+          </Badge>
+        )}
         {row.original.cost_price !== undefined && (
           <Text
             variant="muted"

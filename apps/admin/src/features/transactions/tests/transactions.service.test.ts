@@ -25,6 +25,7 @@ const apiRow = (over: Record<string, unknown> = {}) => ({
   product: { id: 9, name: "19 Diamond", category: { id: 4, name: "Mobile Legends" } },
   payment: { status: "3" },
   payment_channel: { id: 2, name: "Credits" },
+  membership_plan: { id: 1, code: "member", name: "Member" },
   created_at: "2026-07-01T14:56:37.000Z",
   updated_at: "2026-07-01T14:58:00.000Z",
   ...over,
@@ -45,6 +46,7 @@ describe("transactionsService.list", () => {
       payment_status: "success",
       cost: 4752,
       profit: 47,
+      plan: { code: "member", name: "Member" },
       payment_method: "Credits",
       target_ref: "1453734692 / 16057",
     });

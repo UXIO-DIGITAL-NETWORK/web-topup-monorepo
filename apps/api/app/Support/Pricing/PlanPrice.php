@@ -28,19 +28,48 @@ final class PlanPrice
     /** Throttles the fallback warning so one bad deploy cannot flood the log. */
     private static bool $fallbackWarned = false;
 
+    /**
+     * Clears the throttle. The flag is process-wide, so it otherwise outlives the
+     * test that tripped it and silently silences the next test's assertion — the
+     * same reasoning `DefaultPlan` gives for not memoising across a
+     * `RefreshDatabase` boundary.
+     */
+    public static function forgetFallbackWarning(): void
+    {
+        self::$fallbackWarned = false;
+    }
+
     public static function for(Product $product, ?User $user): int
     {
+        return self::forWithPlan($product, $user)['price'];
+    }
+
+    /**
+     * The price AND the tier it came from, resolved in one pass so the two can
+     * never disagree — the admin shows "which price list was this sold on"
+     * beside the figure, and a second resolution could answer differently.
+     *
+     * `planId` is null when no plan price existed and `price_member` answered.
+     *
+     * @return array{price:int, planId:?int}
+     */
+    public static function forWithPlan(Product $product, ?User $user): array
+    {
+        ['price' => $listPrice, 'planId' => $planId] = self::listPriceWithPlan($product, $user);
+
         // The product's own standing discount first, then the flash sale. Both
         // only ever lower, so the cheaper wins; the undiscounted figure stays
         // available through `listFor()` as the strikethrough price.
-        $listPrice = self::listPrice($product, $user);
         $discounted = ProductDiscount::for($product, $listPrice);
         $salePrice = FlashSalePrice::forProduct((int) $product->getKey());
 
         // Making this the single place a promotion is applied is what keeps the
         // homepage, the price list and the invoice agreeing — they all resolve
         // through here.
-        return $salePrice !== null && $salePrice < $discounted ? $salePrice : $discounted;
+        return [
+            'price' => $salePrice !== null && $salePrice < $discounted ? $salePrice : $discounted,
+            'planId' => $planId,
+        ];
     }
 
     /**
@@ -49,14 +78,17 @@ final class PlanPrice
      */
     public static function listFor(Product $product, ?User $user): int
     {
-        return self::listPrice($product, $user);
+        return self::listPriceWithPlan($product, $user)['price'];
     }
 
     /**
      * The price with no promotion applied — the plan tier, the default tier, or
-     * `price_member` as the last resort.
+     * `price_member` as the last resort — together with the tier that supplied
+     * it.
+     *
+     * @return array{price:int, planId:?int}
      */
-    private static function listPrice(Product $product, ?User $user): int
+    private static function listPriceWithPlan(Product $product, ?User $user): array
     {
         $planId = MembershipResolver::planIdFor($user);
 
@@ -64,7 +96,7 @@ final class PlanPrice
             $price = self::priceOnPlan($product, $planId);
 
             if ($price !== null) {
-                return $price;
+                return ['price' => $price, 'planId' => $planId];
             }
         }
 
@@ -77,7 +109,7 @@ final class PlanPrice
             $price = self::priceOnPlan($product, $defaultPlanId);
 
             if ($price !== null) {
-                return $price;
+                return ['price' => $price, 'planId' => $defaultPlanId];
             }
         }
 
@@ -87,7 +119,7 @@ final class PlanPrice
         // That is a silent revenue leak, not an outage, so it must be noisy.
         self::warnOnce($product);
 
-        return (int) $product->price_member;
+        return ['price' => (int) $product->price_member, 'planId' => null];
     }
 
     /**
