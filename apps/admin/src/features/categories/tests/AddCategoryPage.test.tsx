@@ -79,14 +79,14 @@ describe("AddCategoryDialog", () => {
     expect(within(dialog).queryByLabelText("Category UID Parser")).not.toBeInTheDocument();
   });
 
-  it("shows the field-key guide, explaining the field definition rather than only forbidding two keys", async () => {
+  it("shows the field-key guide with the per-game ID instruction and example", async () => {
     const user = userEvent.setup();
     const dialog = await openAdd(user);
 
-    expect(within(dialog).getByText(/technical name used with the supplier/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/must not be whatsapp or email/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/column #1 becomes the account id/)).toBeInTheDocument();
-    expect(within(dialog).getByText(/Examples: Mobile Legends/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/ID each game requires/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/unique within a category/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Up to 5 fields/)).toBeInTheDocument();
+    expect(within(dialog).getByText(/Example: Mobile Legends/)).toBeInTheDocument();
   });
 
   it("shows the empty-forms message before any field is added", async () => {
