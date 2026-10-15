@@ -254,6 +254,10 @@ jobs:
           GH_REPOSITORY: ${{ github.repository }}
           DEPLOY_REF: ${{ env.DEPLOY_REF }}
           APP_VERSION: ${{ env.APP_VERSION }}
+          # Kanal Discord. Dipakai workflow ini untuk notifikasi deploy, DAN
+          # dituliskan ke .env aplikasi di langkah 3a-bis — supaya log aplikasi
+          # dan notifikasi deploy tidak bisa lagi berakhir di dua kanal berbeda.
+          DISCORD_WEBHOOK_LOG_URL: ${{ secrets.DISCORD_WEBHOOK_LOG_URL }}
           # Dihitung di CI dari commit yang di-build, bukan dibaca dari git di
           # server: yang dilaporkan `/v1/version` harus artifact yang mendarat.
           APP_COMMIT: ${{ steps.stamp.outputs.commit }}
@@ -276,7 +280,7 @@ jobs:
           # then store the base64 SHA256 line as SSH_HOST_KEY.
           fingerprint: ${{ secrets.SSH_HOST_KEY }}
           command_timeout: 30m
-          envs: ENV_FILE_CONTENT,DEPLOY_BASE_PATH,GH_REPOSITORY,DEPLOY_REF,APP_VERSION,APP_COMMIT,APP_UPSTREAM
+          envs: ENV_FILE_CONTENT,DEPLOY_BASE_PATH,GH_REPOSITORY,DEPLOY_REF,APP_VERSION,APP_COMMIT,APP_UPSTREAM,DISCORD_WEBHOOK_LOG_URL
           script: |
             set -e
             # APP_DEBUG wajib mati — termasuk di staging, yang justru lebih
@@ -417,6 +421,21 @@ jobs:
             #     yang kebetulan ada di sini.
             sed -i -E '/^(APP_VERSION|APP_COMMIT|APP_UPSTREAM)=/d' .env
             printf 'APP_VERSION=%s\nAPP_COMMIT=%s\nAPP_UPSTREAM=%s\n' "$APP_VERSION" "$APP_COMMIT" "$APP_UPSTREAM" >> .env
+
+            # 3a-bis. Satu kanal Discord untuk deploy DAN aplikasi.
+            #     Notifikasi deploy membaca secret ini; aplikasi membaca barisnya
+            #     sendiri di dalam ENV_FILE. Dua tempat, dan keduanya bisa
+            #     menunjuk kanal berbeda tanpa ada satu pun yang salah — jadi
+            #     yang di .env ditulis ulang dari secret yang sama, persis
+            #     seperti stempel di atas.
+            #     Dilewati saat secret-nya kosong: menulis nilai kosong akan
+            #     mendiamkan seluruh laporan aplikasi, bukan menyatukannya.
+            if [ -n "$DISCORD_WEBHOOK_LOG_URL" ]; then
+              sed -i -E '/^DISCORD_WEBHOOK_LOG_URL=/d' .env
+              printf 'DISCORD_WEBHOOK_LOG_URL=%s\n' "$DISCORD_WEBHOOK_LOG_URL" >> .env
+            else
+              echo "::warning::secret DISCORD_WEBHOOK_LOG_URL kosong — kanal Discord aplikasi dibiarkan seperti di ENV_FILE."
+            fi
 
             # 3b. Kredensial produksi — APP_KEY, kata sandi database, kunci
             #     gateway — tidak boleh terbaca user lain di server. Umask biasa
