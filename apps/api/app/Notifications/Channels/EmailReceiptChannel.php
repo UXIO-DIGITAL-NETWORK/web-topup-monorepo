@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Notifications\Channels;
 
+use App\Actions\Invoice\RecordInvoiceDeliveryLogAction;
 use App\Contracts\ReceiptChannel;
-use App\Mail\TransactionReceiptMail;
+use App\Jobs\SendTransactionReceiptMailJob;
+use App\Models\InvoiceDeliveryLog;
 use App\Models\Transaction;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * The receipt itself, by email.
@@ -15,6 +16,9 @@ use Illuminate\Support\Facades\Mail;
  * The only channel that currently carries a usable order record to the buyer,
  * so its guard (`receipt_sent_at`) is the one that matters most: a duplicate
  * receipt email is worse than a missed one, because the customer already has it.
+ *
+ * The send is handed to `SendTransactionReceiptMailJob` rather than queued from
+ * here, so the delivery log records what happened instead of what was attempted.
  */
 class EmailReceiptChannel implements ReceiptChannel
 {
@@ -28,10 +32,19 @@ class EmailReceiptChannel implements ReceiptChannel
         $email = $transaction->user?->email ?? $transaction->contact_email;
 
         if (! $email) {
+            app(RecordInvoiceDeliveryLogAction::class)->execute(
+                $transaction,
+                InvoiceDeliveryLog::CHANNEL_EMAIL,
+                InvoiceDeliveryLog::STATUS_SKIPPED,
+                null,
+                'Pembeli tidak punya alamat email',
+                $force,
+            );
+
             return false;
         }
 
-        Mail::to($email)->locale($locale)->queue(new TransactionReceiptMail($transaction, $locale));
+        SendTransactionReceiptMailJob::dispatch($transaction, $locale, $email, $force);
 
         $transaction->forceFill(['receipt_sent_at' => now()])->save();
 

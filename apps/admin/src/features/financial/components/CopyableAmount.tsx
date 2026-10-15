@@ -21,7 +21,7 @@ export function CopyableAmount({ value, className }: CopyableAmountProps) {
     return <span className={cn("font-semibold tabular-nums text-muted-foreground", className)}>—</span>;
   }
 
-  const formatted = formatCurrency(value);
+  const formatted = formatCurrency(value, { fractionDigits: 2 });
 
   const handleCopy = async () => {
     await navigator.clipboard.writeText(formatted);

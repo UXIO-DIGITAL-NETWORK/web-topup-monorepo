@@ -62,6 +62,7 @@ export default function FinancialPage() {
             <StatCard
               key={card.id}
               data={card}
+              fractionDigits={2}
             />
           ))
         )}

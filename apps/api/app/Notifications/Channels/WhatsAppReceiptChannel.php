@@ -4,8 +4,10 @@ declare(strict_types=1);
 
 namespace App\Notifications\Channels;
 
+use App\Actions\Invoice\RecordInvoiceDeliveryLogAction;
 use App\Contracts\ReceiptChannel;
 use App\Jobs\SendTransactionWhatsAppJob;
+use App\Models\InvoiceDeliveryLog;
 use App\Models\Transaction;
 use App\Support\Phone;
 
@@ -29,10 +31,19 @@ class WhatsAppReceiptChannel implements ReceiptChannel
         $recipient = Phone::toE164($transaction->user?->phone ?? $transaction->guest_contact);
 
         if ($recipient === null) {
+            app(RecordInvoiceDeliveryLogAction::class)->execute(
+                $transaction,
+                InvoiceDeliveryLog::CHANNEL_WHATSAPP,
+                InvoiceDeliveryLog::STATUS_SKIPPED,
+                null,
+                'Pembeli tidak punya nomor WhatsApp',
+                $force,
+            );
+
             return false;
         }
 
-        SendTransactionWhatsAppJob::dispatch($transaction, $locale);
+        SendTransactionWhatsAppJob::dispatch($transaction, $locale, $force);
 
         // Optimistic — mirrors the email guard, which marks sent after queueing.
         $transaction->forceFill(['whatsapp_sent_at' => now()])->save();

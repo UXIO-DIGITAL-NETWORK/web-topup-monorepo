@@ -8,6 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const TABS = [
   { value: "automatic", labelKey: "tabAutomatic", href: "/admin/transactions/automatic" },
   { value: "manual", labelKey: "tabManual", href: "/admin/transactions/manual" },
+  { value: "invoice-log", labelKey: "tabInvoiceLog", href: "/admin/transactions/invoice-log" },
 ];
 
 /**

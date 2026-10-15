@@ -59,7 +59,9 @@ describe("DashboardPage", () => {
     for (const card of STAT_CARDS) {
       expect(await screen.findByText(card.label)).toBeInTheDocument();
     }
-    expect((await screen.findAllByText(formatCurrency(STAT_CARDS[0].value))).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText(formatCurrency(STAT_CARDS[0].value, { fractionDigits: 2 }))).length,
+    ).toBeGreaterThan(0);
   });
 
   it("shows the Monthly Performance card with a month selector", async () => {

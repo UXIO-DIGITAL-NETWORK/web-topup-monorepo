@@ -321,7 +321,7 @@ const DOCUMENTS: Record<string, unknown> = {
       },
     ],
   },
-  "/v1/transactions/status-counts": { pending: 12, processing: 32, failed_provider: 8, refunded: 3 },
+  "/v1/transactions/status-counts": { pending: 12, processing: 32, completed: 45, failed_provider: 8, refunded: 3 },
   "/v1/refunds/status-counts": {
     WAITING_ACCOUNT: 2,
     WAITING_DETAILS: 1,
@@ -991,6 +991,44 @@ const SEEDS: Record<string, () => Row[]> = {
       created_at: "2026-08-07T11:00:00.000Z",
     },
   ],
+  // The invoice-delivery trail, newest first — one delivered email, one failed
+  // email, and a skipped WhatsApp (the routine case while the gateway is off),
+  // so all three outcomes have a real row to render.
+  "invoice-logs": () => [
+    {
+      id: 3,
+      transaction_id: 2,
+      invoice_number: "INV-20260807-XYZ999",
+      channel: "whatsapp",
+      recipient: null,
+      status: "skipped",
+      reason: "Pembeli tidak punya nomor WhatsApp",
+      is_resend: false,
+      attempted_at: "2026-08-07T11:00:05.000Z",
+    },
+    {
+      id: 2,
+      transaction_id: 2,
+      invoice_number: "INV-20260807-XYZ999",
+      channel: "email",
+      recipient: "guest@example.com",
+      status: "failed",
+      reason: "smtp refused",
+      is_resend: false,
+      attempted_at: "2026-08-07T11:00:00.000Z",
+    },
+    {
+      id: 1,
+      transaction_id: 1,
+      invoice_number: "INV-20260807-ABC123",
+      channel: "email",
+      recipient: "budi88@example.com",
+      status: "sent",
+      reason: null,
+      is_resend: true,
+      attempted_at: "2026-08-07T10:00:00.000Z",
+    },
+  ],
 };
 
 /** Free-text fields per collection, so `?search=` narrows the way the API does. */
@@ -1017,6 +1055,7 @@ const SEARCHABLE: Record<string, string[]> = {
   "banners": ["name"],
   "announcements": ["content"],
   "activity-logs": ["message"],
+  "invoice-logs": ["invoice_number"],
 };
 
 const envelope = <T>(data: T) => ({ status: "success", code: 200, message: "ok", data });

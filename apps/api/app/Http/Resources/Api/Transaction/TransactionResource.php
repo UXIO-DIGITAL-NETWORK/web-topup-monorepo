@@ -39,6 +39,9 @@ class TransactionResource extends JsonResource
             'amount_total' => $this->amount_total,
             'total_price' => $this->total_price,
             'margin' => $this->margin,
+            // What the order cost us at checkout. Null on rows written before
+            // the column existed — the admin renders that as an absence.
+            'cost_price' => $this->cost_price,
             // Three status fields that are easy to confuse, so: `status` is the
             // order's combined lifecycle (unchanged, still what every guard reads);
             // `provider_status` is the supplier's half alone, normalized;

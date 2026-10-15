@@ -55,7 +55,7 @@ describe("AutomaticTransactionsPage", () => {
     ).toBeInTheDocument();
   });
 
-  it("shows the 3 status pills with exact labels and counts", async () => {
+  it("shows the 4 status pills with exact labels and counts", async () => {
     await renderRoute("/admin/transaction-preview");
 
     // Pills are now full-width stat-card buttons with the label and count as
@@ -65,10 +65,14 @@ describe("AutomaticTransactionsPage", () => {
     const pending = await screen.findByRole("button", { name: /Pending/ });
     expect(within(pending).getByText("12")).toBeInTheDocument();
 
-    // The pills track the three statuses the backend actually reports;
+    // The pills track the statuses the backend actually reports;
     // partial_refund / partial_success were never in its status enum.
     const processing = screen.getByRole("button", { name: /Processing/ });
     expect(within(processing).getByText("32")).toBeInTheDocument();
+
+    // Added so an operator can see what actually landed, not only what is stuck.
+    const success = screen.getByRole("button", { name: /Success/ });
+    expect(within(success).getByText("45")).toBeInTheDocument();
 
     const failed = screen.getByRole("button", { name: /Failed/ });
     expect(within(failed).getByText("8")).toBeInTheDocument();

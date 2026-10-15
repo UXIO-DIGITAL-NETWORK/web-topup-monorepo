@@ -107,6 +107,12 @@ return [
         // needed a human. Turn this on where a staging feed is genuinely
         // wanted; it arrives prefixed with the environment name.
         'send_outside_production' => env('DISCORD_SEND_OUTSIDE_PRODUCTION', false),
+
+        // How much of the invoice-delivery trail reaches Discord: `all` (every
+        // delivered and failed attempt), `failures`, or `off`. A completed order
+        // produces up to two rows, so this is a deliberate setting rather than a
+        // default nobody chose.
+        'invoice_log' => env('DISCORD_INVOICE_LOG', 'all'),
     ],
 
     'google' => [

@@ -429,7 +429,7 @@ class CheckoutAction
             $dto, $user, $product, $channel, $activeSupplier, $quotaTargets, $invoiceNumber, $referenceId,
             $targetNickname, $targetValues, $targetUid, $targetServer,
             $discount, $sellingPrice, $adminFee, $channelFee, $gatewayFee,
-            $taxAmount, $taxPercent, $margin, $grossAmount, $callGateway, $gatewayInsideTx,
+            $taxAmount, $taxPercent, $cost, $margin, $grossAmount, $callGateway, $gatewayInsideTx,
             $pointsSpent, $pointsSpentAmount, $isExternal,
             &$paymentInstructions, &$pgTransactionId, &$transactionStatus,
         ) {
@@ -523,6 +523,11 @@ class CheckoutAction
                 'points_spent_amount' => $pointsSpentAmount,
                 'amount_total' => $grossAmount,
                 'margin' => $margin,
+                // What the order cost us, frozen here. The catalogue can be
+                // repriced — or the mapping re-pointed — long before anyone asks
+                // what this particular sale earned, and `margin` cannot be
+                // inverted back into a cost once points have moved amount_base.
+                'cost_price' => $cost,
                 'status' => TransactionStatus::PENDING,
             ]);
 

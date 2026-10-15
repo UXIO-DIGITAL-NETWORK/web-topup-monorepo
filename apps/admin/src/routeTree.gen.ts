@@ -43,6 +43,7 @@ import { Route as AdminProtectedContentIndexRouteImport } from './routes/admin/_
 import { Route as AdminProtectedCategoriesIndexRouteImport } from './routes/admin/_protected/categories/index'
 import { Route as AdminProtectedActivityIndexRouteImport } from './routes/admin/_protected/activity/index'
 import { Route as AdminPreviewTransactionPreviewIndexRouteImport } from './routes/admin/_preview/transaction-preview/index'
+import { Route as AdminPreviewTransactionInvoiceLogIndexRouteImport } from './routes/admin/_preview/transaction-invoice-log/index'
 import { Route as AdminPreviewRefundsPreviewIndexRouteImport } from './routes/admin/_preview/refunds-preview/index'
 import { Route as AdminPreviewProductsPreviewIndexRouteImport } from './routes/admin/_preview/products-preview/index'
 import { Route as AdminPreviewIntegrationPreviewIndexRouteImport } from './routes/admin/_preview/integration-preview/index'
@@ -51,6 +52,7 @@ import { Route as AdminPreviewDashboardPreviewIndexRouteImport } from './routes/
 import { Route as AdminPreviewCategoriesPreviewIndexRouteImport } from './routes/admin/_preview/categories-preview/index'
 import { Route as AdminProtectedUsersUserIdIndexRouteImport } from './routes/admin/_protected/users/$userId/index'
 import { Route as AdminProtectedTransactionsManualIndexRouteImport } from './routes/admin/_protected/transactions/manual/index'
+import { Route as AdminProtectedTransactionsInvoiceLogIndexRouteImport } from './routes/admin/_protected/transactions/invoice-log/index'
 import { Route as AdminProtectedTransactionsAutomaticIndexRouteImport } from './routes/admin/_protected/transactions/automatic/index'
 import { Route as AdminProtectedSettingsSecurityIndexRouteImport } from './routes/admin/_protected/settings/security/index'
 import { Route as AdminProtectedProductsProviderIndexRouteImport } from './routes/admin/_protected/products/provider/index'
@@ -283,6 +285,12 @@ const AdminPreviewTransactionPreviewIndexRoute =
     path: '/transaction-preview/',
     getParentRoute: () => AdminPreviewRoute,
   } as any)
+const AdminPreviewTransactionInvoiceLogIndexRoute =
+  AdminPreviewTransactionInvoiceLogIndexRouteImport.update({
+    id: '/transaction-invoice-log/',
+    path: '/transaction-invoice-log/',
+    getParentRoute: () => AdminPreviewRoute,
+  } as any)
 const AdminPreviewRefundsPreviewIndexRoute =
   AdminPreviewRefundsPreviewIndexRouteImport.update({
     id: '/refunds-preview/',
@@ -329,6 +337,12 @@ const AdminProtectedTransactionsManualIndexRoute =
   AdminProtectedTransactionsManualIndexRouteImport.update({
     id: '/manual/',
     path: '/manual/',
+    getParentRoute: () => AdminProtectedTransactionsRouteRoute,
+  } as any)
+const AdminProtectedTransactionsInvoiceLogIndexRoute =
+  AdminProtectedTransactionsInvoiceLogIndexRouteImport.update({
+    id: '/invoice-log/',
+    path: '/invoice-log/',
     getParentRoute: () => AdminProtectedTransactionsRouteRoute,
   } as any)
 const AdminProtectedTransactionsAutomaticIndexRoute =
@@ -566,6 +580,7 @@ export interface FileRoutesByFullPath {
   '/admin/integration-preview/': typeof AdminPreviewIntegrationPreviewIndexRoute
   '/admin/products-preview/': typeof AdminPreviewProductsPreviewIndexRoute
   '/admin/refunds-preview/': typeof AdminPreviewRefundsPreviewIndexRoute
+  '/admin/transaction-invoice-log/': typeof AdminPreviewTransactionInvoiceLogIndexRoute
   '/admin/transaction-preview/': typeof AdminPreviewTransactionPreviewIndexRoute
   '/admin/activity/': typeof AdminProtectedActivityIndexRoute
   '/admin/categories/': typeof AdminProtectedCategoriesIndexRoute
@@ -614,6 +629,7 @@ export interface FileRoutesByFullPath {
   '/admin/products/provider/': typeof AdminProtectedProductsProviderIndexRoute
   '/admin/settings/security/': typeof AdminProtectedSettingsSecurityIndexRoute
   '/admin/transactions/automatic/': typeof AdminProtectedTransactionsAutomaticIndexRoute
+  '/admin/transactions/invoice-log/': typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   '/admin/transactions/manual/': typeof AdminProtectedTransactionsManualIndexRoute
   '/admin/users/$userId/': typeof AdminProtectedUsersUserIdIndexRoute
   '/admin/products-preview/main/add/': typeof AdminPreviewProductsPreviewMainAddIndexRoute
@@ -637,6 +653,7 @@ export interface FileRoutesByTo {
   '/admin/integration-preview': typeof AdminPreviewIntegrationPreviewIndexRoute
   '/admin/products-preview': typeof AdminPreviewProductsPreviewIndexRoute
   '/admin/refunds-preview': typeof AdminPreviewRefundsPreviewIndexRoute
+  '/admin/transaction-invoice-log': typeof AdminPreviewTransactionInvoiceLogIndexRoute
   '/admin/transaction-preview': typeof AdminPreviewTransactionPreviewIndexRoute
   '/admin/activity': typeof AdminProtectedActivityIndexRoute
   '/admin/categories': typeof AdminProtectedCategoriesIndexRoute
@@ -685,6 +702,7 @@ export interface FileRoutesByTo {
   '/admin/products/provider': typeof AdminProtectedProductsProviderIndexRoute
   '/admin/settings/security': typeof AdminProtectedSettingsSecurityIndexRoute
   '/admin/transactions/automatic': typeof AdminProtectedTransactionsAutomaticIndexRoute
+  '/admin/transactions/invoice-log': typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   '/admin/transactions/manual': typeof AdminProtectedTransactionsManualIndexRoute
   '/admin/users/$userId': typeof AdminProtectedUsersUserIdIndexRoute
   '/admin/products-preview/main/add': typeof AdminPreviewProductsPreviewMainAddIndexRoute
@@ -718,6 +736,7 @@ export interface FileRoutesById {
   '/admin/_preview/integration-preview/': typeof AdminPreviewIntegrationPreviewIndexRoute
   '/admin/_preview/products-preview/': typeof AdminPreviewProductsPreviewIndexRoute
   '/admin/_preview/refunds-preview/': typeof AdminPreviewRefundsPreviewIndexRoute
+  '/admin/_preview/transaction-invoice-log/': typeof AdminPreviewTransactionInvoiceLogIndexRoute
   '/admin/_preview/transaction-preview/': typeof AdminPreviewTransactionPreviewIndexRoute
   '/admin/_protected/activity/': typeof AdminProtectedActivityIndexRoute
   '/admin/_protected/categories/': typeof AdminProtectedCategoriesIndexRoute
@@ -766,6 +785,7 @@ export interface FileRoutesById {
   '/admin/_protected/products/provider/': typeof AdminProtectedProductsProviderIndexRoute
   '/admin/_protected/settings/security/': typeof AdminProtectedSettingsSecurityIndexRoute
   '/admin/_protected/transactions/automatic/': typeof AdminProtectedTransactionsAutomaticIndexRoute
+  '/admin/_protected/transactions/invoice-log/': typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   '/admin/_protected/transactions/manual/': typeof AdminProtectedTransactionsManualIndexRoute
   '/admin/_protected/users/$userId/': typeof AdminProtectedUsersUserIdIndexRoute
   '/admin/_preview/products-preview/main/add/': typeof AdminPreviewProductsPreviewMainAddIndexRoute
@@ -797,6 +817,7 @@ export interface FileRouteTypes {
     | '/admin/integration-preview/'
     | '/admin/products-preview/'
     | '/admin/refunds-preview/'
+    | '/admin/transaction-invoice-log/'
     | '/admin/transaction-preview/'
     | '/admin/activity/'
     | '/admin/categories/'
@@ -845,6 +866,7 @@ export interface FileRouteTypes {
     | '/admin/products/provider/'
     | '/admin/settings/security/'
     | '/admin/transactions/automatic/'
+    | '/admin/transactions/invoice-log/'
     | '/admin/transactions/manual/'
     | '/admin/users/$userId/'
     | '/admin/products-preview/main/add/'
@@ -868,6 +890,7 @@ export interface FileRouteTypes {
     | '/admin/integration-preview'
     | '/admin/products-preview'
     | '/admin/refunds-preview'
+    | '/admin/transaction-invoice-log'
     | '/admin/transaction-preview'
     | '/admin/activity'
     | '/admin/categories'
@@ -916,6 +939,7 @@ export interface FileRouteTypes {
     | '/admin/products/provider'
     | '/admin/settings/security'
     | '/admin/transactions/automatic'
+    | '/admin/transactions/invoice-log'
     | '/admin/transactions/manual'
     | '/admin/users/$userId'
     | '/admin/products-preview/main/add'
@@ -948,6 +972,7 @@ export interface FileRouteTypes {
     | '/admin/_preview/integration-preview/'
     | '/admin/_preview/products-preview/'
     | '/admin/_preview/refunds-preview/'
+    | '/admin/_preview/transaction-invoice-log/'
     | '/admin/_preview/transaction-preview/'
     | '/admin/_protected/activity/'
     | '/admin/_protected/categories/'
@@ -996,6 +1021,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/products/provider/'
     | '/admin/_protected/settings/security/'
     | '/admin/_protected/transactions/automatic/'
+    | '/admin/_protected/transactions/invoice-log/'
     | '/admin/_protected/transactions/manual/'
     | '/admin/_protected/users/$userId/'
     | '/admin/_preview/products-preview/main/add/'
@@ -1257,6 +1283,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminPreviewTransactionPreviewIndexRouteImport
       parentRoute: typeof AdminPreviewRoute
     }
+    '/admin/_preview/transaction-invoice-log/': {
+      id: '/admin/_preview/transaction-invoice-log/'
+      path: '/transaction-invoice-log'
+      fullPath: '/admin/transaction-invoice-log/'
+      preLoaderRoute: typeof AdminPreviewTransactionInvoiceLogIndexRouteImport
+      parentRoute: typeof AdminPreviewRoute
+    }
     '/admin/_preview/refunds-preview/': {
       id: '/admin/_preview/refunds-preview/'
       path: '/refunds-preview'
@@ -1311,6 +1344,13 @@ declare module '@tanstack/react-router' {
       path: '/manual'
       fullPath: '/admin/transactions/manual/'
       preLoaderRoute: typeof AdminProtectedTransactionsManualIndexRouteImport
+      parentRoute: typeof AdminProtectedTransactionsRouteRoute
+    }
+    '/admin/_protected/transactions/invoice-log/': {
+      id: '/admin/_protected/transactions/invoice-log/'
+      path: '/invoice-log'
+      fullPath: '/admin/transactions/invoice-log/'
+      preLoaderRoute: typeof AdminProtectedTransactionsInvoiceLogIndexRouteImport
       parentRoute: typeof AdminProtectedTransactionsRouteRoute
     }
     '/admin/_protected/transactions/automatic/': {
@@ -1659,6 +1699,7 @@ interface AdminPreviewRouteChildren {
   AdminPreviewFinancePreviewIndexRoute: typeof AdminPreviewFinancePreviewIndexRoute
   AdminPreviewIntegrationPreviewIndexRoute: typeof AdminPreviewIntegrationPreviewIndexRoute
   AdminPreviewRefundsPreviewIndexRoute: typeof AdminPreviewRefundsPreviewIndexRoute
+  AdminPreviewTransactionInvoiceLogIndexRoute: typeof AdminPreviewTransactionInvoiceLogIndexRoute
   AdminPreviewTransactionPreviewIndexRoute: typeof AdminPreviewTransactionPreviewIndexRoute
   AdminPreviewTransactionPreviewInvoiceNoEditIndexRoute: typeof AdminPreviewTransactionPreviewInvoiceNoEditIndexRoute
 }
@@ -1674,6 +1715,8 @@ const AdminPreviewRouteChildren: AdminPreviewRouteChildren = {
   AdminPreviewIntegrationPreviewIndexRoute:
     AdminPreviewIntegrationPreviewIndexRoute,
   AdminPreviewRefundsPreviewIndexRoute: AdminPreviewRefundsPreviewIndexRoute,
+  AdminPreviewTransactionInvoiceLogIndexRoute:
+    AdminPreviewTransactionInvoiceLogIndexRoute,
   AdminPreviewTransactionPreviewIndexRoute:
     AdminPreviewTransactionPreviewIndexRoute,
   AdminPreviewTransactionPreviewInvoiceNoEditIndexRoute:
@@ -1788,6 +1831,7 @@ const AdminProtectedProductsRouteRouteWithChildren =
 interface AdminProtectedTransactionsRouteRouteChildren {
   AdminProtectedTransactionsIndexRoute: typeof AdminProtectedTransactionsIndexRoute
   AdminProtectedTransactionsAutomaticIndexRoute: typeof AdminProtectedTransactionsAutomaticIndexRoute
+  AdminProtectedTransactionsInvoiceLogIndexRoute: typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   AdminProtectedTransactionsManualIndexRoute: typeof AdminProtectedTransactionsManualIndexRoute
   AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute: typeof AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute
   AdminProtectedTransactionsManualInvoiceNoEditIndexRoute: typeof AdminProtectedTransactionsManualInvoiceNoEditIndexRoute
@@ -1798,6 +1842,8 @@ const AdminProtectedTransactionsRouteRouteChildren: AdminProtectedTransactionsRo
     AdminProtectedTransactionsIndexRoute: AdminProtectedTransactionsIndexRoute,
     AdminProtectedTransactionsAutomaticIndexRoute:
       AdminProtectedTransactionsAutomaticIndexRoute,
+    AdminProtectedTransactionsInvoiceLogIndexRoute:
+      AdminProtectedTransactionsInvoiceLogIndexRoute,
     AdminProtectedTransactionsManualIndexRoute:
       AdminProtectedTransactionsManualIndexRoute,
     AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute:

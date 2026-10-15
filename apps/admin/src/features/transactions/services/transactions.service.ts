@@ -136,6 +136,8 @@ interface TransactionApiRow {
   amount_fee: number;
   amount_total: number;
   margin: number;
+  /** Supplier cost frozen at checkout; null on rows written before the column existed. */
+  cost_price?: number | null;
   status: string;
   sn: string | null;
   proof_url: string | null;
@@ -266,6 +268,7 @@ const toTransaction = (row: TransactionApiRow): Transaction => {
     // header reads "Cost" but the reference's figures are the amount billed.
     cost: row.amount_total,
     profit: row.margin,
+    cost_price: row.cost_price ?? undefined,
     admin_fee: row.amount_fee,
     target_ref: toTargetRef(row),
     nickname: row.target_nickname ?? undefined,
@@ -311,6 +314,7 @@ const toTransactionDetail = (row: TransactionDetailApiRow): TransactionDetail =>
   channel_fee: row.channel_fee,
   amount_total: row.amount_total,
   margin: row.margin,
+  cost_price: row.cost_price ?? undefined,
   payment_method: row.payment_channel?.name ?? "",
   payment: {
     reference_id: row.payment?.reference_id ?? undefined,
@@ -437,6 +441,7 @@ export const transactionsService = {
     const response: ApiResponse<{
       pending: number;
       processing: number;
+      completed: number;
       failed_provider: number;
       // The per-lifecycle breakdowns are nested and additive — the four flat
       // keys above are frozen so this page keeps working across a deploy where
@@ -448,6 +453,7 @@ export const transactionsService = {
     return {
       pending: response.data.pending,
       processing: response.data.processing,
+      completed: response.data.completed,
       failed: response.data.failed_provider,
       provider: response.data.provider as StatusCounts["provider"],
       payment: response.data.payment as StatusCounts["payment"],

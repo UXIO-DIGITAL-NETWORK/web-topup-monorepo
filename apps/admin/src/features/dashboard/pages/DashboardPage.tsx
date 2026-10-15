@@ -9,6 +9,7 @@ import { Heading } from "@/components/common/Heading";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Text } from "@/components/common/Text";
+import { formatCurrency } from "@/utils/currency";
 import { formatBannerDate } from "@/utils/date";
 import { ActivityFeedCard } from "../components/ActivityFeedCard";
 import { DataTable } from "../components/DataTable";
@@ -75,7 +76,7 @@ function buildColumns(entityLabel: string, t: TFunction<"dashboard">): ColumnDef
           as="span"
           className="tabular-nums"
         >
-          {getValue<number>()}
+          {formatCurrency(getValue<number>(), { fractionDigits: 0 })}
         </Text>
       ),
     },
@@ -121,6 +122,7 @@ export default function DashboardPage() {
               <StatCard
                 key={card.id}
                 data={card}
+                fractionDigits={2}
               />
             ))}
       </Box>

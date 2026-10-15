@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\Transaction\SendTransactionReceiptAction;
 use App\Mail\TransactionReceiptMail;
+use App\Models\InvoiceDeliveryLog;
 use App\Models\PaymentChannel;
 use App\Models\Product;
 use App\Models\Role;
@@ -29,7 +30,7 @@ class TransactionReceiptTest extends TestCase
         return $user;
     }
 
-    public function test_receipt_is_queued_when_a_balance_checkout_completes(): void
+    public function test_receipt_is_delivered_and_logged_when_a_balance_checkout_completes(): void
     {
         Mail::fake();
         Http::fake(['*/order' => Http::response(['status' => true, 'msg' => 'ok', 'data' => ['status' => 'success', 'keterangan' => 'SN-1', 'id' => 'UX1']])]);
@@ -48,7 +49,11 @@ class TransactionReceiptTest extends TestCase
             'locale' => 'en',
         ])->assertCreated();
 
-        Mail::assertQueued(TransactionReceiptMail::class, fn ($mail) => $mail->hasTo($user->email));
+        // The send is owned by the job, so the trail records the outcome rather
+        // than the intent to try.
+        $log = InvoiceDeliveryLog::where('channel', InvoiceDeliveryLog::CHANNEL_EMAIL)->sole();
+        $this->assertSame(InvoiceDeliveryLog::STATUS_SENT, $log->status);
+        $this->assertSame($user->email, $log->recipient);
         $this->assertNotNull(Transaction::first()->receipt_sent_at);
     }
 
@@ -64,7 +69,7 @@ class TransactionReceiptTest extends TestCase
         $this->assertTrue($action->execute($transaction));
         $this->assertFalse($action->execute($transaction->fresh())); // idempotent
 
-        Mail::assertQueued(TransactionReceiptMail::class, 1);
+        $this->assertSame(1, InvoiceDeliveryLog::where('channel', InvoiceDeliveryLog::CHANNEL_EMAIL)->count());
     }
 
     public function test_admin_resend_forces_a_new_receipt(): void
@@ -80,8 +85,11 @@ class TransactionReceiptTest extends TestCase
 
         $this->postJson("/api/v1/transactions/{$transaction->id}/resend-receipt")->assertOk();
 
-        // Force bypasses the idempotency guard.
-        Mail::assertQueued(TransactionReceiptMail::class, fn ($mail) => $mail->hasTo('guest@example.com'));
+        // Force bypasses the idempotency guard, and the trail says so.
+        $log = InvoiceDeliveryLog::where('channel', InvoiceDeliveryLog::CHANNEL_EMAIL)->sole();
+        $this->assertSame(InvoiceDeliveryLog::STATUS_SENT, $log->status);
+        $this->assertSame('guest@example.com', $log->recipient);
+        $this->assertTrue($log->is_resend);
     }
 
     public function test_receipt_html_renders_in_both_locales(): void

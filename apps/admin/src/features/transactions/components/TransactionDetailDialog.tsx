@@ -308,7 +308,10 @@ export function TransactionDetailDialog({ transactionId, open, onOpenChange }: T
               <Row label={t("total")}>
                 <Value className="font-medium">{money(data.amount_total)}</Value>
               </Row>
-              <Row label={t("margin")}>
+              <Row label={t("modal")}>
+                <Value>{data.cost_price !== undefined ? money(data.cost_price) : EM_DASH}</Value>
+              </Row>
+              <Row label={t("profitExclAdminFee")}>
                 <Value
                   testId="detail-margin"
                   className={cn(

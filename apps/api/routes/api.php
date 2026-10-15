@@ -89,6 +89,7 @@ use App\Http\Controllers\Api\Storefront\PriceListController;
 use App\Http\Controllers\Api\Storefront\ValidateGameIdController;
 use App\Http\Controllers\Api\Supplier\SupplierCategoryController;
 use App\Http\Controllers\Api\Supplier\SupplierController;
+use App\Http\Controllers\Api\InvoiceLogController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\User\SyncTimezoneController;
 use App\Http\Controllers\Api\User\UpdateLocaleController;
@@ -642,6 +643,10 @@ Route::prefix('v1')->middleware(['auth:sanctum', 'abilities:access-api', 'admin'
     Route::post('/transactions/{transaction}/supplier-orders/{order}/resend', [TransactionController::class, 'resendSupplierOrder']);
     Route::post('/transactions/{transaction}/resend-receipt', [TransactionController::class, 'resendReceipt']);
     Route::post('/transactions/{transaction}/retry', [TransactionController::class, 'retry']);
+
+    // Invoice delivery trail — one row per receipt attempt, per channel, with
+    // the outcome. Read-only: the rows are written by the sending jobs.
+    Route::get('/invoice-logs', [InvoiceLogController::class, 'index']);
 
     // Refund queue. `status-counts` before the {refundRequest} wildcard, or
     // Laravel tries to route-model-bind "status-counts" as an id.
