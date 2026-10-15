@@ -118,7 +118,9 @@ describe("AutomaticTransactionsPage", () => {
       "Payment Status",
       "Start Date",
       "End Date",
-      "Invoice From",
+      // Was "Invoice From": website / mobile app / admin never existed on the
+      // server, so it now filters on the one real fact — member vs guest.
+      "Customer",
       "Payment Method",
     ]) {
       expect(within(filterBar).getByText(label)).toBeInTheDocument();

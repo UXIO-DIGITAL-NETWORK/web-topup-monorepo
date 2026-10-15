@@ -16,6 +16,11 @@ class GetTransactionsAction
     /** Not a GatewayStatus: "this order never went through a gateway at all". */
     public const PAYMENT_STATUS_NONE = 'NONE';
 
+    /** The two answers to "who bought this": a signed-in member, or a guest. */
+    public const CUSTOMER_GUEST = 'guest';
+
+    public const CUSTOMER_MEMBER = 'member';
+
     /**
      * The '1'..'4' code behind a gateway word, or null if the word is unknown.
      * Shared with ExportTransactionsAction so a filtered export matches the list
@@ -47,6 +52,8 @@ class GetTransactionsAction
         string $sortDir = 'desc',
         ?string $providerStatus = null,
         ?string $paymentStatus = null,
+        ?int $categoryId = null,
+        ?string $customerType = null,
     ): LengthAwarePaginator {
         $sortColumn = in_array($sortBy, self::SORTABLE_COLUMNS, true) ? $sortBy : 'created_at';
         $sortDirection = strtolower($sortDir) === 'asc' ? 'asc' : 'desc';
@@ -88,6 +95,23 @@ class GetTransactionsAction
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
             ->when($productId, fn ($q) => $q->where('product_id', $productId))
             ->when($paymentChannelId, fn ($q) => $q->where('payment_channel_id', $paymentChannelId))
+            // A category is not a column on the order — it is the game the sold
+            // product belongs to, so the filter travels through the relation.
+            // `product()` is soft-delete aware, which is what keeps an archived
+            // game's orders reachable from this filter.
+            ->when($categoryId, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('category_id', $categoryId)))
+            // The one "where did this come from" fact the table holds: a signed-in
+            // buyer has a user_id, a guest's contact lives on the order itself.
+            // An unknown word returns nothing rather than silently everything —
+            // the same rule the payment-status filter follows, because a filter
+            // that quietly ignores itself reads as "no such order exists".
+            ->when($customerType !== null, function ($q) use ($customerType) {
+                match ($customerType) {
+                    self::CUSTOMER_GUEST => $q->whereNull('user_id'),
+                    self::CUSTOMER_MEMBER => $q->whereNotNull('user_id'),
+                    default => $q->whereRaw('1 = 0'),
+                };
+            })
             ->when($startDate, fn ($q) => $q->where('created_at', '>=', $startDate))
             ->when($endDate, fn ($q) => $q->where('created_at', '<=', $endDate))
             ->orderBy($sortColumn, $sortDirection)

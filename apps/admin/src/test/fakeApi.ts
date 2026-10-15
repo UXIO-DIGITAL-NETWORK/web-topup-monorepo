@@ -1369,6 +1369,24 @@ export function createFakeApi() {
       const wantAvailable = params.availability === "available";
       if (Boolean(row.buyer_product_status) !== wantAvailable) return false;
     }
+    // The transaction list's own filters. Its rows carry the product and the
+    // channel nested, and a "guest" is simply a row with no user_id — the real
+    // API narrows exactly the same way.
+    if (collection === "transactions") {
+      const product = row.product as { id?: unknown; category?: { id?: unknown } } | undefined;
+      const channel = row.payment_channel as { id?: unknown } | undefined;
+
+      if (params.user_id && String(row.user_id ?? "") !== String(params.user_id)) return false;
+      if (params.product_id && String(product?.id ?? "") !== String(params.product_id)) return false;
+      if (params.payment_channel_id && String(channel?.id ?? "") !== String(params.payment_channel_id)) return false;
+      if (params.category_id && String(product?.category?.id ?? "") !== String(params.category_id)) return false;
+
+      if (params.customer_type) {
+        const isGuest = row.user_id === null || row.user_id === undefined;
+        if (params.customer_type === "guest" && !isGuest) return false;
+        if (params.customer_type === "member" && isGuest) return false;
+      }
+    }
     // A pooled row has no product, so its category lives on `pool_category`.
     if (params.category_id) {
       const own = row.category_id ?? (row.pool_category as { id?: unknown } | undefined)?.id;

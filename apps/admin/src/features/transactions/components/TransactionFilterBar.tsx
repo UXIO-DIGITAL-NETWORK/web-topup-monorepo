@@ -12,16 +12,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { cn } from "@/lib/utils";
 import { formatWib } from "@/utils/date";
 import {
-  CATEGORY_OPTIONS,
-  INVOICE_FROM_OPTIONS,
+  CUSTOMER_TYPE_OPTIONS,
   INVOICE_STATUS_OPTIONS,
   PROVIDER_STATUS_OPTIONS,
-  PAYMENT_METHOD_OPTIONS,
   PAYMENT_STATUS_OPTIONS,
-  PRODUCT_OPTIONS,
-  USER_OPTIONS,
 } from "../data/select-options.data";
 import type { KeyedSelectOption, SelectOption, TransactionListParams } from "../types/transaction.type";
+import {
+  CategoryFilterCombobox,
+  PaymentMethodFilterCombobox,
+  ProductFilterCombobox,
+  UserFilterCombobox,
+} from "./TransactionFilterComboboxes";
 
 export type TransactionFilters = Pick<
   TransactionListParams,
@@ -34,7 +36,7 @@ export type TransactionFilters = Pick<
   | "paymentStatus"
   | "startDate"
   | "endDate"
-  | "invoiceFrom"
+  | "customerType"
   | "paymentMethod"
 >;
 
@@ -48,7 +50,7 @@ export type FilterField =
   | "paymentStatus"
   | "startDate"
   | "endDate"
-  | "invoiceFrom"
+  | "customerType"
   | "paymentMethod";
 
 const ALL_FILTER_FIELDS: FilterField[] = [
@@ -61,7 +63,7 @@ const ALL_FILTER_FIELDS: FilterField[] = [
   "paymentStatus",
   "startDate",
   "endDate",
-  "invoiceFrom",
+  "customerType",
   "paymentMethod",
 ];
 
@@ -188,31 +190,22 @@ export function TransactionFilterBar({ filters, onChange, fields = ALL_FILTER_FI
         </Box>
       )}
       {has("user") && (
-        <FilterSelect
+        <UserFilterCombobox
           id={`${uid}-user`}
-          label={t("colUser")}
-          placeholder={t("allUsers")}
-          options={USER_OPTIONS}
           value={filters.userId}
           onChange={(value) => onChange({ userId: value })}
         />
       )}
       {has("category") && (
-        <FilterSelect
+        <CategoryFilterCombobox
           id={`${uid}-category`}
-          label={t("category")}
-          placeholder={t("allCategories")}
-          options={CATEGORY_OPTIONS}
           value={filters.categoryId}
           onChange={(value) => onChange({ categoryId: value })}
         />
       )}
       {has("product") && (
-        <FilterSelect
+        <ProductFilterCombobox
           id={`${uid}-product`}
-          label={t("product")}
-          placeholder={t("allProducts")}
-          options={PRODUCT_OPTIONS}
           value={filters.productId}
           onChange={(value) => onChange({ productId: value })}
         />
@@ -263,22 +256,19 @@ export function TransactionFilterBar({ filters, onChange, fields = ALL_FILTER_FI
           onChange={(value) => onChange({ endDate: value })}
         />
       )}
-      {has("invoiceFrom") && (
+      {has("customerType") && (
         <FilterSelect
-          id={`${uid}-invoice-from`}
-          label={t("invoiceFrom")}
-          placeholder={t("allSources")}
-          options={INVOICE_FROM_OPTIONS}
-          value={filters.invoiceFrom}
-          onChange={(value) => onChange({ invoiceFrom: value })}
+          id={`${uid}-customer-type`}
+          label={t("customerType")}
+          placeholder={t("allCustomers")}
+          options={CUSTOMER_TYPE_OPTIONS}
+          value={filters.customerType}
+          onChange={(value) => onChange({ customerType: value as TransactionFilters["customerType"] })}
         />
       )}
       {has("paymentMethod") && (
-        <FilterSelect
+        <PaymentMethodFilterCombobox
           id={`${uid}-payment-method`}
-          label={t("paymentMethod")}
-          placeholder={t("allMethods")}
-          options={PAYMENT_METHOD_OPTIONS}
           value={filters.paymentMethod}
           onChange={(value) => onChange({ paymentMethod: value })}
         />

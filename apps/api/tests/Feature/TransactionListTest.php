@@ -73,6 +73,62 @@ class TransactionListTest extends TestCase
             ->assertJsonPath('data.data.0.id', $inScope->id);
     }
 
+    /**
+     * A category is not a column on the order — it is the game the sold product
+     * belongs to. This is what the admin's Kategori dropdown asks for.
+     */
+    public function test_filters_by_the_products_category(): void
+    {
+        $this->actingAsAdmin();
+        $mlbb = Category::factory()->create(['name' => 'Mobile Legends']);
+        $freeFire = Category::factory()->create(['name' => 'Free Fire']);
+        $mlbbProduct = Product::factory()->create(['category_id' => $mlbb->id]);
+        $freeFireProduct = Product::factory()->create(['category_id' => $freeFire->id]);
+
+        $inScope = Transaction::factory()->create(['product_id' => $mlbbProduct->id]);
+        Transaction::factory()->create(['product_id' => $freeFireProduct->id]);
+
+        $this->getJson('/api/v1/transactions?category_id='.$mlbb->id)
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $inScope->id);
+    }
+
+    public function test_filters_members_apart_from_guests(): void
+    {
+        $this->actingAsAdmin();
+        $role = Role::factory()->create(['name' => 'Member']);
+        $member = User::factory()->create(['role_id' => $role->id]);
+
+        $memberOrder = Transaction::factory()->create(['user_id' => $member->id]);
+        $guestOrder = Transaction::factory()->create(['user_id' => null, 'guest_contact' => '081234567890']);
+
+        $this->getJson('/api/v1/transactions?customer_type=member')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $memberOrder->id);
+
+        $this->getJson('/api/v1/transactions?customer_type=guest')
+            ->assertOk()
+            ->assertJsonCount(1, 'data.data')
+            ->assertJsonPath('data.data.0.id', $guestOrder->id);
+    }
+
+    /**
+     * A filter the API cannot honour must match nothing rather than quietly
+     * matching everything — otherwise a typo reads as "no such order exists".
+     * The same rule the payment-status filter follows.
+     */
+    public function test_an_unknown_customer_type_matches_nothing(): void
+    {
+        $this->actingAsAdmin();
+        Transaction::factory()->count(2)->create();
+
+        $this->getJson('/api/v1/transactions?customer_type=reseller')
+            ->assertOk()
+            ->assertJsonCount(0, 'data.data');
+    }
+
     public function test_sorts_by_amount_total_ascending(): void
     {
         $this->actingAsAdmin();
