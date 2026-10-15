@@ -214,11 +214,14 @@ describe("transactionsService.getById", () => {
 
 describe("transactionsService.getStatusCounts", () => {
   it("renames the API's failed_provider onto the pill's key", async () => {
-    vi.mocked(api.get).mockResolvedValue(envelope({ pending: 12, processing: 32, failed_provider: 8 }));
+    vi.mocked(api.get).mockResolvedValue(
+      envelope({ pending: 12, processing: 32, completed: 45, failed_provider: 8 }),
+    );
 
     await expect(transactionsService.getStatusCounts()).resolves.toEqual({
       pending: 12,
       processing: 32,
+      completed: 45,
       failed: 8,
     });
   });

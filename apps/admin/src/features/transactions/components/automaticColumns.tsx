@@ -123,12 +123,26 @@ export const automaticColumnsFor = (t: TFunction<"transactions">): ColumnDef<Tra
         >
           {formatCurrency(row.original.cost, { fractionDigits: 0 })}
         </Text>
+        {row.original.cost_price !== undefined && (
+          <Text
+            variant="muted"
+            as="span"
+          >
+            {t("modal")}:{" "}
+            <Text
+              as="span"
+              className="tabular-nums"
+            >
+              {formatCurrency(row.original.cost_price, { fractionDigits: 0 })}
+            </Text>
+          </Text>
+        )}
         {row.original.profit !== undefined && (
           <Text
             variant="muted"
             as="span"
           >
-            Profit:{" "}
+            {t("profit")}:{" "}
             <Text
               as="span"
               className="text-success tabular-nums"
@@ -178,7 +192,7 @@ export const automaticColumnsFor = (t: TFunction<"transactions">): ColumnDef<Tra
             variant="muted"
             as="span"
           >
-            Admin fee:{" "}
+            {t("adminFee")}:{" "}
             <Text
               as="span"
               className="text-warning tabular-nums"

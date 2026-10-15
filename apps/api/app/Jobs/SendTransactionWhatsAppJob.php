@@ -2,8 +2,9 @@
 
 namespace App\Jobs;
 
+use App\Actions\Invoice\RecordInvoiceDeliveryLogAction;
+use App\Models\InvoiceDeliveryLog;
 use App\Models\Transaction;
-use App\Services\DiscordWebhookService;
 use App\Services\PiWapiService;
 use App\Support\Phone;
 use Illuminate\Bus\Queueable;
@@ -21,8 +22,10 @@ use Throwable;
  *
  * No-op — not a failure — when PiWAPI is unconfigured, WhatsApp delivery is
  * switched off (`PIWAPI_ENABLED=false`, the default), or the buyer has no usable
- * number; those are expected states, not errors to retry. Queued with retries so
- * a transient gateway blip doesn't drop the receipt on the first HTTP hiccup.
+ * number; those are expected states, not errors to retry. Each of them is still
+ * recorded in the delivery log as `skipped`, so "no receipt went out" always has
+ * a reason attached rather than being silence. Queued with retries so a
+ * transient gateway blip doesn't drop the receipt on the first HTTP hiccup.
  */
 class SendTransactionWhatsAppJob implements ShouldQueue
 {
@@ -33,16 +36,25 @@ class SendTransactionWhatsAppJob implements ShouldQueue
     /** @var array<int, int> */
     public array $backoff = [60, 300, 900];
 
-    public function __construct(public Transaction $transaction, public string $locale) {}
+    public function __construct(
+        public Transaction $transaction,
+        public string $locale,
+        public bool $isResend = false,
+    ) {}
 
     public function handle(PiWapiService $piwapi): void
     {
+        $recipient = Phone::toE164($this->transaction->user?->phone ?? $this->transaction->guest_contact);
+
         if (! $piwapi->canSend()) {
+            $this->record(InvoiceDeliveryLog::STATUS_SKIPPED, $recipient, 'Pengiriman WhatsApp sedang dimatikan');
+
             return;
         }
 
-        $recipient = Phone::toE164($this->transaction->user?->phone ?? $this->transaction->guest_contact);
         if ($recipient === null) {
+            $this->record(InvoiceDeliveryLog::STATUS_SKIPPED, null, 'Pembeli tidak punya nomor WhatsApp');
+
             return;
         }
 
@@ -54,6 +66,10 @@ class SendTransactionWhatsAppJob implements ShouldQueue
         $documentName = "Invoice-{$invoice}.pdf";
 
         $piwapi->sendDocument($recipient, $documentUrl, $documentName, $this->caption());
+
+        // Reached only when the gateway accepted the message, so this is the one
+        // place that can honestly say "sent".
+        $this->record(InvoiceDeliveryLog::STATUS_SENT, $recipient);
     }
 
     private function caption(): string
@@ -81,11 +97,24 @@ class SendTransactionWhatsAppJob implements ShouldQueue
     {
         Log::channel('piwapi')->error("SendTransactionWhatsAppJob: retries exhausted for {$this->transaction->invoice_number}: {$e->getMessage()}");
 
-        app(DiscordWebhookService::class)->sendEmbed(
-            '[PIWAPI] 🚨 System Alert',
-            [],
-            DiscordWebhookService::COLOR_RED,
-            "WhatsApp receipt failed for invoice `{$this->transaction->invoice_number}` after all retries."
+        // No Discord call here: the log action raises the alarm itself from the
+        // `failed` row, and doing both put the same failure in the channel twice.
+        $this->record(
+            InvoiceDeliveryLog::STATUS_FAILED,
+            Phone::toE164($this->transaction->user?->phone ?? $this->transaction->guest_contact),
+            $e->getMessage(),
+        );
+    }
+
+    private function record(string $status, ?string $recipient, ?string $reason = null): void
+    {
+        app(RecordInvoiceDeliveryLogAction::class)->execute(
+            $this->transaction,
+            InvoiceDeliveryLog::CHANNEL_WHATSAPP,
+            $status,
+            $recipient,
+            $reason,
+            $this->isResend,
         );
     }
 }

@@ -42,6 +42,7 @@ class TransactionActionsTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.pending', 2)
             ->assertJsonPath('data.processing', 1)
+            ->assertJsonPath('data.completed', 1)
             ->assertJsonPath('data.failed_provider', 1);
     }
 

@@ -90,6 +90,8 @@ export interface Transaction {
   game: TransactionGameRef;
   product: TransactionProductRef;
   cost: number;
+  /** What the order cost us — the supplier price frozen at checkout. Absent on rows written before the column existed. */
+  cost_price?: number;
   profit?: number;
   admin_fee?: number;
   /** Provider/destination account reference. */
@@ -192,6 +194,8 @@ export interface TransactionDetail {
   channel_fee: number;
   amount_total: number;
   margin: number;
+  /** Supplier cost frozen at checkout; absent on rows written before the column existed. */
+  cost_price?: number;
   payment_method: string;
   payment: TransactionDetailPayment;
   supplier: TransactionDetailSupplier;
@@ -231,6 +235,8 @@ export interface TransactionListParams {
 export interface StatusCounts {
   pending: number;
   processing: number;
+  /** Orders that completed — the "Berhasil" pill. */
+  completed: number;
   failed: number;
   /** Per-lifecycle breakdowns. Optional — absent when running against an API that predates the split. */
   provider?: Partial<Record<ProviderStatus, number>>;

@@ -138,8 +138,9 @@ class TransactionStatusFilterTest extends TestCase
 
         $this->getJson('/api/v1/transactions/status-counts')
             ->assertOk()
-            // Frozen: the deployed admin SPA reads these four directly.
-            ->assertJsonStructure(['data' => ['pending', 'processing', 'failed_provider', 'refunded', 'provider', 'payment']])
+            // Frozen: the deployed admin SPA reads these directly. `completed`
+            // was added alongside them for the "Berhasil" pill.
+            ->assertJsonStructure(['data' => ['pending', 'processing', 'completed', 'failed_provider', 'refunded', 'provider', 'payment']])
             ->assertJsonPath('data.processing', 1)
             ->assertJsonPath('data.provider.sending', 1)
             ->assertJsonPath('data.payment.success', 1);

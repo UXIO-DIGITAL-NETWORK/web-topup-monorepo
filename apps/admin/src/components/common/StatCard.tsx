@@ -21,12 +21,19 @@ export interface StatCardData {
 
 interface StatCardProps {
   data: StatCardData;
+  /**
+   * Decimal digits for the currency format. Whole rupiah by default; the
+   * Financial and Dashboard cards pass 2 to keep the cents their reference
+   * figures carry.
+   */
+  fractionDigits?: number;
 }
 
-export function StatCard({ data }: StatCardProps) {
+export function StatCard({ data, fractionDigits = 0 }: StatCardProps) {
   const { label, value, deltaPct, direction, caption, icon: Icon, iconClassName, format = "currency" } = data;
 
-  const formattedValue = format === "count" ? value.toLocaleString("id-ID") : formatCurrency(value);
+  const formattedValue =
+    format === "count" ? value.toLocaleString("id-ID") : formatCurrency(value, { fractionDigits });
 
   return (
     <Box className="flex flex-col gap-3 rounded-xl border border-border bg-card p-4">

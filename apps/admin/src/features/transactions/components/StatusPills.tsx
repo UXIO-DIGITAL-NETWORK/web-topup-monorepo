@@ -10,7 +10,7 @@ const PILLS: {
   status: TransactionStatus;
   labelKey: string;
   tooltipKey: string;
-  countKey: "pending" | "processing" | "failed";
+  countKey: "pending" | "processing" | "completed" | "failed";
   borderClass: string;
   bgClass: string;
   hoverBgClass: string;
@@ -37,6 +37,16 @@ const PILLS: {
     activeClass: "bg-chart-1/20 ring-2 ring-chart-1/30",
   },
   {
+    status: "success",
+    labelKey: "pillSuccess",
+    tooltipKey: "tipSuccess",
+    countKey: "completed",
+    borderClass: "border-success",
+    bgClass: "bg-success/10",
+    hoverBgClass: "hover:bg-success/15",
+    activeClass: "bg-success/20 ring-2 ring-success/30",
+  },
+  {
     status: "failed",
     labelKey: "pillFailed",
     tooltipKey: "tipFailed",
@@ -55,7 +65,7 @@ interface StatusPillsProps {
 
 /**
  * Clickable status-count filter chips above the transactions table
- * (product_requirements.md §4.3), restyled as a full-width 1x3 stat-card
+ * (product_requirements.md §4.3), restyled as a full-width 1x4 stat-card
  * grid — each cell color-coded per status via the design system's
  * success/destructive/chart-1 tokens plus the new `--warning` amber token
  * (design_system.md §3, 2026-07-10 revision).
@@ -65,7 +75,7 @@ export function StatusPills({ active, onToggle }: StatusPillsProps) {
   const { data: counts } = useStatusCounts();
 
   return (
-    <Box className="grid grid-cols-1 gap-3 md:grid-cols-3">
+    <Box className="grid grid-cols-1 gap-3 sm:grid-cols-2 md:grid-cols-4">
       {PILLS.map((pill) => {
         const isActive = active === pill.status;
         return (

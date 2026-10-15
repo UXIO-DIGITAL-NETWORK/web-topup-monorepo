@@ -40,7 +40,9 @@ describe("FinancialPage", () => {
     for (const card of SUMMARY_CARDS) {
       expect(await screen.findByText(card.label)).toBeInTheDocument();
     }
-    expect((await screen.findAllByText(formatCurrency(SUMMARY_CARDS[0].value))).length).toBeGreaterThan(0);
+    expect(
+      (await screen.findAllByText(formatCurrency(SUMMARY_CARDS[0].value, { fractionDigits: 2 }))).length,
+    ).toBeGreaterThan(0);
   });
 
   it("shows the Payment Gateway section with the UxioPay row and both balance labels", async () => {
@@ -69,7 +71,7 @@ describe("FinancialPage", () => {
     const gateway = PAYMENT_GATEWAYS[0];
     // Fixtures always carry a figure; the null case is a supplier with no
     // balance integration and is covered by CopyableAmount itself.
-    const formatted = formatCurrency(gateway.activeBalance ?? 0);
+    const formatted = formatCurrency(gateway.activeBalance ?? 0, { fractionDigits: 2 });
     // Every fixture balance is deliberately the same amount (Rp 15.231,89, per
     // the reference), so several copy buttons share this accessible name —
     // any of them copying the exact string is what's under test. fireEvent

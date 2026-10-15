@@ -7,8 +7,6 @@ use App\Models\Transaction;
 use App\Support\DateTime\Wib;
 use App\Support\PublicUrl;
 use App\Support\Storefront\MediaUrl;
-use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Attachment;
 use Illuminate\Mail\Mailables\Content;
@@ -19,10 +17,16 @@ use Illuminate\Queue\SerializesModels;
  * The purchase receipt emailed to the buyer once an order is COMPLETED. Sent
  * with `Mail::to()->locale($locale)`, so the subject and every `__('receipt.*')`
  * in the view resolve to the buyer's language (id | en).
+ *
+ * Deliberately NOT `ShouldQueue`: the send is owned by
+ * `SendTransactionReceiptMailJob`, which needs `Mail::send` to reach the
+ * transport before it returns. A queued mailable made that job report success
+ * the moment it handed the work on — which is the confusion the
+ * `invoice_delivery_logs` trail exists to remove.
  */
-class TransactionReceiptMail extends Mailable implements ShouldQueue
+class TransactionReceiptMail extends Mailable
 {
-    use Queueable, SerializesModels;
+    use SerializesModels;
 
     public function __construct(public Transaction $transaction, public string $emailLocale) {}
 

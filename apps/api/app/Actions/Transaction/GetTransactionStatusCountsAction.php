@@ -49,6 +49,9 @@ class GetTransactionStatusCountsAction
         return [
             'pending' => (int) ($byStatus[TransactionStatus::PENDING->value] ?? 0),
             'processing' => (int) ($byStatus[TransactionStatus::PROCESSING->value] ?? 0),
+            // The "it worked" pill. Additive: the admin reads the other keys by
+            // name, so adding one changes nothing that was already there.
+            'completed' => (int) ($byStatus[TransactionStatus::COMPLETED->value] ?? 0),
             'failed_provider' => (int) ($byStatus[TransactionStatus::FAILED_PROVIDER->value] ?? 0),
             // A refunded order leaves FAILED_PROVIDER, so without its own pill
             // it would simply vanish from the operator's view — and the failed
