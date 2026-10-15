@@ -389,6 +389,10 @@ const toListParams = (params: TransactionListParams) => ({
   ...(params.userId && { user_id: params.userId }),
   ...(params.productId && { product_id: params.productId }),
   ...(params.paymentMethod && { payment_channel_id: params.paymentMethod }),
+  // Both of these used to be dropped here: the Category dropdown wrote to local
+  // state and was never sent, and no `customer_type` filter existed to send.
+  ...(params.categoryId && { category_id: params.categoryId }),
+  ...(params.customerType && { customer_type: params.customerType }),
   ...(params.invoiceStatus && { status: TO_API_STATUS[params.invoiceStatus] }),
   // Both of these used to go nowhere: the Payment Status dropdown wrote to
   // local state and was never serialized, and the API had no parameter for it.

@@ -231,7 +231,11 @@ export interface TransactionListParams {
   providerStatus?: ProviderStatus;
   startDate?: string;
   endDate?: string;
-  invoiceFrom?: string;
+  /**
+   * `member` or `guest`. Replaces the retired `invoiceFrom`, whose values
+   * (website/mobile app/admin) never existed on the server.
+   */
+  customerType?: "guest" | "member";
   paymentMethod?: string;
   page?: number;
   per_page?: number;

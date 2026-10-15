@@ -23,6 +23,8 @@ class ExportTransactionsAction
         ?string $endDate = null,
         ?string $providerStatus = null,
         ?string $paymentStatus = null,
+        ?int $categoryId = null,
+        ?string $customerType = null,
     ): Collection {
         return Transaction::query()
             ->with(['user', 'product', 'paymentChannel', 'payment'])
@@ -52,6 +54,18 @@ class ExportTransactionsAction
             ->when($userId, fn ($q) => $q->where('user_id', $userId))
             ->when($productId, fn ($q) => $q->where('product_id', $productId))
             ->when($paymentChannelId, fn ($q) => $q->where('payment_channel_id', $paymentChannelId))
+            // The export must mean the same thing as the list it was exported
+            // from, so these two travel exactly as they do in
+            // GetTransactionsAction — down to "an unknown customer_type matches
+            // nothing".
+            ->when($categoryId, fn ($q) => $q->whereHas('product', fn ($p) => $p->where('category_id', $categoryId)))
+            ->when($customerType !== null, function ($q) use ($customerType) {
+                match ($customerType) {
+                    GetTransactionsAction::CUSTOMER_GUEST => $q->whereNull('user_id'),
+                    GetTransactionsAction::CUSTOMER_MEMBER => $q->whereNotNull('user_id'),
+                    default => $q->whereRaw('1 = 0'),
+                };
+            })
             ->when($startDate, fn ($q) => $q->where('created_at', '>=', $startDate))
             ->when($endDate, fn ($q) => $q->where('created_at', '<=', $endDate))
             ->orderBy('created_at', 'desc')

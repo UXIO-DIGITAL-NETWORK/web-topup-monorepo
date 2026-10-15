@@ -1,25 +1,13 @@
-import type { KeyedSelectOption, SelectOption } from "../types/transaction.type";
+import type { KeyedSelectOption } from "../types/transaction.type";
 
-/** Small typed fixed lists for the filter-bar selects (product_requirements.md §4.3). */
-export const USER_OPTIONS: SelectOption[] = [
-  { value: "1001", label: "Randy Galang" },
-  { value: "1002", label: "Sinta Dewi" },
-  { value: "1003", label: "Budi Santoso" },
-  { value: "1004", label: "Wulan Ayu" },
-];
-
-export const CATEGORY_OPTIONS: SelectOption[] = [
-  { value: "cat-mobile", label: "Mobile Games" },
-  { value: "cat-battle-royale", label: "Battle Royale" },
-  { value: "cat-open-world", label: "Open World" },
-];
-
-export const PRODUCT_OPTIONS: SelectOption[] = [
-  { value: "prod-19-diamond", label: "19 Diamond (17 + 2 Bonus)" },
-  { value: "prod-100-diamond", label: "100 Diamond" },
-  { value: "prod-660-uc", label: "660 UC" },
-  { value: "prod-genesis-crystal", label: "980 Genesis Crystal" },
-];
+/**
+ * Only the enumerated lists live here.
+ *
+ * Users, categories, products and payment channels are deliberately NOT in this
+ * file: they were fixed lists of invented ids, so picking one could only ever
+ * return nothing. Each is now a `SearchableSelect` fed by the endpoint that owns
+ * the rows (`TransactionFilterComboboxes.tsx`).
+ */
 
 export const INVOICE_STATUS_OPTIONS: KeyedSelectOption[] = [
   { value: "pending", labelKey: "pillPending" },
@@ -71,15 +59,12 @@ export const EDITABLE_INVOICE_STATUS_OPTIONS: KeyedSelectOption[] = INVOICE_STAT
   (option) => option.value !== "refunded",
 );
 
-export const INVOICE_FROM_OPTIONS: KeyedSelectOption[] = [
-  { value: "website", labelKey: "optWebsite" },
-  { value: "mobile-app", labelKey: "optMobileApp" },
-  { value: "admin", labelKey: "optAdminManual" },
-];
-
-export const PAYMENT_METHOD_OPTIONS: KeyedSelectOption[] = [
-  { value: "Credits", labelKey: "optCredits" },
-  { value: "QRIS", labelKey: "optQris" },
-  { value: "Virtual Account", labelKey: "optVirtualAccount" },
-  { value: "E-Wallet", labelKey: "optEwallet" },
+/**
+ * Who bought it. The transactions table has no `source` column, so this (and
+ * `is_manual`, which the Automatic/Manual tabs already own) is the only "where
+ * did this come from" fact there is.
+ */
+export const CUSTOMER_TYPE_OPTIONS: KeyedSelectOption[] = [
+  { value: "member", labelKey: "optMember" },
+  { value: "guest", labelKey: "optGuest" },
 ];

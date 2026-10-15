@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Models\Category;
 use App\Models\Product;
 use App\Models\Role;
 use App\Models\Transaction;
@@ -55,6 +56,33 @@ class TransactionReportingTest extends TestCase
         $body = $this->get('/api/v1/transactions/export')->streamedContent();
 
         $this->assertStringContainsString("'=1+1", $body);
+    }
+
+    /**
+     * The export is "the same filters, every matching row" — so a filter added
+     * to the list has to travel here too, or the CSV would contain orders the
+     * operator had filtered out.
+     */
+    public function test_export_honours_the_category_and_customer_filters(): void
+    {
+        $this->actingAsAdmin();
+        $category = Category::factory()->create();
+        $otherCategory = Category::factory()->create();
+        $product = Product::factory()->create(['category_id' => $category->id]);
+        $otherProduct = Product::factory()->create(['category_id' => $otherCategory->id]);
+        $role = Role::factory()->create(['name' => 'Member']);
+        $member = User::factory()->create(['role_id' => $role->id]);
+
+        Transaction::factory()->create(['invoice_number' => 'INV-IN-SCOPE', 'product_id' => $product->id, 'user_id' => $member->id]);
+        Transaction::factory()->create(['invoice_number' => 'INV-OTHER-CATEGORY', 'product_id' => $otherProduct->id, 'user_id' => $member->id]);
+
+        $body = $this->get('/api/v1/transactions/export?'.http_build_query([
+            'category_id' => $category->id,
+            'customer_type' => 'member',
+        ]))->streamedContent();
+
+        $this->assertStringContainsString('INV-IN-SCOPE', $body);
+        $this->assertStringNotContainsString('INV-OTHER-CATEGORY', $body);
     }
 
     public function test_recap_groups_completed_transactions_per_product(): void

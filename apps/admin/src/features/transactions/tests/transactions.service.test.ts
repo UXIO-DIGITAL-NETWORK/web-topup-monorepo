@@ -34,6 +34,19 @@ const apiRow = (over: Record<string, unknown> = {}) => ({
 beforeEach(() => vi.clearAllMocks());
 
 describe("transactionsService.list", () => {
+  it("sends the two filters that never used to leave the browser", async () => {
+    // The Category dropdown wrote to local state and was dropped here, and there
+    // was no `customer_type` parameter to send at all.
+    vi.mocked(api.get).mockResolvedValue(paginated([]));
+
+    await transactionsService.list({ categoryId: "7", customerType: "guest" });
+
+    expect(api.get).toHaveBeenCalledWith(
+      "/v1/transactions",
+      { params: expect.objectContaining({ category_id: "7", customer_type: "guest" }) },
+    );
+  });
+
   it("maps the API row onto the feature's transaction shape", async () => {
     vi.mocked(api.get).mockResolvedValue(paginated([apiRow()]));
 
