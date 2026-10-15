@@ -68,3 +68,17 @@ export const CUSTOMER_TYPE_OPTIONS: KeyedSelectOption[] = [
   { value: "member", labelKey: "optMember" },
   { value: "guest", labelKey: "optGuest" },
 ];
+
+/**
+ * The roles that buy: a member, and the paid tiers above it.
+ *
+ * Staff and internal accounts (admin, payment-internal, payment-admin) are
+ * deliberately absent — they were showing up in the transaction filter's user
+ * picker as "Super Admin", "Internal Finance" and the Hub system account, none
+ * of which is ever the customer on an order.
+ *
+ * Guests are absent for a different reason: they have no user row at all. They
+ * are reached through `CUSTOMER_TYPE_OPTIONS` (Tamu) or the search box, which
+ * the API also matches against the contact captured at checkout.
+ */
+export const BUYER_ROLES = ["member", "vip", "reseller", "agent"];
