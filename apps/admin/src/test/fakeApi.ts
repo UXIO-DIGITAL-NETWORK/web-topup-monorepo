@@ -1351,6 +1351,11 @@ export function createFakeApi() {
       if (!wanted.includes(String(row.id))) return false;
     }
     if (params.pool_state && String(row.pool_state) !== String(params.pool_state)) return false;
+    // Role allowlist, as the admin user list and the transaction filter both use.
+    if (params.roles) {
+      const wanted = Array.isArray(params.roles) ? params.roles.map(String) : [String(params.roles)];
+      if (!wanted.includes(String(row.role ?? ""))) return false;
+    }
     // The pool is what is still in the pool. A promoted SKU has left it for the
     // Main Products list; an explicit `ids` selection or a promoted `pool_state`
     // is the deliberate way past that.

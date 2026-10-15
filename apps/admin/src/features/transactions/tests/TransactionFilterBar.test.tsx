@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 
 import { usersService } from "@/features/administration/services/administration.service";
 import { renderRoute, screen, within } from "@/test/test-utils";
+import { BUYER_ROLES } from "../data/select-options.data";
 import { transactionsService } from "../services/transactions.service";
 
 /**
@@ -43,6 +44,22 @@ describe("TransactionFilterBar data-backed filters", () => {
     await user.click(await screen.findByRole("option", { name: /Sinta Dewi/ }));
 
     await vi.waitFor(() => expect(listSpy).toHaveBeenCalledWith(expect.objectContaining({ userId: "2" })));
+  });
+
+  it("asks only for buyer accounts, never for staff", async () => {
+    const usersSpy = vi.spyOn(usersService, "list");
+    const user = userEvent.setup();
+
+    await renderRoute("/admin/transaction-preview");
+    const bar = await filterBar();
+
+    await user.click(within(bar).getByRole("combobox", { name: "User" }));
+
+    // "Developer", "Super Admin", "Internal Finance" and the Hub system account
+    // all carry staff roles; none of them is ever the customer on an order.
+    await vi.waitFor(() =>
+      expect(usersSpy).toHaveBeenCalledWith(expect.objectContaining({ roles: BUYER_ROLES })),
+    );
   });
 
   it("searches users on the server as the admin types", async () => {

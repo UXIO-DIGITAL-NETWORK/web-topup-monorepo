@@ -5,6 +5,7 @@ import { useCategoryList } from "@/features/categories/hooks/useCategories";
 import { usePaymentChannelList, useUserList } from "@/features/administration/hooks/useAdministration";
 import { useProductList } from "@/features/products/hooks/useProducts";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { BUYER_ROLES } from "../data/select-options.data";
 import { SearchableSelect, type SearchableOption } from "./SearchableSelect";
 
 /**
@@ -47,7 +48,11 @@ function useComboboxState(onChange: (value: string | undefined) => void) {
 export function UserFilterCombobox({ id, value, onChange }: FilterComboboxProps) {
   const { t } = useTranslation("transactions");
   const state = useComboboxState(onChange);
-  const { data, isFetching } = useUserList({ search: state.search || undefined, per_page: PER_PAGE });
+  const { data, isFetching } = useUserList({
+    roles: BUYER_ROLES,
+    search: state.search || undefined,
+    per_page: PER_PAGE,
+  });
 
   return (
     <SearchableSelect
