@@ -9,6 +9,7 @@ Peta akar. **Dokumen yang mengikat ada di tiap app** — baca `CLAUDE.md` terdek
 | `apps/storefront/**` | `apps/storefront/CLAUDE.md` — memuat kontrak API dan pola routing |
 | `apps/payment/**` | `apps/payment/CLAUDE.md` |
 | Lintas aplikasi | `docs/` |
+| Membuat branch, commit, push, PR, atau rilis | `docs/10-sop-it-department.md` — SOP IT: format branch, prefix commit, isi PR, siapa yang boleh merge |
 
 ## Perintah
 
@@ -32,6 +33,7 @@ node node_modules/eslint/bin/eslint.js .
 
 ## Aturan yang berlaku di seluruh repo
 
+- **Git flow mengikuti SOP IT** (`docs/10-sop-it-department.md`): branch baru `dev-[role]-[nama-fitur]-[ddmmyyyy]` atau `mtc-…`, commit berprefix `feat:`/`fix:`/`refactor:`/`chore:`/`docs:`, PR ke `staging` dengan deskripsi (perubahan, cara tes, screenshot UI). Agent tidak pernah push ke `main`/`staging`, merge PR, atau membuat tag rilis — itu wewenang Head of IT.
 - **Pipeline API wajib:** `Route → FormRequest → Controller → Action → ApiResponse`. Controller tidak boleh memuat logika.
 - **Angka yang menyangkut uang hanya dihitung di satu tempat.** Lihat `apps/api/app/Support/` — `Money`, `PlanPrice`, `PointRules`, `WalletLedger`, `PointLedger`.
 - **Satu `features/*` tidak boleh mengimpor dari `features/*` lain.** Kode bersama diangkat ke `components/common`, `lib`, atau `utils`.
