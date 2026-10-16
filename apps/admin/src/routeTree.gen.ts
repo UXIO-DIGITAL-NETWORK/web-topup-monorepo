@@ -40,6 +40,7 @@ import { Route as AdminProtectedFinancialIndexRouteImport } from './routes/admin
 import { Route as AdminProtectedFeedbackIndexRouteImport } from './routes/admin/_protected/feedback/index'
 import { Route as AdminProtectedDashboardIndexRouteImport } from './routes/admin/_protected/dashboard/index'
 import { Route as AdminProtectedContentIndexRouteImport } from './routes/admin/_protected/content/index'
+import { Route as AdminProtectedChangelogIndexRouteImport } from './routes/admin/_protected/changelog/index'
 import { Route as AdminProtectedCategoriesIndexRouteImport } from './routes/admin/_protected/categories/index'
 import { Route as AdminProtectedActivityIndexRouteImport } from './routes/admin/_protected/activity/index'
 import { Route as AdminPreviewTransactionPreviewIndexRouteImport } from './routes/admin/_preview/transaction-preview/index'
@@ -266,6 +267,12 @@ const AdminProtectedContentIndexRoute =
     id: '/',
     path: '/',
     getParentRoute: () => AdminProtectedContentRouteRoute,
+  } as any)
+const AdminProtectedChangelogIndexRoute =
+  AdminProtectedChangelogIndexRouteImport.update({
+    id: '/changelog/',
+    path: '/changelog/',
+    getParentRoute: () => AdminProtectedRoute,
   } as any)
 const AdminProtectedCategoriesIndexRoute =
   AdminProtectedCategoriesIndexRouteImport.update({
@@ -584,6 +591,7 @@ export interface FileRoutesByFullPath {
   '/admin/transaction-preview/': typeof AdminPreviewTransactionPreviewIndexRoute
   '/admin/activity/': typeof AdminProtectedActivityIndexRoute
   '/admin/categories/': typeof AdminProtectedCategoriesIndexRoute
+  '/admin/changelog/': typeof AdminProtectedChangelogIndexRoute
   '/admin/content/': typeof AdminProtectedContentIndexRoute
   '/admin/dashboard/': typeof AdminProtectedDashboardIndexRoute
   '/admin/feedback/': typeof AdminProtectedFeedbackIndexRoute
@@ -657,6 +665,7 @@ export interface FileRoutesByTo {
   '/admin/transaction-preview': typeof AdminPreviewTransactionPreviewIndexRoute
   '/admin/activity': typeof AdminProtectedActivityIndexRoute
   '/admin/categories': typeof AdminProtectedCategoriesIndexRoute
+  '/admin/changelog': typeof AdminProtectedChangelogIndexRoute
   '/admin/content': typeof AdminProtectedContentIndexRoute
   '/admin/dashboard': typeof AdminProtectedDashboardIndexRoute
   '/admin/feedback': typeof AdminProtectedFeedbackIndexRoute
@@ -740,6 +749,7 @@ export interface FileRoutesById {
   '/admin/_preview/transaction-preview/': typeof AdminPreviewTransactionPreviewIndexRoute
   '/admin/_protected/activity/': typeof AdminProtectedActivityIndexRoute
   '/admin/_protected/categories/': typeof AdminProtectedCategoriesIndexRoute
+  '/admin/_protected/changelog/': typeof AdminProtectedChangelogIndexRoute
   '/admin/_protected/content/': typeof AdminProtectedContentIndexRoute
   '/admin/_protected/dashboard/': typeof AdminProtectedDashboardIndexRoute
   '/admin/_protected/feedback/': typeof AdminProtectedFeedbackIndexRoute
@@ -821,6 +831,7 @@ export interface FileRouteTypes {
     | '/admin/transaction-preview/'
     | '/admin/activity/'
     | '/admin/categories/'
+    | '/admin/changelog/'
     | '/admin/content/'
     | '/admin/dashboard/'
     | '/admin/feedback/'
@@ -894,6 +905,7 @@ export interface FileRouteTypes {
     | '/admin/transaction-preview'
     | '/admin/activity'
     | '/admin/categories'
+    | '/admin/changelog'
     | '/admin/content'
     | '/admin/dashboard'
     | '/admin/feedback'
@@ -976,6 +988,7 @@ export interface FileRouteTypes {
     | '/admin/_preview/transaction-preview/'
     | '/admin/_protected/activity/'
     | '/admin/_protected/categories/'
+    | '/admin/_protected/changelog/'
     | '/admin/_protected/content/'
     | '/admin/_protected/dashboard/'
     | '/admin/_protected/feedback/'
@@ -1261,6 +1274,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/content/'
       preLoaderRoute: typeof AdminProtectedContentIndexRouteImport
       parentRoute: typeof AdminProtectedContentRouteRoute
+    }
+    '/admin/_protected/changelog/': {
+      id: '/admin/_protected/changelog/'
+      path: '/changelog'
+      fullPath: '/admin/changelog/'
+      preLoaderRoute: typeof AdminProtectedChangelogIndexRouteImport
+      parentRoute: typeof AdminProtectedRoute
     }
     '/admin/_protected/categories/': {
       id: '/admin/_protected/categories/'
@@ -1863,6 +1883,7 @@ interface AdminProtectedRouteChildren {
   AdminProtectedProductsRouteRoute: typeof AdminProtectedProductsRouteRouteWithChildren
   AdminProtectedTransactionsRouteRoute: typeof AdminProtectedTransactionsRouteRouteWithChildren
   AdminProtectedActivityIndexRoute: typeof AdminProtectedActivityIndexRoute
+  AdminProtectedChangelogIndexRoute: typeof AdminProtectedChangelogIndexRoute
   AdminProtectedDashboardIndexRoute: typeof AdminProtectedDashboardIndexRoute
   AdminProtectedFeedbackIndexRoute: typeof AdminProtectedFeedbackIndexRoute
   AdminProtectedFinancialIndexRoute: typeof AdminProtectedFinancialIndexRoute
@@ -1890,6 +1911,7 @@ const AdminProtectedRouteChildren: AdminProtectedRouteChildren = {
   AdminProtectedTransactionsRouteRoute:
     AdminProtectedTransactionsRouteRouteWithChildren,
   AdminProtectedActivityIndexRoute: AdminProtectedActivityIndexRoute,
+  AdminProtectedChangelogIndexRoute: AdminProtectedChangelogIndexRoute,
   AdminProtectedDashboardIndexRoute: AdminProtectedDashboardIndexRoute,
   AdminProtectedFeedbackIndexRoute: AdminProtectedFeedbackIndexRoute,
   AdminProtectedFinancialIndexRoute: AdminProtectedFinancialIndexRoute,

@@ -37,6 +37,8 @@
   "navReports": "Reports",
   "navFinancial": "Financial",
   "navIntegration": "Integration",
+  "navChangelog": "Release History",
+  "changelogUnread": "Unread release notes",
   "navOrders": "Orders",
   "navTransaction": "Transaction",
   "navRefunds": "Refunds",

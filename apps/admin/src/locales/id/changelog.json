@@ -1,0 +1,16 @@
+{
+  "title": "Riwayat Versi",
+  "subtitle": "Apa yang berubah di tiap rilis. Tab Fitur untuk pembaruan yang bisa dipakai; tab Teknis untuk catatan pengembangnya.",
+  "tabFeatures": "Fitur",
+  "tabTechnical": "Teknis",
+  "running": "Sedang berjalan",
+  "runningUnlisted": "Versi yang berjalan ({{version}}) belum ada di daftar — halaman ini hanya memuat rilis stabil.",
+  "noUserChanges": "Rilis ini tidak mengubah apa pun yang terlihat di panel.",
+  "noTechnicalChanges": "Tidak ada catatan teknis untuk rilis ini.",
+  "kind": {
+    "new": "Baru",
+    "improved": "Diperbaiki dan disempurnakan",
+    "fixed": "Perbaikan",
+    "removed": "Dihapus"
+  }
+}
