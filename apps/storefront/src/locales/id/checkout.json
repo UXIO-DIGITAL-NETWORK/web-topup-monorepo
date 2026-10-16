@@ -131,7 +131,21 @@
     "pointsDiscount": "Potongan Poin",
     "promoDiscount": "Potongan Promo",
     "pointsEarned": "Poin didapat",
-    "pointsEarnedGuest": "Login untuk dapat {{points}} poin dari transaksi ini"
+    "pointsEarnedGuest": "Login untuk dapat {{points}} poin dari transaksi ini",
+    "checkingPrice": "Mengecek harga...",
+    "unavailableMessage": "Paket ini sedang tidak tersedia di penyedia. Silakan pilih paket lain.",
+    "unknownMessage": "Kami belum bisa memastikan harga paket ini saat ini.",
+    "retryCheck": "Coba lagi"
+  },
+  "priceChangedModal": {
+    "title": "HARGA BERUBAH",
+    "subtitle": "Harga paket ini naik sejak terakhir diperbarui. Periksa dulu sebelum melanjutkan.",
+    "orderSummary": "Ringkasan Pesanan",
+    "product": "Produk",
+    "previousPrice": "Harga sebelumnya",
+    "newPrice": "Harga sekarang",
+    "confirm": "Lanjutkan",
+    "cancel": "Batalkan"
   },
   "confirmModal": {
     "title": "KONFIRMASI PEMBELIAN",

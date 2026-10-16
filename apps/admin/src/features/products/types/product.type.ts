@@ -615,6 +615,20 @@ export const PRICE_CHANGE_STATUS_LABELS: Record<PriceChangeStatus, string> = {
   negative_margin: "Negative margin",
 };
 
+/**
+ * Which path noticed the change. `sweep` is the 5-minute checker; `checkout` is a
+ * buyer's re-check at the moment they were about to pay. Kept apart because a
+ * burst of `checkout` rows is the signal that the provider is moving prices under
+ * us, and it should not be buried in the scheduled run's rows.
+ */
+export const PRICE_CHANGE_SOURCES = ["sweep", "checkout"] as const;
+export type PriceChangeSource = (typeof PRICE_CHANGE_SOURCES)[number];
+
+export const PRICE_CHANGE_SOURCE_LABELS: Record<PriceChangeSource, string> = {
+  sweep: "Scheduled",
+  checkout: "Checkout",
+};
+
 /** Old → new pair for one price field; `new` is null for events that don't reprice. */
 export interface PriceChangePair {
   old: number | null;
@@ -628,6 +642,8 @@ export interface PriceChangeLog {
   buyer_sku_code: string;
   product_name: string;
   status: PriceChangeStatus;
+  /** Who noticed it: the scheduled sweep, or a buyer's check at checkout. */
+  source: PriceChangeSource;
   needs_attention: boolean;
   reason: string | null;
   old_cost: number;

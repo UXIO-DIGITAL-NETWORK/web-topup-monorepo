@@ -7,6 +7,7 @@ import type {
   CheckoutPayload,
   CheckoutResult,
   GameReviewsResponse,
+  RecheckResult,
   ValidateGameIdResult,
 } from "../types/checkout.type";
 
@@ -48,6 +49,17 @@ export const checkoutService = {
     payload: { target_uid: string; target_server?: string },
   ): Promise<ApiResponse<ValidateGameIdResult>> => {
     return await api.post(`${API_VERSION}/games/${slug}/validate-id`, payload);
+  },
+
+  /**
+   * Ask the API to re-check the item's price and availability against the
+   * provider, right before payment. Always resolves — the four outcomes
+   * (`ok`, `price_changed`, `unavailable`, `unknown`) are normal answers the
+   * screen renders, so a rejected request here is a transport failure, not a
+   * business answer.
+   */
+  recheckItem: async (productId: number): Promise<ApiResponse<RecheckResult>> => {
+    return await api.post(`${API_VERSION}/storefront/checkout/recheck`, { product_id: productId });
   },
 
   checkout: async (payload: CheckoutPayload): Promise<ApiResponse<CheckoutResult>> => {

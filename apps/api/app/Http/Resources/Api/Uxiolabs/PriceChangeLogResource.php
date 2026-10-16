@@ -24,6 +24,7 @@ class PriceChangeLogResource extends JsonResource
             'buyer_sku_code' => $this->buyer_sku_code,
             'product_name' => $this->product_name,
             'status' => $this->status->value,
+            'source' => $this->source->value,
             'needs_attention' => in_array($this->status->value, PriceChangeLogStatus::needsAttention(), true),
             'reason' => $this->reason,
             'old_cost' => $this->old_cost,

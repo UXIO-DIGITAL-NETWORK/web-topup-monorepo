@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDateTime } from "@/utils/date";
 import { PriceChangePairCell } from "./PriceChangePairCell";
 import {
+  PRICE_CHANGE_SOURCE_LABELS,
   PRICE_CHANGE_STATUS_LABELS,
   type PriceChangeLog,
   type PriceChangeStatus,
@@ -70,6 +71,13 @@ export const priceChangeLogColumnsFor = (t: TFunction<"products">): ColumnDef<Pr
           <Text as="span" variant="small" className="text-destructive">{t("needsAttention")}</Text>
         )}
       </Box>
+    ),
+  },
+  {
+    id: "source",
+    header: t("colSource"),
+    cell: ({ row }) => (
+      <Badge variant="outline">{PRICE_CHANGE_SOURCE_LABELS[row.original.source]}</Badge>
     ),
   },
   {

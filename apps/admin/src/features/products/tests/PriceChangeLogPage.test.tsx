@@ -18,6 +18,7 @@ const applied: PriceChangeLog = {
   buyer_sku_code: "ML5",
   product_name: "Mobile Legends 5 Diamond",
   status: "applied",
+  source: "sweep",
   needs_attention: false,
   reason: "Harga jual diperbarui otomatis dari aturan margin.",
   old_cost: 10000,
@@ -38,6 +39,7 @@ const deactivated: PriceChangeLog = {
   buyer_sku_code: "FF100",
   product_name: "Free Fire 100 Diamond",
   status: "deactivated",
+  source: "checkout",
   needs_attention: true,
   reason: "SKU dinonaktifkan di provider — perlu perhatian admin.",
   old_cost: 8000,
@@ -94,6 +96,15 @@ describe("PriceChangeLogPage", () => {
     expect(await screen.findByText("Free Fire 100 Diamond")).toBeInTheDocument();
     expect(screen.getByText("Deactivated")).toBeInTheDocument();
     expect(screen.getByText("Needs attention")).toBeInTheDocument();
+  });
+
+  it("shows which path noticed the change", async () => {
+    vi.spyOn(priceChangeLogService, "list").mockResolvedValue(page([applied, deactivated]));
+    await renderRoute(LIST_PATH);
+
+    // The scheduled sweep's row, and the one a buyer's pre-payment check produced.
+    expect(await screen.findByText("Scheduled")).toBeInTheDocument();
+    expect(screen.getByText("Checkout")).toBeInTheDocument();
   });
 
   it("filters by status", async () => {

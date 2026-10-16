@@ -3,22 +3,21 @@
 namespace App\Actions\Uxiolabs;
 
 use App\Actions\Log\CreateActivityLogAction;
-use App\Actions\Pricing\WriteProductPricesAction;
 use App\Contracts\SupplierGateway;
 use App\DTOs\Log\CreateActivityLogDTO;
 use App\DTOs\Uxiolabs\PriceCheckReportDTO;
+use App\Enums\PriceChangeLogSource;
 use App\Enums\PriceChangeLogStatus;
 use App\Models\FlashSale;
 use App\Models\PriceChangeLog;
 use App\Models\Product;
 use App\Models\SupplierProduct;
 use App\Models\SupplierSkuSighting;
+use App\Support\Uxiolabs\PriceCheckLock;
+use App\Support\Uxiolabs\PriceListSync;
 use App\Support\Uxiolabs\UxiolabsSupplier;
-use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Throwable;
 
 /**
  * Compare the uxiolabs price list against existing supplier_products.
@@ -61,17 +60,6 @@ class CheckUxiolabsPricesAction
     private const CODE_CHANGE_SAMPLE_LIMIT = 50;
 
     /**
-     * One run at a time, whatever started it.
-     *
-     * The scheduled command carries `withoutOverlapping`, but the manual console
-     * command and the HTTP endpoint do not. Two overlapping runs read the same
-     * snapshot, both see the cost move, and each writes a log row for one real
-     * change — doubling every count in the report and the audit trail with it.
-     * A lock here is the one choke point all three go through.
-     */
-    private const RUN_LOCK_KEY = 'uxiolabs:price-check';
-
-    /**
      * Last reported provider-code drift. A drifted name on an already-promoted
      * mapping is never written back over `provider_name` (that column is the
      * record of what the row was pooled as), so the same drift would otherwise be
@@ -80,28 +68,19 @@ class CheckUxiolabsPricesAction
      */
     private const DRIFT_CACHE_KEY = 'uxiolabs:provider-code-drift';
 
-    /** Past the worst case (an upstream fetch plus thousands of rows); a crashed run must not wedge the schedule. */
-    private const RUN_LOCK_SECONDS = 300;
-
     public function __construct(
         private readonly SupplierGateway $uxiolabsService,
         private readonly CreateActivityLogAction $logAction,
-        private readonly WriteProductPricesAction $writePrices,
+        private readonly SyncSupplierProductAction $syncProduct,
     ) {}
 
     public function execute(): PriceCheckReportDTO
     {
-        $lock = Cache::lock(self::RUN_LOCK_KEY, self::RUN_LOCK_SECONDS);
+        // The lock is shared with the on-demand checkout re-check (PriceCheckLock),
+        // so the two can never be writing prices from different snapshots at once.
+        $report = PriceCheckLock::attempt(fn () => $this->run());
 
-        if (! $lock->get()) {
-            return PriceCheckReportDTO::skipped('Sinkronisasi harga lain sedang berjalan.');
-        }
-
-        try {
-            return $this->run();
-        } finally {
-            $lock->release();
-        }
+        return $report ?? PriceCheckReportDTO::skipped('Sinkronisasi harga lain sedang berjalan.');
     }
 
     private function run(): PriceCheckReportDTO
@@ -114,6 +93,9 @@ class CheckUxiolabsPricesAction
             $items,
             $this->uxiolabsService->priceListCacheTtl()
         );
+        // Stamped so the on-demand re-check can tell "this list is seconds old"
+        // from "nothing has synced in a while" without a column per row.
+        PriceListSync::markFetched();
 
         $supplier = UxiolabsSupplier::modelOrFail();
 
@@ -216,9 +198,6 @@ class CheckUxiolabsPricesAction
                 continue;
             }
 
-            $cost = $this->uxiolabsService->costFor($item);
-            $available = $this->uxiolabsService->isItemActive($item);
-
             // Verifikasi kode provider: nama layanan dianggap bagian dari identitas
             // yang datang dari provider. Bila bergeser dari snapshot tersimpan,
             // catat — inilah cara "kode produk uxiotopup berubah" terdeteksi, sebab
@@ -236,155 +215,49 @@ class CheckUxiolabsPricesAction
                 }
             }
 
-            $costChanged = (int) $existing->price !== $cost;
-            $wasActive = (bool) $existing->is_active;
+            // Everything from here down — cost, availability, reprice, audit row
+            // and the mapping row — is decided by the action the checkout
+            // re-check also calls, so the two paths cannot drift apart.
+            $result = $this->syncProduct->execute($existing, $item, $now, PriceChangeLogSource::SWEEP);
 
-            if ($available && ! $wasActive && $existing->sync_deactivated_at !== null) {
-                // Only re-activate what this checker itself turned off.
-                $isActive = true;
-                $syncDeactivatedAt = null;
-                $reactivated[] = $sku;
-            } elseif (! $available && $wasActive) {
-                $isActive = false;
-                $syncDeactivatedAt = $now;
-                $deactivated[] = $sku;
-            } else {
-                $isActive = $wasActive;
-                $syncDeactivatedAt = $existing->sync_deactivated_at;
-            }
-
-            // uxiolabs has a single aktif/nonaktif flag — mirror it into both
-            // status columns so the schema stays untouched.
-            $statusChanged = $isActive !== $wasActive
-                || (bool) $existing->buyer_product_status !== $available
-                || (bool) $existing->seller_product_status !== $available;
-
-            if ($costChanged) {
+            if ($result->costChanged) {
                 $priceChanged++;
             }
 
-            // Auto-reprice + audit log. Only mapped products have a selling price;
-            // a pooled row (product_id null) has nothing to reprice or log — its
-            // cost still updates below and its preview prices move with it.
-            $product = $existing->product;
+            if ($result->reactivated) {
+                $reactivated[] = $sku;
+            }
 
-            // The legacy columns as they stand *before* anything below writes. The
-            // log records what each tier was, and the reprice updates the row in
-            // place, so reading them off the model afterwards would report the new
-            // price as the old one.
-            $oldPrices = $product?->only(['price_member', 'price_vip', 'price_reseller', 'price_agent']) ?? [];
+            if ($result->deactivatedNow) {
+                $deactivated[] = $sku;
+            }
 
-            if ($existing->product_id !== null && $product !== null) {
-                if (! $available && $wasActive) {
-                    // Went dark at the provider this run — can't be sold until the
-                    // admin handles it. Attention outranks a locked-price note, so
-                    // this is the only row we write for the mapping this run.
-                    $logRows[] = $this->makeLogRow(
-                        PriceChangeLogStatus::DEACTIVATED, $existing, $product, $oldPrices,
-                        (int) $existing->price, $cost, null,
-                        'SKU dinonaktifkan di provider — perlu perhatian admin.', $now,
-                    );
-                    $deactivatedLogged++;
-                } elseif ($costChanged && $isActive && $available) {
-                    try {
-                        // Always reprice. A selling price left behind at an old
-                        // cost is the one thing that makes checkout refuse a
-                        // paying customer, so the margin rule is never
-                        // second-guessed here.
-                        //
-                        // Its own transaction (a savepoint inside this run's), so
-                        // one row that cannot be repriced — a duplicate plan row,
-                        // a lock wait — costs that row only. Without it the
-                        // exception rolled back every other product's price and
-                        // left the whole catalogue priced at the old cost, which
-                        // is exactly what checkout refuses.
-                        $newPrices = DB::transaction(
-                            fn () => $this->writePrices->fromCost($product, $cost, $existing)
-                        );
+            if ($result->logStatus === PriceChangeLogStatus::DEACTIVATED) {
+                $deactivatedLogged++;
+            } elseif ($result->logStatus === PriceChangeLogStatus::NEGATIVE_MARGIN) {
+                $negativeMarginCount++;
+            } elseif ($result->logStatus === PriceChangeLogStatus::UNCHANGED) {
+                $unchangedCount++;
+            } elseif ($result->logStatus === PriceChangeLogStatus::APPLIED) {
+                $repriced++;
+            }
 
-                        $belowCost = $this->tiersBelowCost($newPrices, $cost);
-                        $moved = $this->tiersMoved($oldPrices, $newPrices);
-
-                        // A log row states what happened, so the status is read off
-                        // the prices that were actually written: "applied" for a
-                        // real movement, "unchanged" when the rule and the price
-                        // window produced the same number, and the margin case
-                        // first because it is the one that stops a sale.
-                        $status = match (true) {
-                            $belowCost !== [] => PriceChangeLogStatus::NEGATIVE_MARGIN,
-                            ! $moved => PriceChangeLogStatus::UNCHANGED,
-                            default => PriceChangeLogStatus::APPLIED,
-                        };
-
-                        $logRows[] = $this->makeLogRow(
-                            $status, $existing, $product, $oldPrices, (int) $existing->price, $cost, $newPrices,
-                            match ($status) {
-                                PriceChangeLogStatus::NEGATIVE_MARGIN => 'Setelah markup & clamp, harga '
-                                    .implode('/', $belowCost).' masih di bawah modal.',
-                                PriceChangeLogStatus::UNCHANGED => 'Modal berubah; harga jual tidak berubah (aturan margin dan batas harga menghasilkan angka yang sama).',
-                                default => 'Harga jual diperbarui otomatis dari aturan margin.',
-                            },
-                            $now,
-                        );
-
-                        match ($status) {
-                            PriceChangeLogStatus::NEGATIVE_MARGIN => $negativeMarginCount++,
-                            PriceChangeLogStatus::UNCHANGED => $unchangedCount++,
-                            default => $repriced++,
-                        };
-                    } catch (Throwable $e) {
-                        // The cost still lands (it is a fact, and it is in the
-                        // upsert below); the selling price is left where it was and
-                        // NO log row is written for it — a log that claims a price
-                        // we did not write is worse than a gap. The negative-margin
-                        // scan picks the row up at the end of this run.
-                        $failedCount++;
-                        if (count($failedSample) < self::FAILED_SAMPLE_LIMIT) {
-                            $failedSample[] = $sku;
-                        }
-
-                        Log::channel('uxiolabs')->error('uxiolabs:check-prices reprice failed for one SKU', [
-                            'buyer_sku_code' => $sku,
-                            'product_id' => $product->id,
-                            'error' => $e->getMessage(),
-                        ]);
-                    }
+            if ($result->repriceFailed) {
+                $failedCount++;
+                if (count($failedSample) < self::FAILED_SAMPLE_LIMIT) {
+                    $failedSample[] = $sku;
                 }
             }
 
-            // A pooled row renders from this snapshot (it has no product to read a
-            // name from), so keep it in step with the provider. Once promoted, the
-            // product owns the name and this is left as the record of what it was
-            // pooled as.
-            $providerName = $existing->product_id === null
-                ? (string) ($item['nama_layanan'] ?? $existing->provider_name)
-                : $existing->provider_name;
-
-            $metaChanged = $providerName !== $existing->provider_name;
-
-            // Nothing to write unless something actually moved. `$metaChanged` has to
-            // be part of this test AND of the upsert column list below, or the
-            // refresh silently never lands.
-            if (! $costChanged && ! $statusChanged && ! $metaChanged) {
-                continue;
+            if ($result->logRow !== null) {
+                $logRows[] = $result->logRow;
             }
 
-            $upsertRows[] = [
-                'supplier_id' => $supplierId,
-                'buyer_sku_code' => $sku,
-                'product_id' => $existing->product_id,
-                'pool_category_id' => $existing->pool_category_id,
-                'provider_name' => $providerName,
-                'price' => $cost,
-                'admin_fee' => $existing->admin_fee,
-                'commission' => $existing->commission,
-                'buyer_product_status' => $available,
-                'seller_product_status' => $available,
-                'is_active' => $isActive,
-                'sync_deactivated_at' => $syncDeactivatedAt,
-                'created_at' => $existing->created_at,
-                'updated_at' => $now,
-            ];
+            // Null when nothing moved — the same "skip the write" the upsert test
+            // used to make here.
+            if ($result->upsertRow !== null) {
+                $upsertRows[] = $result->upsertRow;
+            }
         }
 
         // Mapping yang tidak lagi muncul di price list: sinyal kode/penawaran
@@ -395,13 +268,7 @@ class CheckUxiolabsPricesAction
             ->values()
             ->all();
 
-        foreach (array_chunk($upsertRows, self::UPSERT_CHUNK) as $chunk) {
-            SupplierProduct::upsert(
-                $chunk,
-                ['supplier_id', 'buyer_sku_code'],
-                ['price', 'provider_name', 'admin_fee', 'commission', 'buyer_product_status', 'seller_product_status', 'is_active', 'sync_deactivated_at', 'updated_at']
-            );
-        }
+        SyncSupplierProductAction::upsert($upsertRows);
 
         // Append-only: plain insert, chunked. insert() bypasses casts, so the rows
         // are already raw scalars with explicit timestamps.
@@ -428,89 +295,6 @@ class CheckUxiolabsPricesAction
             disappearedCount: count($disappeared),
             disappearedSkusSample: array_slice($disappeared, 0, self::CODE_CHANGE_SAMPLE_LIMIT),
         );
-    }
-
-    /**
-     * Whether any tier's billed price actually moved — the difference between a
-     * reprice that changed something and one that re-derived the same number.
-     *
-     * @param  array<string,mixed>  $old  The legacy columns as they stood before this run's write
-     * @param  array<string,int>  $new  What each tier is billed at now
-     */
-    private function tiersMoved(array $old, array $new): bool
-    {
-        foreach (['price_member', 'price_vip', 'price_reseller', 'price_agent'] as $tier) {
-            if ((int) ($old[$tier] ?? 0) !== (int) ($new[$tier] ?? 0)) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
-     * The tiers now priced below cost, by name.
-     *
-     * Every tier, not just `price_member`: checkout applies the margin guard to
-     * whichever tier the customer is on (`CheckoutAction`), so a VIP row under
-     * cost refuses a VIP customer even when the member price is healthy.
-     *
-     * @param  array<string,int>  $new  What each tier is billed at
-     * @return array<int,string> e.g. ['member', 'vip']
-     */
-    private function tiersBelowCost(array $new, int $cost): array
-    {
-        $below = [];
-
-        foreach (['price_member', 'price_vip', 'price_reseller', 'price_agent'] as $tier) {
-            if (isset($new[$tier]) && (int) $new[$tier] < $cost) {
-                $below[] = str_replace('price_', '', $tier);
-            }
-        }
-
-        return $below;
-    }
-
-    /**
-     * One price_change_logs row as a raw array for bulk insert(). Old selling
-     * prices are snapshotted off the product; new prices come from the freshly
-     * computed set, or null for an event that does not reprice (deactivated).
-     *
-     * @param  array<string,mixed>  $oldPrices  The legacy columns as they were before this run's write
-     * @param  array{price_modal:int,price_member:int,price_vip:int,price_reseller:int,price_agent:int}|null  $newPrices
-     * @return array<string,mixed>
-     */
-    private function makeLogRow(
-        PriceChangeLogStatus $status,
-        SupplierProduct $mapping,
-        Product $product,
-        array $oldPrices,
-        int $oldCost,
-        int $newCost,
-        ?array $newPrices,
-        string $reason,
-        Carbon $now,
-    ): array {
-        return [
-            'supplier_product_id' => $mapping->id,
-            'product_id' => $product->id,
-            'buyer_sku_code' => $mapping->buyer_sku_code,
-            'product_name' => $product->name,
-            'status' => $status->value,
-            'old_cost' => $oldCost,
-            'new_cost' => $newCost,
-            'old_price_member' => (int) ($oldPrices['price_member'] ?? $product->price_member),
-            'new_price_member' => $newPrices['price_member'] ?? null,
-            'old_price_vip' => (int) ($oldPrices['price_vip'] ?? $product->price_vip),
-            'new_price_vip' => $newPrices['price_vip'] ?? null,
-            'old_price_reseller' => (int) ($oldPrices['price_reseller'] ?? $product->price_reseller),
-            'new_price_reseller' => $newPrices['price_reseller'] ?? null,
-            'old_price_agent' => (int) ($oldPrices['price_agent'] ?? $product->price_agent),
-            'new_price_agent' => $newPrices['price_agent'] ?? null,
-            'reason' => $reason,
-            'created_at' => $now,
-            'updated_at' => $now,
-        ];
     }
 
     /**

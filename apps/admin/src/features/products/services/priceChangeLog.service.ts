@@ -2,7 +2,7 @@ import { api } from "@/lib/axios";
 import { API_VERSION } from "@/config/env";
 import { toRowId, unwrapPaginated } from "@/lib/apiMappers";
 import type { ApiResponse, PaginatedResponse } from "@/types/api.type";
-import type { PriceChangeLog, PriceChangeLogListParams, PriceChangeStatus } from "../types/product.type";
+import type { PriceChangeLog, PriceChangeLogListParams, PriceChangeSource, PriceChangeStatus } from "../types/product.type";
 
 /**
  * The read-only audit trail of what the 5-minute price checker did — the
@@ -20,6 +20,7 @@ interface PriceChangeLogApiRow {
   buyer_sku_code: string;
   product_name: string;
   status: PriceChangeStatus;
+  source: PriceChangeSource;
   needs_attention: boolean;
   reason: string | null;
   old_cost: number;

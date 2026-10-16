@@ -38,6 +38,7 @@ use App\Http\Controllers\Api\Hub\HubInstallationController;
 use App\Http\Controllers\Api\Hub\HubReportController;
 use App\Http\Controllers\Api\Hub\HubSyncTriggerController;
 use App\Http\Controllers\Api\IntegrationController;
+use App\Http\Controllers\Api\InvoiceLogController;
 use App\Http\Controllers\Api\LeaderboardController;
 use App\Http\Controllers\Api\Marketing\FlashSaleController;
 use App\Http\Controllers\Api\Marketing\PromoController;
@@ -86,10 +87,10 @@ use App\Http\Controllers\Api\Storefront\OrderTrackController;
 use App\Http\Controllers\Api\Storefront\PaymentChannelController as StorefrontPaymentChannelController;
 use App\Http\Controllers\Api\Storefront\PayoutBankController;
 use App\Http\Controllers\Api\Storefront\PriceListController;
+use App\Http\Controllers\Api\Storefront\RecheckCheckoutItemController;
 use App\Http\Controllers\Api\Storefront\ValidateGameIdController;
 use App\Http\Controllers\Api\Supplier\SupplierCategoryController;
 use App\Http\Controllers\Api\Supplier\SupplierController;
-use App\Http\Controllers\Api\InvoiceLogController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\User\SyncTimezoneController;
 use App\Http\Controllers\Api\User\UpdateLocaleController;
@@ -211,6 +212,13 @@ Route::prefix('v1')->group(function () {
     // Static `/download` before the `{invoiceNumber}` read so it isn't shadowed.
     Route::get('/invoices/{invoiceNumber}/download', InvoiceDownloadController::class);
     Route::get('/invoices/{invoiceNumber}', InvoiceController::class);
+
+    // Cek harga & status item tepat sebelum bayar. Limiter sendiri, bukan
+    // `checkout`: layar checkout memanggilnya tiap pembeli memilih paket, dan
+    // memakai kuota 10/menit milik checkout akan menghabiskannya hanya dengan
+    // menjelajah paket.
+    Route::post('/storefront/checkout/recheck', RecheckCheckoutItemController::class)
+        ->middleware('throttle:recheck');
 
     Route::middleware('throttle:checkout')->group(function () {
         Route::post('/checkout', [CheckoutController::class, 'store']);

@@ -84,3 +84,17 @@ export const useCheckoutMutation = () =>
   useMutation({
     mutationFn: checkoutService.checkout,
   });
+
+/**
+ * The pre-payment price/availability check. Deliberately a mutation rather than
+ * a query: it is triggered by an event (the buyer picks a package), it writes on
+ * the server, and the answer is only wanted for the package in hand — none of
+ * which a cache of "the" answer would model.
+ */
+export const useRecheckItemMutation = () =>
+  useMutation({
+    mutationFn: async (productId: number) => {
+      const response = await checkoutService.recheckItem(productId);
+      return response.data;
+    },
+  });

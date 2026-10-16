@@ -25,6 +25,7 @@ import {
   usePaymentChannelsQuery,
 } from "@/features/checkout/hooks/useCheckoutQueries";
 import { useNicknameCheck } from "@/features/checkout/hooks/useNicknameCheck";
+import { useCheckoutRecheck } from "@/features/checkout/hooks/useCheckoutRecheck";
 import { calculateAdminFee } from "@/features/checkout/lib/mappers";
 import { getOrderFormErrors } from "@/features/checkout/lib/orderFormValidation";
 import { normalizeWhatsappNumber } from "@/lib/phone";
@@ -111,6 +112,17 @@ export default function CheckoutPage(): React.JSX.Element {
     userId,
     serverId,
   });
+
+  // The price/availability question, asked the moment a package is picked. The
+  // summary's button stands on the answer: shut while it is out, shut when the
+  // item is off sale or the answer is unknown, and a "yes" from the buyer when
+  // the price went up.
+  const {
+    status: recheckStatus,
+    result: recheckResult,
+    decision: recheckDecision,
+    retry: retryRecheck,
+  } = useCheckoutRecheck({ productId: selectedPackage?.productId ?? null, slug: gameSlug });
 
   // The account fields are validated against the rules the game declared. For a
   // game with no lookup provider this is the only thing standing between a
@@ -384,6 +396,10 @@ export default function CheckoutPage(): React.JSX.Element {
               whatsapp={whatsapp}
               nickname={nickname}
               isSubmitting={checkoutMutation.isPending}
+              recheckStatus={recheckStatus}
+              recheckResult={recheckResult}
+              recheckDecision={recheckDecision}
+              onRetryRecheck={retryRecheck}
               onRequestConfirm={handleRequestConfirm}
               isPreparing={isChecking}
               onSubmit={handleConfirmCheckout}

@@ -45,7 +45,7 @@ class PriceChangeLogsTest extends TestCase
             'data' => [
                 'data' => [[
                     'id', 'supplier_product_id', 'product_id', 'buyer_sku_code',
-                    'product_name', 'status', 'needs_attention', 'reason',
+                    'product_name', 'status', 'source', 'needs_attention', 'reason',
                     'old_cost', 'new_cost',
                     'prices' => [
                         'member' => ['old', 'new'],
