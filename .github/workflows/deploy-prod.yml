@@ -159,6 +159,23 @@ jobs:
             echo "upstream=" >> "$GITHUB_OUTPUT"
           fi
 
+      # Catatan rilis tidak boleh ketinggalan tanpa ketahuan: changelog yang
+      # ditulis belakangan selalu kehilangan hal yang paling mudah dilupakan.
+      #
+      # PERINGATAN, bukan gerbang. Kelalaian dokumentasi tidak sebanding dengan
+      # menahan rilis perbaikan darurat, dan berkas ini juga tidak bisa
+      # menggagalkan deploy yang sudah lolos tes. Hanya di sini, tidak di
+      # staging: staging mendeploy tag `-rc`, yang memang tidak masuk changelog.
+      #
+      # Kutip di sekitar versi mencegah "v1.4.1" cocok dengan "v1.4.10".
+      - name: Periksa catatan rilis
+        run: |
+          set -euo pipefail
+          CHANGELOG=apps/admin/src/features/changelog/data/changelog.data.ts
+          if ! grep -qF "\"$APP_VERSION\"" "$CHANGELOG"; then
+            echo "::warning file=$CHANGELOG::$APP_VERSION tidak ada di changelog — rilis ini akan tampil tanpa catatan di panel admin."
+          fi
+
       # Pola yang sama dengan job frontend: rinciannya sengaja identik (pin host
       # key lewat SSH_HOST_KEY, `ssh-keyscan` hanya sebagai mundur) supaya tidak
       # ada dua kebiasaan berbeda di repo ini.

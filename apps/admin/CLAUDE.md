@@ -98,6 +98,20 @@ login screen is branded too) and the sidebar wordmark render it — never a hard
 called. The fallback is a real name rather than a blank, because a header that
 flickers empty on every cold load looks broken.
 
+## Rilis & changelog
+
+`src/features/changelog/data/changelog.data.ts` adalah satu-satunya tempat catatan rilis ditulis, dan `/admin/changelog` menampilkannya dalam dua tab: **Fitur** (yang admin lihat dan pakai) dan **Teknis** (modul yang tersentuh, untuk developer). Keduanya dari satu berkas supaya tidak mungkin bercerita beda soal rilis yang sama.
+
+- **Entri ditulis di commit yang membuat perubahannya**, bukan menumpuk di akhir. Catatan yang ditulis belakangan selalu kehilangan hal yang paling mudah dilupakan.
+- **`changes` ditulis tanpa nama modul, path berkas, atau istilah teknis.** Kalau pembacanya harus tahu kode untuk mengerti, kalimatnya salah — detail itu tempatnya di `technical`.
+- **`changes` boleh kosong** untuk rilis yang memang tidak terlihat admin (mis. hanya pekerjaan deploy); halaman mengatakannya terus terang. Mengarang pembaruan supaya daftarnya kelihatan berisi justru lebih buruk.
+- **Hanya rilis stabil.** Tag `-rc` tidak masuk: yang dibaca admin adalah apa yang benar-benar sudah naik ke produksi.
+- **Terbaru di atas**, dan `version` ditulis sama persis dengan tag (`"v1.4.9"`) — nilainya dicocokkan dengan `APP_VERSION` untuk menandai versi yang sedang berjalan.
+
+`deploy-prod.yml` memperingatkan bila tag yang dirilis tidak ada di berkas itu. Peringatan, bukan gerbang: kelalaian dokumentasi tidak boleh menahan rilis perbaikan darurat.
+
+Halaman ini **hanya ada di panel admin**, dan isinya ikut bundle saat build — tidak ada endpoint, tabel, atau CRUD. Kalau suatu saat storefront butuh changelog untuk pelanggan, itu fitur terpisah: bahasanya berbeda dan sumbernya harus pindah ke API.
+
 ## Commands
 
 | Command                       | Does                                                                        |

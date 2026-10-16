@@ -37,6 +37,8 @@
   "navReports": "Laporan",
   "navFinancial": "Keuangan",
   "navIntegration": "Integrasi",
+  "navChangelog": "Riwayat Versi",
+  "changelogUnread": "Ada catatan rilis yang belum dibaca",
   "navOrders": "Pesanan",
   "navTransaction": "Transaksi",
   "navRefunds": "Pengembalian Dana",

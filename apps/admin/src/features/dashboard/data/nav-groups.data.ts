@@ -5,6 +5,7 @@ import {
   FileStack,
   FileText,
   Globe,
+  History,
   LayoutGrid,
   Megaphone,
   Package,
@@ -48,6 +49,9 @@ export const NAV_GROUPS: NavGroup[] = [
       { labelKey: "navReports", href: "/admin/reports", icon: FileText },
       { labelKey: "navFinancial", href: "/admin/financial", icon: Wallet },
       { labelKey: "navIntegration", href: "/admin/integration", icon: Plug },
+      // What changed in each release. Last in the group on purpose: it is
+      // something you consult occasionally, not a place you work.
+      { labelKey: "navChangelog", href: "/admin/changelog", icon: History },
     ],
   },
   {

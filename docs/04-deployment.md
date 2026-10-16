@@ -64,6 +64,8 @@ yang turun ke working tree.
 - **Gerbang** — `php artisan hub:ping` dijalankan tepat sebelum `migrate`. Bila `HUB_ENABLED=true` dan Hub tidak terjangkau, deploy berhenti sebelum skema tersentuh. Di deploy standalone (`HUB_ENABLED=false`) perintah ini lulus sendiri.
 - **Rollback** — jalankan workflow `Deploy Production` lewat *Run workflow*, isi `ref` dengan tag lama (mis. `v1.3.0`). CI mengirim source tag itu, dan server memasang dependensinya dari `composer.lock` tag tersebut; tidak ada `git checkout` di server. Klon riwayat di `<base>/.api-repo` ikut mundur ke tag itu.
 
+**Catatan rilis ikut rilisnya.** `apps/admin/src/features/changelog/data/changelog.data.ts` memuat catatan per rilis stabil, dan panel admin menampilkannya di `/admin/changelog` — tab **Fitur** untuk admin, **Teknis** untuk developer. Entri ditulis di commit yang membuat perubahannya, dan `deploy-prod.yml` memperingatkan (bukan menggagalkan) bila tag yang dirilis tidak ada di sana.
+
 **Migrasi harus aditif supaya rollback aman.** Rollback kode tidak membalik migrasi: kalau sebuah rilis menghapus kolom, kode lama akan mencarinya dan gagal. Urutannya: tambah kolom → deploy kode baru → backfill → baru hapus kolom di rilis *berikutnya*.
 
 ---

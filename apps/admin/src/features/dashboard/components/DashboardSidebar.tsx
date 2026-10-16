@@ -5,6 +5,7 @@ import { useLocation, useNavigate } from "@tanstack/react-router";
 import { Command, Search } from "lucide-react";
 
 import { useBranding } from "@/hooks/useBranding";
+import { useChangelogSeen } from "@/hooks/useChangelogSeen";
 import { ENV } from "@/config/env";
 import { NAV_GROUPS } from "../data/nav-groups.data";
 import { Box } from "@/components/common/Box";
@@ -37,6 +38,7 @@ import { cn } from "@/lib/utils";
 
 export function DashboardSidebar() {
   const { t } = useTranslation("dashboard");
+  const { hasUnseen } = useChangelogSeen();
   const { siteName } = useBranding();
 
   const [commandOpen, setCommandOpen] = useState(false);
@@ -181,15 +183,26 @@ export function DashboardSidebar() {
           thing an admin sees, and links out to where it is actually renewed. */}
       <SidebarFooter>
         <WebsiteSubscriptionCard />
-        {/* The release stamp. Rendered only when the build carried one, so a
-            local build shows nothing instead of a meaningless version. */}
+        {/* The release stamp doubles as the way into the changelog: it is where
+            the version already appears, so it is where "what changed?" gets
+            asked. Rendered only when the build carried a version, so a local
+            build shows nothing instead of a meaningless stamp. */}
         {ENV.APP_VERSION && (
-          <Text
-            as="span"
-            className="px-2 pb-1 text-center text-[10px] text-muted-foreground"
+          <Link
+            href="/admin/changelog"
+            className="mx-auto flex items-center gap-1.5 px-2 pb-1 text-[10px] text-muted-foreground transition-colors hover:text-foreground"
           >
             {ENV.APP_VERSION}
-          </Text>
+            {/* The dot is the whole point: the notes only get read if something
+                says the build moved on. */}
+            {hasUnseen && (
+              <Box
+                as="span"
+                aria-label={t("changelogUnread")}
+                className="size-1.5 rounded-full bg-primary"
+              />
+            )}
+          </Link>
         )}
       </SidebarFooter>
 

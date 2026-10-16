@@ -1,0 +1,16 @@
+{
+  "title": "Release History",
+  "subtitle": "What changed in each release. The Features tab covers updates you can use; the Technical tab carries the developer notes.",
+  "tabFeatures": "Features",
+  "tabTechnical": "Technical",
+  "running": "Running now",
+  "runningUnlisted": "The running version ({{version}}) is not in this list — this page only covers stable releases.",
+  "noUserChanges": "This release changed nothing visible in the panel.",
+  "noTechnicalChanges": "No technical notes for this release.",
+  "kind": {
+    "new": "New",
+    "improved": "Improved",
+    "fixed": "Fixed",
+    "removed": "Removed"
+  }
+}
