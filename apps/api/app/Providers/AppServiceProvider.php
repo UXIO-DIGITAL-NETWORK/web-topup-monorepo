@@ -105,8 +105,13 @@ class AppServiceProvider extends ServiceProvider
 
     private function configureRateLimiting(): void
     {
+        // These two are env-tunable (config/ratelimit.php) for the same reason:
+        // a guest is keyed by IP, so one office — or one mobile carrier's NAT —
+        // shares a single allowance, and when that starts refusing real buyers
+        // the answer is a number, not a release.
         RateLimiter::for('api', function (Request $request) {
-            return Limit::perMinute(120)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute((int) config('ratelimit.api_per_minute'))
+                ->by($request->user()?->id ?: $request->ip());
         });
 
         RateLimiter::for('checkout', function (Request $request) {
@@ -114,10 +119,12 @@ class AppServiceProvider extends ServiceProvider
         });
 
         // Looser than checkout on purpose: the checkout screen re-checks the item
-        // every time a buyer picks a package, and sharing checkout's 10/minute
-        // would spend the checkout budget just by browsing.
+        // every time a buyer presses the button, and sharing checkout's 10/minute
+        // would spend the checkout budget just by browsing. Not as generous as the
+        // read paths because every call let through may reach the supplier.
         RateLimiter::for('recheck', function (Request $request) {
-            return Limit::perMinute(30)->by($request->user()?->id ?: $request->ip());
+            return Limit::perMinute((int) config('ratelimit.recheck_per_minute'))
+                ->by($request->user()?->id ?: $request->ip());
         });
 
         // Generous on purpose: legitimate gateway retry bursts must never be
