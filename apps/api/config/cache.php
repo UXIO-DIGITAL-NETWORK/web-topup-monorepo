@@ -91,11 +91,23 @@ return [
             'driver' => 'octane',
         ],
 
+        // Redis first, `database` as the net — chosen by setting
+        // CACHE_STORE=failover. Not plain `redis`, because a cache that fails
+        // hard takes the site with it, and more than a cache goes through this
+        // store: the price-check lock and every rate limiter do too. With this
+        // list, a Redis outage means the site runs exactly as it did before
+        // Redis existed, instead of answering 500s.
+        //
+        // Two knobs decide how fast that net catches. `max_retries` defaults to
+        // 3 with a 100ms→1000ms backoff, so a dead Redis can cost hundreds of
+        // milliseconds *per cache operation* before failover even begins —
+        // slower than having no Redis at all. Set REDIS_MAX_RETRIES=0 so the
+        // first failure is the one that moves it along.
         'failover' => [
             'driver' => 'failover',
             'stores' => [
+                'redis',
                 'database',
-                'array',
             ],
         ],
 
