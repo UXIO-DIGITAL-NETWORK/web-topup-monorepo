@@ -27,6 +27,7 @@ import {
 import { useNicknameCheck } from "@/features/checkout/hooks/useNicknameCheck";
 import { useCheckoutRecheck } from "@/features/checkout/hooks/useCheckoutRecheck";
 import { calculateAdminFee } from "@/features/checkout/lib/mappers";
+import { recheckBlocksCheckout, recheckPriceChange } from "@/features/checkout/lib/recheck";
 import { getOrderFormErrors } from "@/features/checkout/lib/orderFormValidation";
 import { normalizeWhatsappNumber } from "@/lib/phone";
 import { useCheckoutStore } from "@/store/useCheckoutStore";
@@ -113,16 +114,24 @@ export default function CheckoutPage(): React.JSX.Element {
     serverId,
   });
 
-  // The price/availability question, asked the moment a package is picked. The
-  // summary's button stands on the answer: shut while it is out, shut when the
-  // item is off sale or the answer is unknown, and a "yes" from the buyer when
-  // the price went up.
+  // The price/availability question, asked on demand: it runs inside the
+  // confirmation gate, for the package the buyer actually chose.
   const {
-    status: recheckStatus,
+    check: recheckItem,
+    isChecking: isCheckingPrice,
     result: recheckResult,
-    decision: recheckDecision,
-    retry: retryRecheck,
-  } = useCheckoutRecheck({ productId: selectedPackage?.productId ?? null, slug: gameSlug });
+    resultProductId: recheckProductId,
+  } = useCheckoutRecheck({ slug: gameSlug });
+
+  // Forwarded to the review modal only when the answer belongs to the package on
+  // screen and the quote really moved; a stale answer from a package the buyer has
+  // since switched away from must not be shown against this one's price.
+  const previousPrice =
+    recheckResult !== null &&
+    recheckProductId === selectedPackage?.productId &&
+    recheckPriceChange(recheckResult) !== "none"
+      ? recheckResult.previous_price
+      : undefined;
 
   // The account fields are validated against the rules the game declared. For a
   // game with no lookup provider this is the only thing standing between a
@@ -195,13 +204,35 @@ export default function CheckoutPage(): React.JSX.Element {
     selectedPayment && payablePrice > 0 ? calculateAdminFee(selectedPayment, payablePrice) : 0;
 
   /**
+   * The one live price/availability check, asked for the package actually chosen.
+   * `unavailable` and "no answer" both keep the buyer on the page with the reason
+   * — only a price we can stand behind opens the review.
+   */
+  const confirmPrice = async (): Promise<boolean> => {
+    if (!selectedPackage) return false;
+
+    const answer = await recheckItem(selectedPackage.productId);
+
+    if (recheckBlocksCheckout(answer?.outcome ?? null)) {
+      toast.error(
+        answer?.outcome === "unavailable"
+          ? t("summary.unavailableMessage")
+          : t("summary.unknownMessage"),
+      );
+      return false;
+    }
+
+    return true;
+  };
+
+  /**
    * Runs when the buyer presses "Top Up Sekarang", before the confirmation
    * modal is allowed to open. Returning false keeps it shut.
    *
-   * The account id gets whichever guard the game can offer: a live lookup when
-   * it has a provider, the declared field rules when it does not. Everything
-   * past this point costs the buyer money, so an unverified id must not reach
-   * it.
+   * Order matters: the declared field rules and the account-id lookup come first
+   * because they are cheap (or, for the lookup, already paid for), and the
+   * package's live price check comes last — so the modal shows, and the order is
+   * placed against, the price the provider is quoting right now.
    */
   const handleRequestConfirm = async (): Promise<boolean> => {
     if (Object.values(fieldErrors).some(Boolean)) {
@@ -210,15 +241,12 @@ export default function CheckoutPage(): React.JSX.Element {
       return false;
     }
 
-    if (!supportsNicknameCheck) return true;
-
-    // Already checked → reuse that answer; never pay for a second inquiry.
-    if (!(await ensureChecked())) {
+    if (supportsNicknameCheck && !(await ensureChecked())) {
       toast.error(t("accountDetail.nicknameError"));
       return false;
     }
 
-    return true;
+    return await confirmPrice();
   };
 
   const handleConfirmCheckout = () => {
@@ -396,10 +424,8 @@ export default function CheckoutPage(): React.JSX.Element {
               whatsapp={whatsapp}
               nickname={nickname}
               isSubmitting={checkoutMutation.isPending}
-              recheckStatus={recheckStatus}
-              recheckResult={recheckResult}
-              recheckDecision={recheckDecision}
-              onRetryRecheck={retryRecheck}
+              isCheckingPrice={isCheckingPrice}
+              previousPrice={previousPrice}
               onRequestConfirm={handleRequestConfirm}
               isPreparing={isChecking}
               onSubmit={handleConfirmCheckout}
