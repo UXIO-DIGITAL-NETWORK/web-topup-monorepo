@@ -3,6 +3,7 @@ import userEvent from "@testing-library/user-event";
 
 import { fireEvent, makeUser, renderRoute, screen, waitFor, within } from "@/test/test-utils";
 import { useAuthStore } from "@/store/useAuthStore";
+import { websiteSubscriptionService } from "@/features/dashboard/services/websiteSubscription.service";
 import { settingsService, usersService } from "../services/administration.service";
 
 // Guarded routes with no preview twin — the store is seeded so requireAuth and
@@ -73,7 +74,8 @@ describe("administration routes", () => {
   it("Settings opens on the first group and marks the public values", async () => {
     await renderRoute("/admin/settings");
 
-    expect(await screen.findByRole("heading", { name: "Settings" })).toBeInTheDocument();
+    // The card header names the active group — there is no page-level "Settings" card.
+    expect(await screen.findByRole("heading", { name: "General" })).toBeInTheDocument();
     // General leads the response, so it is the tab the page opens on.
     expect(await screen.findByLabelText("Site Name")).toBeInTheDocument();
     // The Public badge is what tells an admin a value reaches the storefront.
@@ -117,12 +119,85 @@ describe("administration routes", () => {
     await renderRoute("/admin/settings");
     await screen.findByLabelText("Site Name");
 
-    // Four on the General tab: one beside the section heading, plus one per
-    // setting in the fixture's general group — Site Name, Maintenance Mode, and
-    // the logo dropzone, which owns its own label and takes the hint as a prop.
-    // A setting with no `help_` key in the locale files renders no icon, which
-    // is what keeps the count tied to the copy rather than to the row count.
-    expect(screen.getAllByRole("button", { name: "More information" })).toHaveLength(4);
+    // The section's help and a switch's help read as plain text under their
+    // titles (the Figma card layout), so only the field rows keep an icon:
+    // Site Name, and the logo dropzone, which owns its own label.
+    expect(screen.getByText(/Site identity and the global switches/)).toBeInTheDocument();
+    expect(screen.getByText(/Takes the storefront offline/)).toBeInTheDocument();
+    expect(screen.getAllByRole("button", { name: "More information" })).toHaveLength(2);
+  });
+
+  it("Settings saves only after the Edit → Save → confirm flow", async () => {
+    const updateSpy = vi.spyOn(settingsService, "update").mockResolvedValue([]);
+    const user = userEvent.setup();
+    await renderRoute("/admin/settings");
+    await screen.findByLabelText("Site Name");
+
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    const dialog = await screen.findByRole("alertdialog", { name: "Save Data?" });
+    expect(updateSpy).not.toHaveBeenCalled();
+
+    await user.click(within(dialog).getByRole("button", { name: "Yes, Save" }));
+    await waitFor(() => expect(updateSpy).toHaveBeenCalledTimes(1));
+    // Back to the resting state once the write lands.
+    expect(await screen.findByRole("button", { name: "Edit" })).toBeInTheDocument();
+    // The spy is shared with later tests, which read `mock.calls[0]`.
+    updateSpy.mockRestore();
+  });
+
+  it("Settings lists the tabs in a fixed order, General first", async () => {
+    await renderRoute("/admin/settings");
+    await screen.findByLabelText("Site Name");
+
+    const names = screen.getAllByRole("tab").map((tab) => tab.textContent);
+    expect(names).toEqual(["General", "Contact", "Operational", "Payment", "SEO", "Social", "Licence"]);
+  });
+
+  it("Settings gives SEO and Social their long card titles", async () => {
+    const user = userEvent.setup();
+    await renderRoute("/admin/settings");
+
+    await user.click(await screen.findByRole("tab", { name: "SEO" }));
+    expect(await screen.findByRole("heading", { name: "Search Engine Optimization (SEO)" })).toBeInTheDocument();
+
+    await user.click(screen.getByRole("tab", { name: "Social" }));
+    expect(await screen.findByRole("heading", { name: "Social Profile Link" })).toBeInTheDocument();
+  });
+
+  it("Settings stacks each payment-method expiry under its label at full width", async () => {
+    const user = userEvent.setup();
+    await renderRoute("/admin/settings");
+    await user.click(await screen.findByRole("tab", { name: "Operational" }));
+
+    const input = await screen.findByDisplayValue("15");
+    expect(input).toHaveClass("w-full");
+    expect(input).not.toHaveClass("w-28");
+  });
+
+  it("Settings Cancel throws away the unsaved edits", async () => {
+    const user = userEvent.setup();
+    await renderRoute("/admin/settings");
+
+    const siteName = await screen.findByLabelText("Site Name");
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    await user.clear(siteName);
+    await user.type(siteName, "Dibuang");
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+
+    expect(await screen.findByLabelText("Site Name")).toHaveValue("TopUpGame.ID");
+    expect(screen.getByRole("button", { name: "Edit" })).toBeInTheDocument();
+  });
+
+  it("Settings offers no Edit on the read-only Licence tab", async () => {
+    const user = userEvent.setup();
+    await renderRoute("/admin/settings");
+    await user.click(await screen.findByRole("tab", { name: "Licence" }));
+
+    await screen.findByText("Expiring soon");
+    expect(screen.queryByRole("button", { name: "Edit" })).not.toBeInTheDocument();
   });
 
   // The panel and the API deploy separately, so the client repeats the API's
@@ -156,6 +231,25 @@ describe("administration routes", () => {
     expect(within(panel).queryAllByRole("switch")).toHaveLength(0);
   });
 
+  it("Licence explains an unconfigured site and offers a way to re-check", async () => {
+    const getSpy = vi
+      .spyOn(websiteSubscriptionService, "get")
+      .mockResolvedValue({ status: "unconfigured" } as Awaited<ReturnType<typeof websiteSubscriptionService.get>>);
+    const user = userEvent.setup();
+    await renderRoute("/admin/settings");
+    await user.click(await screen.findByRole("tab", { name: "Licence" }));
+
+    const panel = await screen.findByRole("tabpanel");
+    expect(await within(panel).findByText("No licence configured")).toBeInTheDocument();
+    expect(within(panel).getByText(/no platform service is configured/i)).toBeInTheDocument();
+    expect(panel.querySelector("img")).not.toBeNull();
+
+    const calls = getSpy.mock.calls.length;
+    await user.click(within(panel).getByRole("button", { name: "Check again" }));
+    await waitFor(() => expect(getSpy.mock.calls.length).toBeGreaterThan(calls));
+    getSpy.mockRestore();
+  });
+
   it("Settings edits the top-up presets as amounts rather than as raw JSON", async () => {
     const user = userEvent.setup();
     await renderRoute("/admin/settings");
@@ -180,8 +274,11 @@ describe("administration routes", () => {
     await screen.findByDisplayValue("10000");
 
     await user.click(screen.getByRole("button", { name: "Remove amount 3" }));
-    await user.click(screen.getByRole("button", { name: "Save Settings" }));
+    await user.click(screen.getByRole("button", { name: "Edit" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await user.click(await screen.findByRole("button", { name: "Yes, Save" }));
 
+    await waitFor(() => expect(updateSpy).toHaveBeenCalled());
     const payload = updateSpy.mock.calls[0][0] as Record<string, string>;
 
     expect(payload.balance_topup_presets).toBe("[10000,25000]");

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { ExternalLink } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
+import { EmptyState } from "@/components/common/EmptyState";
 import { Text } from "@/components/common/Text";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -43,12 +44,28 @@ function Row({ label, children }: { label: string; children: ReactNode }) {
  */
 export function LicencePanel() {
   const { t } = useTranslation("administration");
-  const { data, isLoading } = useWebsiteSubscription();
+  const { data, isLoading, isFetching, refetch } = useWebsiteSubscription();
 
   if (isLoading) return <Text variant="muted">{t("loadingSettings")}</Text>;
 
   if (!data || data.status === "unconfigured") {
-    return <Text variant="muted">{t("licenceUnconfigured")}</Text>;
+    return (
+      <EmptyState
+        title={t("licenceEmptyTitle")}
+        description={t("licenceUnconfigured")}
+        action={
+          <Button
+            type="button"
+            variant="outline"
+            className="rounded-xl"
+            disabled={isFetching}
+            onClick={() => refetch()}
+          >
+            {t("licenceRecheck")}
+          </Button>
+        }
+      />
+    );
   }
 
   const urgent = data.status === "expired" || data.status === "expiring_soon" || data.status === "suspended";

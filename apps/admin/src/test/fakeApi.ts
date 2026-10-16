@@ -241,8 +241,10 @@ const DOCUMENTS: Record<string, unknown> = {
     })),
   },
   "/v1/settings": [
-    { id: 1, group: "general", key: "site_name", value: "TopUpGame.ID", type: "string", label: "Site Name", is_public: true },
+    // Contact leads on purpose: the real API returns groups in no fixed order,
+    // and the page has to put General first regardless.
     { id: 2, group: "contact", key: "contact_whatsapp", value: "6281234567890", type: "string", label: "WhatsApp", is_public: true },
+    { id: 1, group: "general", key: "site_name", value: "TopUpGame.ID", type: "string", label: "Site Name", is_public: true },
     { id: 3, group: "general", key: "maintenance_mode", value: "0", type: "boolean", label: "Maintenance Mode", is_public: true },
     {
       id: 4,
@@ -275,6 +277,8 @@ const DOCUMENTS: Record<string, unknown> = {
       label: "Order Expiry (minutes)",
       is_public: false,
     },
+    { id: 9, group: "seo", key: "meta_title", value: "TopUpGame", type: "string", label: "Meta Title", is_public: true },
+    { id: 10, group: "social", key: "social_instagram", value: "", type: "string", label: "Instagram", is_public: true },
     // Present on purpose, though the API no longer serves either group: the
     // panel and the API deploy separately, and an older API must not be able to
     // put a Hub-owned licence or a per-plan markup back on screen — or into the
