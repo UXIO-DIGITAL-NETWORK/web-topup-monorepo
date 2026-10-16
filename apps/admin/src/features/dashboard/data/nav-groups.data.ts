@@ -1,25 +1,25 @@
 import type { ComponentType } from "react";
 import {
-  Activity,
-  CreditCard,
+  AppWindow,
+  Banknote,
+  ChartColumnBig,
+  ClipboardList,
   FileStack,
-  FileText,
-  Globe,
+  Folder,
   LayoutGrid,
-  Megaphone,
-  Package,
+  Layers,
+  Link as LinkIcon,
   Percent,
-  Plug,
-  Receipt,
   RotateCcw,
   Settings,
   ShieldCheck,
+  ShoppingCart,
+  SquareUser,
   Star,
-  Users2,
   Tag,
-  Users,
+  TicketPercent,
+  Users2,
   Wallet,
-  Zap,
 } from "lucide-react";
 
 export type NavItem = {
@@ -45,47 +45,47 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: "navGeneral",
     items: [
       { labelKey: "navDashboard", href: "/admin/dashboard", icon: LayoutGrid },
-      { labelKey: "navReports", href: "/admin/reports", icon: FileText },
+      { labelKey: "navReports", href: "/admin/reports", icon: ChartColumnBig },
       { labelKey: "navFinancial", href: "/admin/financial", icon: Wallet },
-      { labelKey: "navIntegration", href: "/admin/integration", icon: Plug },
+      { labelKey: "navIntegration", href: "/admin/integration", icon: LinkIcon },
+      { labelKey: "navSettings", href: "/admin/settings", icon: Settings },
     ],
   },
   {
     labelKey: "navOrders",
     items: [
-      { labelKey: "navTransaction", href: "/admin/transactions", icon: Receipt },
+      { labelKey: "navTransaction", href: "/admin/transactions", icon: ShoppingCart },
       { labelKey: "navRefunds", href: "/admin/refunds", icon: RotateCcw },
-      { labelKey: "navActivity", href: "/admin/activity", icon: Activity },
+      { labelKey: "navActivity", href: "/admin/activity", icon: ClipboardList },
       { labelKey: "navFeedback", href: "/admin/feedback", icon: Star },
     ],
   },
   {
     labelKey: "navProductsServices",
     items: [
-      { labelKey: "navCategory", href: "/admin/categories", icon: Tag },
-      { labelKey: "navProduct", href: "/admin/products", icon: Package },
+      { labelKey: "navCategory", href: "/admin/categories", icon: Folder },
+      { labelKey: "navProduct", href: "/admin/products", icon: Layers },
       { labelKey: "navPricingRules", href: "/admin/pricing", icon: Percent },
-      { labelKey: "navPayment", href: "/admin/payments", icon: CreditCard },
-      { labelKey: "navMembership", href: "/admin/memberships", icon: Users },
+      { labelKey: "navPayment", href: "/admin/payments", icon: Banknote },
+      { labelKey: "navMembership", href: "/admin/memberships", icon: SquareUser },
+    ],
+  },
+  {
+    labelKey: "navMarketing",
+    items: [
+      { labelKey: "navPromo", href: "/admin/promos", icon: TicketPercent },
+      { labelKey: "navFlashSale", href: "/admin/flash-sales", icon: Tag },
+      { labelKey: "navWebsiteContent", href: "/admin/content", icon: AppWindow },
+      { labelKey: "navPages", href: "/admin/content/pages", icon: FileStack },
     ],
   },
   {
     labelKey: "navAdministration",
     items: [
       { labelKey: "navUsers", href: "/admin/users", icon: Users2 },
-      { labelKey: "navSettings", href: "/admin/settings", icon: Settings },
       // Account security — the authenticator this admin holds. Previously
       // reachable only by being thrown here from a failed request.
       { labelKey: "navSecurity", href: "/admin/settings/security", icon: ShieldCheck },
-    ],
-  },
-  {
-    labelKey: "navMarketing",
-    items: [
-      { labelKey: "navPromo", href: "/admin/promos", icon: Megaphone },
-      { labelKey: "navFlashSale", href: "/admin/flash-sales", icon: Zap },
-      { labelKey: "navWebsiteContent", href: "/admin/content", icon: Globe },
-      { labelKey: "navPages", href: "/admin/content/pages", icon: FileStack },
     ],
   },
 ];

@@ -59,7 +59,7 @@ describe("navbar logout", () => {
 
 describe("navbar page title", () => {
   it.each([
-    ["/admin/users", "Users"],
+    ["/admin/users", "User Management"],
     ["/admin/refunds", "Refunds"],
     ["/admin/reports", "Reports"],
     ["/admin/flash-sales", "Flash Sale"],
