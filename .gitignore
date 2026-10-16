@@ -22,6 +22,10 @@ build/
 coverage/
 *.tsbuildinfo
 
+# Local agent tooling output (snapshots/logs from Playwright MCP, learned taste from Commandcode)
+.playwright-mcp/
+.commandcode/taste/
+
 # Python bytecode (artefak skrip skill/agen — jangan di-commit)
 __pycache__/
 *.pyc
