@@ -134,18 +134,7 @@
     "pointsEarnedGuest": "Sign in to earn {{points}} points from this order",
     "checkingPrice": "Checking price...",
     "unavailableMessage": "This package is currently unavailable from the provider. Please choose another package.",
-    "unknownMessage": "We could not confirm this package's price right now.",
-    "retryCheck": "Try again"
-  },
-  "priceChangedModal": {
-    "title": "PRICE CHANGED",
-    "subtitle": "This package's price went up since it was last updated. Please review before continuing.",
-    "orderSummary": "Order Summary",
-    "product": "Product",
-    "previousPrice": "Previous price",
-    "newPrice": "Current price",
-    "confirm": "Continue",
-    "cancel": "Cancel"
+    "unknownMessage": "We could not confirm this package's price right now."
   },
   "confirmModal": {
     "title": "PURCHASE CONFIRMATION",
@@ -158,6 +147,8 @@
     "item": "Item",
     "product": "Product",
     "price": "Price",
+    "previousPrice": "Previous price",
+    "priceIncreased": "This package's price has gone up since you last saw it. Please check before continuing.",
     "method": "Method",
     "adminFee": "Admin Fee",
     "totalPay": "Total Payable",

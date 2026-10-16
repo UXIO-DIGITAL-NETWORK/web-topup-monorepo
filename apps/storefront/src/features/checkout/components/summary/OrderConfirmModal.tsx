@@ -17,6 +17,13 @@ interface Props {
   itemLabel: string;
   productName: string;
   price: number;
+  /**
+   * What the buyer was quoted before the pre-payment check, when that check
+   * found a different number. Rendered struck-through above the price they will
+   * actually be charged, so a change is seen here rather than discovered on the
+   * invoice.
+   */
+  previousPrice?: number;
   /** Rupiah taken off by the promo code; 0 when none is applied. */
   promoDiscount?: number;
   /** Rupiah covered by redeemed loyalty points; 0 when none are applied. */
@@ -103,6 +110,7 @@ export default function OrderConfirmModal({
   itemLabel,
   productName,
   price,
+  previousPrice,
   promoDiscount = 0,
   pointsDiscount = 0,
   paymentName,
@@ -188,6 +196,32 @@ export default function OrderConfirmModal({
             value={formatCurrency(price, locale)}
             numeric
           />
+          {/* The quote moved between picking the package and pressing the button.
+              Shown as a struck-through reference so the buyer recognises the
+              number they saw, not just the new one. */}
+          {previousPrice !== undefined && previousPrice !== price && (
+            <Box className="flex items-center justify-between gap-4">
+              <Text as="span" className="font-inter text-[12px] text-white/45 leading-none">
+                {t("confirmModal.previousPrice")}
+              </Text>
+              <Text
+                as="span"
+                className="font-plex text-[12px] text-white/45 leading-none line-through"
+              >
+                {formatCurrency(previousPrice, locale)}
+              </Text>
+            </Box>
+          )}
+          {previousPrice !== undefined && previousPrice < price && (
+            // An increase is the direction that costs the buyer money, so it is
+            // the one that gets said out loud.
+            <Text
+              as="span"
+              className="font-inter text-[12px] text-[#FBBF24] leading-snug text-right"
+            >
+              {t("confirmModal.priceIncreased")}
+            </Text>
+          )}
           {promoDiscount > 0 && (
             <Field
               label={t("summary.promoDiscount")}

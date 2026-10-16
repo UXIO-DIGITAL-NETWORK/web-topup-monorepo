@@ -1,100 +1,66 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 
 import { useRecheckItemMutation } from "@/features/checkout/hooks/useCheckoutQueries";
-import {
-  decideRecheck,
-  recheckStatusFrom,
-  type RecheckDecision,
-  type RecheckStatus,
-} from "@/features/checkout/lib/recheck";
 import type { RecheckResult } from "@/features/checkout/types/checkout.type";
 
 interface Options {
-  /** Id of the selected package; null while the buyer has picked nothing. */
-  productId: number | null;
   /** Game slug — the products query whose prices must follow a reprice. */
   slug: string;
 }
 
-interface State {
-  productId: number;
-  status: RecheckStatus;
-  result: RecheckResult | null;
-}
-
 /**
- * Owns the pre-payment check for whichever package is selected.
+ * The price/availability question, asked on demand: the moment the buyer presses
+ * "Top Up Now", not while they browse.
  *
- * It runs the moment a package is chosen, and its answer is what the "Top Up
- * Now" button stands on: while the question is out the button says so, an item
- * the provider has switched off keeps it shut, and a price that went up is
- * confirmed by a human before the order is placed.
- *
- * Answers are stored WITH the package they belong to, so picking another package
- * invalidates the previous one in the same render — there is never a frame where
- * one package's verdict is shown against another's price.
+ * Asking once, for the package they actually chose, is what makes this cheap —
+ * a buyer clicking through ten packages costs one supplier call instead of ten,
+ * and nothing is spent on a package they were only comparing.
  */
-export function useCheckoutRecheck({ productId, slug }: Options) {
+export function useCheckoutRecheck({ slug }: Options) {
   const { mutateAsync } = useRecheckItemMutation();
   const queryClient = useQueryClient();
 
-  const [state, setState] = useState<State | null>(null);
+  const [isChecking, setIsChecking] = useState(false);
+  const [state, setState] = useState<{ productId: number; result: RecheckResult | null } | null>(
+    null,
+  );
 
-  // The package the buyer is on right now. An answer that arrives after they have
-  // moved on is dropped rather than rendered against the wrong item.
-  const latest = useRef<number | null>(productId);
-  useEffect(() => {
-    latest.current = productId;
-  }, [productId]);
-
-  const run = useCallback(
-    async (id: number) => {
-      setState({ productId: id, status: "checking", result: null });
+  /**
+   * Returns the answer, or null when the request itself failed. The caller treats
+   * both the same way: neither is a price to sell on.
+   */
+  const check = useCallback(
+    async (productId: number): Promise<RecheckResult | null> => {
+      setIsChecking(true);
 
       try {
-        const result = await mutateAsync(id);
-        if (latest.current !== id) return;
+        const answer = await mutateAsync(productId);
+        setState({ productId, result: answer });
 
-        setState({ productId: id, status: recheckStatusFrom(result.outcome), result });
-
-        // A reprice happened server-side, so the cached list is now the old truth.
-        // Refetching is what makes the summary show the price that will be billed
-        // rather than the one that was quoted a moment ago.
-        if (result.outcome === "price_changed") {
-          void queryClient.invalidateQueries({ queryKey: ["checkout", "products", slug] });
+        // A reprice happened server-side, so the cached list now holds the old
+        // price. Awaited on purpose: the summary is about to be shown, and it has
+        // to carry the price that will be billed rather than the one it replaced.
+        if (answer.outcome === "price_changed") {
+          await queryClient.invalidateQueries({ queryKey: ["checkout", "products", slug] });
         }
-      } catch {
-        if (latest.current !== id) return;
 
+        return answer;
+      } catch {
         // The endpoint answers 200 with an outcome for every business answer, so
-        // reaching here means the request itself failed. We genuinely do not know
-        // — which is the honest thing to show, not a guess.
-        setState({ productId: id, status: "unknown", result: null });
+        // reaching here is the request itself failing.
+        setState({ productId, result: null });
+        return null;
+      } finally {
+        setIsChecking(false);
       }
     },
     [mutateAsync, queryClient, slug],
   );
 
-  useEffect(() => {
-    if (productId === null) return;
-    void run(productId);
-    // Only the selection re-asks. `run`'s identity changing is not a new question.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [productId]);
+  // The result is stored WITH the package it belongs to: a stale answer must never
+  // be rendered against the price of a package the buyer has since switched to.
+  const belongsToSelected = state?.productId ?? null;
 
-  const active = state !== null && state.productId === productId ? state : null;
-
-  // A freshly picked package has no answer yet, and no answer means "still asking".
-  const status: RecheckStatus = productId === null ? "idle" : (active?.status ?? "checking");
-
-  const decision: RecheckDecision | null = active?.result
-    ? decideRecheck(active.result.outcome, active.result.previous_price, active.result.price)
-    : null;
-
-  const retry = useCallback(() => {
-    if (productId !== null) void run(productId);
-  }, [productId, run]);
-
-  return { status, result: active?.result ?? null, decision, retry };
+  return { check, isChecking, result: state?.result ?? null, resultProductId: belongsToSelected };
 }

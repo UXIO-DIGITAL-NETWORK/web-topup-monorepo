@@ -134,18 +134,7 @@
     "pointsEarnedGuest": "Login untuk dapat {{points}} poin dari transaksi ini",
     "checkingPrice": "Mengecek harga...",
     "unavailableMessage": "Paket ini sedang tidak tersedia di penyedia. Silakan pilih paket lain.",
-    "unknownMessage": "Kami belum bisa memastikan harga paket ini saat ini.",
-    "retryCheck": "Coba lagi"
-  },
-  "priceChangedModal": {
-    "title": "HARGA BERUBAH",
-    "subtitle": "Harga paket ini naik sejak terakhir diperbarui. Periksa dulu sebelum melanjutkan.",
-    "orderSummary": "Ringkasan Pesanan",
-    "product": "Produk",
-    "previousPrice": "Harga sebelumnya",
-    "newPrice": "Harga sekarang",
-    "confirm": "Lanjutkan",
-    "cancel": "Batalkan"
+    "unknownMessage": "Kami belum bisa memastikan harga paket ini saat ini."
   },
   "confirmModal": {
     "title": "KONFIRMASI PEMBELIAN",
@@ -158,6 +147,8 @@
     "item": "Item",
     "product": "Produk",
     "price": "Harga",
+    "previousPrice": "Harga sebelumnya",
+    "priceIncreased": "Harga paket ini naik dari harga sebelumnya. Periksa dulu sebelum melanjutkan.",
     "method": "Metode",
     "adminFee": "Biaya Admin",
     "totalPay": "Total Bayar",

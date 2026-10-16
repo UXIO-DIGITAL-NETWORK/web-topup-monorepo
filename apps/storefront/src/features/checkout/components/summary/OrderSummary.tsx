@@ -1,16 +1,14 @@
 import React, { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { orderTotalAfterDiscounts, pointsEarned } from "@/features/checkout/lib/points";
-import { recheckBlocksCheckout, type RecheckDecision, type RecheckStatus } from "@/features/checkout/lib/recheck";
 import { Box } from "@/components/common/Box";
 import { Text } from "@/components/common/Text";
 import { PriceText } from "@/components/common/PriceText";
 import { Button } from "@/components/ui/Button";
 import { formatCurrency, formatNumber } from "@/lib/format";
 import { useAuthStore } from "@/store/useAuthStore";
-import type { DiamondPackage, RecheckResult } from "@/features/checkout/types/checkout.type";
+import type { DiamondPackage } from "@/features/checkout/types/checkout.type";
 import OrderConfirmModal from "./OrderConfirmModal";
-import PriceChangedModal from "./PriceChangedModal";
 
 interface Props {
   selectedPackage: DiamondPackage | null;
@@ -32,17 +30,15 @@ interface Props {
   nickname?: string | null;
   isSubmitting?: boolean;
   /**
-   * State of the pre-payment price check for the selected package. The button
-   * stands on this: while it is out the button says so, and an item the provider
-   * switched off (or one we could not check) keeps it shut.
+   * True while the pre-payment price check is in flight — it runs when the buyer
+   * presses "Top Up Now", so the button has to say what it is waiting for.
    */
-  recheckStatus: RecheckStatus;
-  /** What the check found, when it has an answer — the price dialog reads it. */
-  recheckResult: RecheckResult | null;
-  /** The check's verdict; `confirm` opens the price dialog instead of the review. */
-  recheckDecision: RecheckDecision | null;
-  /** Re-asks the question after an inconclusive answer. */
-  onRetryRecheck: () => void;
+  isCheckingPrice?: boolean;
+  /**
+   * The quote from before that check, when it came back different. Forwarded to
+   * the confirmation modal so the change is visible where the buyer decides.
+   */
+  previousPrice?: number;
   /**
    * Last gate before the confirmation modal: validates the account fields and,
    * for a game with a lookup provider, makes sure the id has actually been
@@ -83,10 +79,8 @@ export default function OrderSummary({
   whatsapp,
   nickname,
   isSubmitting = false,
-  recheckStatus,
-  recheckResult,
-  recheckDecision,
-  onRetryRecheck,
+  isCheckingPrice = false,
+  previousPrice,
   onRequestConfirm,
   isPreparing = false,
   onSubmit,
@@ -94,7 +88,6 @@ export default function OrderSummary({
   const { t, i18n } = useTranslation("checkout");
   const locale = i18n.language;
   const [confirmOpen, setConfirmOpen] = useState(false);
-  const [priceChangedOpen, setPriceChangedOpen] = useState(false);
 
   // The same order the server applies them in: the promo comes off the package
   // price, points come off what is left, and a fully covered order owes nothing
@@ -114,29 +107,18 @@ export default function OrderSummary({
     selectedPackage?.pointFlat ?? 0,
   );
 
-  /** The account-field/nickname gate, then the review modal. */
-  const openConfirm = async () => {
+  /**
+   * "Top Up Now". The page's gate runs the pre-payment price check and validates
+   * the account fields; the review modal opens only once both have passed, so the
+   * number it shows is the number that will be charged.
+   */
+  const handleTopUp = async () => {
     if (!onRequestConfirm) {
       setConfirmOpen(true);
       return;
     }
 
     if (await onRequestConfirm()) setConfirmOpen(true);
-  };
-
-  const handleTopUp = async () => {
-    // The button is disabled in these states; this is the second lock, so a
-    // keyboard path or a stale render cannot place an order the check refused.
-    if (recheckBlocksCheckout(recheckStatus)) return;
-
-    // An upward move is a question about money, so it is asked before the review
-    // rather than inside it — the buyer sees what changed and still chooses.
-    if (recheckDecision === "confirm") {
-      setPriceChangedOpen(true);
-      return;
-    }
-
-    await openConfirm();
   };
 
   return (
@@ -218,45 +200,24 @@ export default function OrderSummary({
         </Box>
       )}
 
-      {/* The check's verdict, when it is "not this one" — the button alone cannot
-          say why it is shut. */}
-      {(recheckStatus === "unavailable" || recheckStatus === "unknown") && (
-        <Box className="mx-4 mb-3 rounded-xl border border-[rgba(147,51,234,0.35)] bg-[rgba(147,51,234,0.12)] px-3 py-2.5 flex flex-col items-start gap-2">
-          <Text as="span" className="font-inter text-[12px] text-violet-lavender/80 leading-snug">
-            {recheckStatus === "unavailable"
-              ? t("summary.unavailableMessage")
-              : t("summary.unknownMessage")}
-          </Text>
-          <button
-            type="button"
-            onClick={onRetryRecheck}
-            className="font-outfit font-semibold text-[12px] text-violet-lavender underline underline-offset-2 cursor-pointer hover:text-white transition-colors"
-          >
-            {t("summary.retryCheck")}
-          </button>
-        </Box>
-      )}
-
       {/* CTA button */}
       <Box className="px-4 pb-4">
         <Button
           type="button"
           onClick={() => void handleTopUp()}
           // `isPreparing` is in here too: a second click would fire a second
-          // supplier lookup, and for some games that one is billed. The check's
-          // blocking states are in here for the same reason: nothing may be
-          // ordered while the price is unknown or the item is off sale.
+          // supplier lookup, and for some games that one is billed.
           disabled={
             !selectedPackage ||
             !selectedPaymentName ||
             whatsapp.trim() === "" ||
             isPreparing ||
             isSubmitting ||
-            recheckBlocksCheckout(recheckStatus)
+            isCheckingPrice
           }
           className="w-full py-3 text-[15px]"
         >
-          {recheckStatus === "checking"
+          {isCheckingPrice
             ? t("summary.checkingPrice")
             : isPreparing
               ? t("summary.checkingId")
@@ -286,6 +247,7 @@ export default function OrderSummary({
         }
         productName={gameName}
         price={selectedPackage?.price ?? 0}
+        previousPrice={previousPrice}
         promoDiscount={promoDiscount}
         pointsDiscount={pointsDiscount}
         paymentName={selectedPaymentName}
@@ -293,20 +255,6 @@ export default function OrderSummary({
         total={total}
         pointsEarned={earnedPoints}
         isGuest={isGuest}
-      />
-
-      {/* The price moved up: say so before the review, and only continue if the
-          buyer accepts the new number. */}
-      <PriceChangedModal
-        isOpen={priceChangedOpen}
-        onClose={() => setPriceChangedOpen(false)}
-        onConfirm={() => {
-          setPriceChangedOpen(false);
-          void openConfirm();
-        }}
-        productName={selectedPackage?.name ?? gameName}
-        previousPrice={recheckResult?.previous_price ?? 0}
-        newPrice={recheckResult?.price ?? 0}
       />
     </Box>
   );
