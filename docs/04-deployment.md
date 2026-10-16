@@ -455,6 +455,62 @@ Kunci di luar bawaan Laravel, dikelompokkan menurut fungsinya:
 
 ---
 
+## Cache di Redis
+
+Bawaannya `CACHE_STORE=database`: setiap pembacaan cache berarti satu kueri ke tabel `cache`. Itu cukup sampai daftar harga supplier yang berukuran megabita dibaca berkali-kali per menit, atau sampai rate limiter menulis ke tabel yang sama di setiap permintaan.
+
+Redis dipasang sebagai **store utama dengan `database` sebagai jaring**, bukan menggantikannya. Store `failover` di `config/cache.php` sudah tersedia; isinya diubah menjadi:
+
+```php
+'stores' => ['redis', 'database'],
+```
+
+lalu di `ENV_FILE` diisi `CACHE_STORE=failover`.
+
+**Kenapa bukan `CACHE_STORE=redis` langsung.** Yang lewat store ini bukan hanya cache: **kunci cek harga (`uxiolabs:price-check`) dan seluruh rate limiter juga**. Kalau store-nya keras dan Redis mati, situsnya ikut mati. Dengan `failover`, Redis yang mati berarti situs berjalan persis seperti sebelum Redis ada — itu yang membuat perubahan ini bisa dibalik tanpa drama.
+
+**Dua hal yang menentukan jaring itu menangkap:**
+
+- `REDIS_MAX_RETRIES=0`. Bawaannya **3** percobaan dengan backoff 100→1000 ms. Saat Redis mati, itu berarti setiap operasi cache menunggu ratusan milidetik **sebelum** failover mulai — lebih lambat daripada tidak ada Redis sama sekali. Nol membuat kegagalan pertama langsung berpindah.
+- `failover` berpindah saat *exception*, bukan saat *cache miss*. Setelah Redis hidup lagi, entri yang tertulis ke database selama outage tidak terlihat dan dihitung ulang. Untuk daftar harga, itu satu pengambilan ulang ke supplier.
+
+### Di server, sekali per server
+
+```bash
+sudo apt-get update -qq && sudo apt-get install -y redis-server
+PHP_VER=$(php -r 'echo PHP_MAJOR_VERSION.".".PHP_MINOR_VERSION;')
+sudo apt-get install -y "php${PHP_VER}-redis"
+sudo systemctl enable --now redis-server
+```
+
+Lalu setel di `/etc/redis/redis.conf` (Debian/Ubuntu):
+
+```conf
+bind 127.0.0.1          # jangan pernah terbuka ke publik
+maxmemory 256mb
+maxmemory-policy allkeys-lru
+save ""                 # cache murni — tidak perlu persistensi
+```
+
+`maxmemory` harus **lebih besar dari ukuran daftar harga**. Kalau tidak, daftar itu terus dieviction dan cek harga malah sering memanggil supplier — keadaan yang lebih buruk daripada sebelum Redis.
+
+**Kalau beberapa situs berbagi satu Redis** (cetakan & klien, staging & produksi di satu VPS), `REDIS_CACHE_DB` atau `CACHE_PREFIX` **wajib berbeda per situs**. Kalau tidak, kuncinya bertabrakan dan gejalanya bug yang mustahil dilacak.
+
+### Sesudah deploy
+
+```bash
+php artisan config:show cache.stores.failover          # redis, database
+redis-cli info stats | grep evicted_keys               # harus 0
+```
+
+Nilainya dibaca lewat cache config, jadi mengubah env baru berlaku setelah `config:cache` dibangun ulang — setiap deploy sudah melakukannya.
+
+**Uji kegagalan yang wajib:** `sudo systemctl stop redis-server` saat situs dipakai. Situs harus tetap melayani lewat `database`, **bukan 500**. Kalau balasannya 500, `failover` tidak benar-benar berlaku dan Redis harus dimatikan lagi (`CACHE_STORE=database`).
+
+**Rollback:** kembalikan `CACHE_STORE=database` lalu deploy. Tidak ada skema yang berubah dan tidak ada data yang hilang — ini cache.
+
+---
+
 ## Perintah terjadwal
 
 Cron memanggil `schedule:run` tiap menit; sisanya diatur di `apps/api/routes/console.php`. Setiap perintah memakai `withoutOverlapping()` dan mengabarkan kegagalannya ke Discord.
