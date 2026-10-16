@@ -110,6 +110,30 @@ export interface ValidateGameIdResult {
   supported: boolean;
 }
 
+/**
+ * What the pre-payment check found. Always one of these four — the endpoint
+ * answers 200 even when it could not reach the provider, because "we could not
+ * look" is an answer the checkout screen has to render, not a failed request.
+ *
+ * - `ok`            nothing moved, or we could not look and what we hold is fresh
+ * - `price_changed` the price that will be billed moved
+ * - `unavailable`   the provider switched the item off
+ * - `unknown`       we could not look AND the stored price list is stale
+ */
+export type RecheckOutcome = "ok" | "price_changed" | "unavailable" | "unknown";
+
+export interface RecheckResult {
+  outcome: RecheckOutcome;
+  /** The price that will be billed, after any reprice the check itself applied. */
+  price: number;
+  /** The price quoted before the check. */
+  previous_price: number;
+  available: boolean;
+  /** Where the answer came from: fresh | recent | sweep | none. */
+  freshness: string;
+  checked_at: string;
+}
+
 export interface GameReviewsResponse {
   summary: ReviewSummary;
   reviews: {
