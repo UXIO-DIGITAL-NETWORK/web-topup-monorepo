@@ -22,6 +22,7 @@
   "colCostModal": "Cost (modal)",
   "colMemberPrice": "Member price",
   "colChangedAt": "Changed At",
+  "colSource": "Source",
   "needsAttention": "Needs attention",
   "noPricedPlans": "No priced plans yet — set a margin and save.",
   "searchProviderServices": "Search provider services",

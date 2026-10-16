@@ -22,6 +22,7 @@
   "colCostModal": "Modal",
   "colMemberPrice": "Harga member",
   "colChangedAt": "Berubah",
+  "colSource": "Sumber",
   "needsAttention": "Perlu perhatian",
   "noPricedPlans": "Belum ada paket berharga — atur margin lalu simpan.",
   "searchProviderServices": "Cari layanan penyedia",
