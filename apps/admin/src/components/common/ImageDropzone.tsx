@@ -39,7 +39,6 @@ const matchesAccept = (file: File, accept: string): boolean => {
   });
 };
 
-
 interface ImageDropzoneProps {
   id: string;
   label: string;
@@ -180,12 +179,16 @@ export function ImageDropzone({
           <Text
             variant="small"
             role="status"
-          >{t("dropzone.optimising")}</Text>
+          >
+            {t("dropzone.optimising")}
+          </Text>
         ) : uploading ? (
           <Text
             variant="small"
             role="status"
-          >{t("dropzone.uploading")}</Text>
+          >
+            {t("dropzone.uploading")}
+          </Text>
         ) : (
           value && <Text variant="small">{value.name}</Text>
         )}

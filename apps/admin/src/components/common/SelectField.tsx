@@ -47,7 +47,10 @@ export function SelectField({
 }: SelectFieldProps) {
   return (
     <Box className="flex flex-col gap-1.5">
-      <FieldLabel htmlFor={id} tooltip={tooltip}>
+      <FieldLabel
+        htmlFor={id}
+        tooltip={tooltip}
+      >
         {label}
       </FieldLabel>
       <Select

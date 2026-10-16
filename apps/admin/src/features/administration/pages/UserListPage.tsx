@@ -135,7 +135,9 @@ export function UserListPage() {
         <Heading
           level={1}
           variant="section"
-        >{t("usersTitle")}</Heading>
+        >
+          {t("usersTitle")}
+        </Heading>
         <Text variant="muted">{t("usersSubtitle")}</Text>
       </Box>
 

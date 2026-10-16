@@ -185,10 +185,7 @@ export const paymentChannelsService = {
     }
     if (input.logo instanceof File) form.append("logo", input.logo);
 
-    const response: ApiResponse<PaymentChannelApiRow> = await api.post(
-      `${API_VERSION}/payment-channels/${id}`,
-      form,
-    );
+    const response: ApiResponse<PaymentChannelApiRow> = await api.post(`${API_VERSION}/payment-channels/${id}`, form);
     return toChannel(response.data);
   },
   remove: async (id: string): Promise<void> => {
@@ -220,7 +217,10 @@ export const usersService = {
     );
     return unwrapPaginated(response, toBalanceMutation);
   },
-  pointHistory: async (id: string, params: AdministrationListParams = {}): Promise<PaginatedResponse<PointLedgerRow>> => {
+  pointHistory: async (
+    id: string,
+    params: AdministrationListParams = {},
+  ): Promise<PaginatedResponse<PointLedgerRow>> => {
     const response: ApiResponse<PointLedgerApiRow[]> = await api.get(`${API_VERSION}/users/${id}/point-history`, {
       params,
     });

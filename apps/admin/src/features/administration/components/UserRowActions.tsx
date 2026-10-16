@@ -51,27 +51,37 @@ export function UserRowActions({ user }: { user: AdminUser }) {
               where an operator's hand already is. */}
           <DropdownMenuItem asChild>
             <Link href={`/admin/users/${user.id}`}>
-              <Eye />{t("detail")}</Link>
+              <Eye />
+              {t("detail")}
+            </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <Can permission="users.adjust-balance">
             <DropdownMenuItem onSelect={() => setAdjustOpen(true)}>
-              <Wallet />{t("adjustBalance")}</DropdownMenuItem>
+              <Wallet />
+              {t("adjustBalance")}
+            </DropdownMenuItem>
           </Can>
           <Can permission="users.suspend">
             {user.status === "active" ? (
               <>
                 <DropdownMenuItem onSelect={() => setPendingStatus("suspended")}>
-                  <UserX />{t("suspend")}</DropdownMenuItem>
+                  <UserX />
+                  {t("suspend")}
+                </DropdownMenuItem>
                 <DropdownMenuItem
                   variant="destructive"
                   onSelect={() => setPendingStatus("banned")}
                 >
-                  <Ban />{t("ban")}</DropdownMenuItem>
+                  <Ban />
+                  {t("ban")}
+                </DropdownMenuItem>
               </>
             ) : (
               <DropdownMenuItem onSelect={() => setStatus.mutate({ id: user.id, status: "active" })}>
-                <RotateCcw />{t("reactivate")}</DropdownMenuItem>
+                <RotateCcw />
+                {t("reactivate")}
+              </DropdownMenuItem>
             )}
           </Can>
           <Can permission="users.delete">
@@ -80,7 +90,9 @@ export function UserRowActions({ user }: { user: AdminUser }) {
               variant="destructive"
               onSelect={() => setDeleteOpen(true)}
             >
-              <Trash2 />{t("delete")}</DropdownMenuItem>
+              <Trash2 />
+              {t("delete")}
+            </DropdownMenuItem>
           </Can>
         </DropdownMenuContent>
       </DropdownMenu>

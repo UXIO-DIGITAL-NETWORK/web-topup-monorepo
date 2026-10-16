@@ -89,8 +89,7 @@ export const useAdjustBalance = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, input }: { id: string; input: BalanceAdjustmentInput }) =>
-      usersService.adjustBalance(id, input),
+    mutationFn: ({ id, input }: { id: string; input: BalanceAdjustmentInput }) => usersService.adjustBalance(id, input),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["users"] });
       toast.success(t("balanceAdjusted"));
