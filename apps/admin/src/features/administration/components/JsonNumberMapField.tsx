@@ -60,34 +60,33 @@ export function JsonNumberMapField({ id, value, onChange }: JsonNumberMapFieldPr
       {rows.map((row) => (
         <Box
           key={row.name}
-          className="flex items-center gap-3"
+          className="flex flex-col gap-1.5"
         >
-          <Text
-            as="span"
-            className="flex-1 text-sm"
-          >
-            {t(`channel_${row.name}`, { defaultValue: humanize(row.name) })}
-          </Text>
+          <Box className="flex items-baseline justify-between gap-3">
+            <Text
+              as="span"
+              className="text-sm"
+            >
+              {t(`channel_${row.name}`, { defaultValue: humanize(row.name) })}
+            </Text>
+            <Text
+              as="span"
+              variant="small"
+            >
+              {t("minutes")}
+            </Text>
+          </Box>
           <Input
             id={`${id}-${row.name}`}
             type="number"
             inputMode="numeric"
             min={1}
-            className="w-28 rounded-xl"
+            className="w-full rounded-xl"
             value={row.minutes}
             onChange={(event) =>
-              commit(
-                rows.map((entry) => (entry.name === row.name ? { ...entry, minutes: event.target.value } : entry)),
-              )
+              commit(rows.map((entry) => (entry.name === row.name ? { ...entry, minutes: event.target.value } : entry)))
             }
           />
-          <Text
-            as="span"
-            variant="small"
-            className="w-14 shrink-0"
-          >
-            {t("minutes")}
-          </Text>
         </Box>
       ))}
     </Box>

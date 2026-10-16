@@ -49,7 +49,13 @@ export default function UserDetailPage() {
   const [sorting, setSorting] = useState<SortingState>([]);
 
   const { data: overview, isPending, isError } = useUserOverview(id);
-  const transactions = useTransactionList({ userId: id, page, per_page: PAGE_SIZE, sortBy: sorting[0]?.id, sortDir: sorting[0] ? (sorting[0].desc ? "desc" : "asc") : undefined });
+  const transactions = useTransactionList({
+    userId: id,
+    page,
+    per_page: PAGE_SIZE,
+    sortBy: sorting[0]?.id,
+    sortDir: sorting[0] ? (sorting[0].desc ? "desc" : "asc") : undefined,
+  });
   const mutations = useUserBalanceMutations(id, { page: 1, per_page: PAGE_SIZE });
   const points = useUserPointHistory(id, { page: 1, per_page: PAGE_SIZE });
   const refunds = useUserRefunds(id, { page: 1, per_page: PAGE_SIZE });
@@ -83,7 +89,13 @@ export default function UserDetailPage() {
     { id: "balance", label: t("colBalance"), value: user.balance, caption: t("statBalanceCaption") },
     { id: "point", label: t("colPoints"), value: user.point, caption: t("statPointsCaption"), format: "count" },
     { id: "spent", label: t("statSpent"), value: stats.total_spent, caption: t("statSpentCaption") },
-    { id: "orders", label: t("statOrders"), value: stats.transactions_count, caption: t("statOrdersCaption"), format: "count" },
+    {
+      id: "orders",
+      label: t("statOrders"),
+      value: stats.transactions_count,
+      caption: t("statOrdersCaption"),
+      format: "count",
+    },
   ];
 
   const mutationColumns: ColumnDef<BalanceMutationRow>[] = [
@@ -92,11 +104,38 @@ export default function UserDetailPage() {
       accessorKey: "type",
       header: t("colType"),
       cell: ({ row }) => (
-        <Badge variant="outline" className="capitalize">{row.original.type}</Badge>
+        <Badge
+          variant="outline"
+          className="capitalize"
+        >
+          {row.original.type}
+        </Badge>
       ),
     },
-    { id: "amount", header: t("colAmount"), cell: ({ row }) => <Text as="span" className="tabular-nums">{money(row.original.amount)}</Text> },
-    { id: "balance_after", header: t("colBalanceAfter"), cell: ({ row }) => <Text as="span" className="tabular-nums">{money(row.original.balance_after)}</Text> },
+    {
+      id: "amount",
+      header: t("colAmount"),
+      cell: ({ row }) => (
+        <Text
+          as="span"
+          className="tabular-nums"
+        >
+          {money(row.original.amount)}
+        </Text>
+      ),
+    },
+    {
+      id: "balance_after",
+      header: t("colBalanceAfter"),
+      cell: ({ row }) => (
+        <Text
+          as="span"
+          className="tabular-nums"
+        >
+          {money(row.original.balance_after)}
+        </Text>
+      ),
+    },
     { accessorKey: "description", header: t("colNote"), cell: ({ row }) => row.original.description ?? "—" },
   ];
 
@@ -106,24 +145,75 @@ export default function UserDetailPage() {
       accessorKey: "type",
       header: t("colType"),
       cell: ({ row }) => (
-        <Badge variant="outline" className="capitalize">{row.original.type}</Badge>
+        <Badge
+          variant="outline"
+          className="capitalize"
+        >
+          {row.original.type}
+        </Badge>
       ),
     },
-    { id: "amount", header: t("colPointsChange"), cell: ({ row }) => <Text as="span" className="tabular-nums">{row.original.amount}</Text> },
-    { id: "points_after", header: t("colPointsAfter"), cell: ({ row }) => <Text as="span" className="tabular-nums">{row.original.points_after}</Text> },
+    {
+      id: "amount",
+      header: t("colPointsChange"),
+      cell: ({ row }) => (
+        <Text
+          as="span"
+          className="tabular-nums"
+        >
+          {row.original.amount}
+        </Text>
+      ),
+    },
+    {
+      id: "points_after",
+      header: t("colPointsAfter"),
+      cell: ({ row }) => (
+        <Text
+          as="span"
+          className="tabular-nums"
+        >
+          {row.original.points_after}
+        </Text>
+      ),
+    },
     { accessorKey: "description", header: t("colNote"), cell: ({ row }) => row.original.description ?? "—" },
   ];
 
   const refundColumns: ColumnDef<UserRefundRow>[] = [
-    { accessorKey: "refund_number", header: t("refundNumber"), cell: ({ row }) => <Text as="span" className="font-medium">{row.original.refund_number}</Text> },
-    { accessorKey: "invoice_number", header: t("refundInvoice"), cell: ({ row }) => row.original.invoice_number ?? "—" },
-    { id: "amount", header: t("colAmount"), cell: ({ row }) => <Text as="span" className="tabular-nums">{money(row.original.amount)}</Text> },
+    {
+      accessorKey: "refund_number",
+      header: t("refundNumber"),
+      cell: ({ row }) => (
+        <Text
+          as="span"
+          className="font-medium"
+        >
+          {row.original.refund_number}
+        </Text>
+      ),
+    },
+    {
+      accessorKey: "invoice_number",
+      header: t("refundInvoice"),
+      cell: ({ row }) => row.original.invoice_number ?? "—",
+    },
+    {
+      id: "amount",
+      header: t("colAmount"),
+      cell: ({ row }) => (
+        <Text
+          as="span"
+          className="tabular-nums"
+        >
+          {money(row.original.amount)}
+        </Text>
+      ),
+    },
     {
       accessorKey: "status",
       header: t("refundStatus"),
-      cell: ({ row }) => (
-        <Badge variant="outline">{row.original.status}</Badge>
-      ),
+      cell: ({ row }) => <Badge variant="outline">{row.original.status}</Badge>,
     },
     { accessorKey: "created_at", header: t("colDate"), cell: ({ row }) => formatDateTime(row.original.created_at) },
   ];
@@ -139,13 +229,23 @@ export default function UserDetailPage() {
         </Link>
         <Box className="flex flex-wrap items-start justify-between gap-3">
           <Box className="flex flex-col gap-1">
-            <Heading level={1} variant="section">{user.name}</Heading>
+            <Heading
+              level={1}
+              variant="section"
+            >
+              {user.name}
+            </Heading>
             <Text variant="muted">
               {user.email} · {user.phone}
             </Text>
           </Box>
           <Box className="flex items-center gap-2">
-            <Badge variant="outline" className="capitalize">{user.role ?? "—"}</Badge>
+            <Badge
+              variant="outline"
+              className="capitalize"
+            >
+              {user.role ?? "—"}
+            </Badge>
             <Badge
               variant={user.status === "active" ? "outline" : "destructive"}
               className="capitalize"
@@ -160,19 +260,29 @@ export default function UserDetailPage() {
           {membership === null
             ? t("membershipNone")
             : `${t("membershipLabel")}: ${membership.plan ?? "—"} · ${
-                membership.lifetime ? t("membershipLifetime") : t("membershipUntil", { date: formatDate(membership.ends_at) })
+                membership.lifetime
+                  ? t("membershipLifetime")
+                  : t("membershipUntil", { date: formatDate(membership.ends_at) })
               }`}
         </Text>
       </Box>
 
       <Box className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {cards.map((card) => (
-          <StatCard key={card.id} data={card} />
+          <StatCard
+            key={card.id}
+            data={card}
+          />
         ))}
       </Box>
 
       <Box className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-4">
-        <Text variant="small" className="font-medium">{t("tabTransactions")}</Text>
+        <Text
+          variant="small"
+          className="font-medium"
+        >
+          {t("tabTransactions")}
+        </Text>
         <TransactionsTable
           columns={automaticColumnsFor(tTx)}
           data={transactions.data?.data ?? []}
@@ -191,7 +301,12 @@ export default function UserDetailPage() {
       </Box>
 
       <Box className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-4">
-        <Text variant="small" className="font-medium">{t("tabMutations")}</Text>
+        <Text
+          variant="small"
+          className="font-medium"
+        >
+          {t("tabMutations")}
+        </Text>
         <DataTable
           columns={mutationColumns}
           data={mutations.data?.data ?? []}
@@ -212,7 +327,12 @@ export default function UserDetailPage() {
       </Box>
 
       <Box className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-4">
-        <Text variant="small" className="font-medium">{t("tabPoints")}</Text>
+        <Text
+          variant="small"
+          className="font-medium"
+        >
+          {t("tabPoints")}
+        </Text>
         <DataTable
           columns={pointColumns}
           data={points.data?.data ?? []}
@@ -233,7 +353,12 @@ export default function UserDetailPage() {
       </Box>
 
       <Box className="flex flex-col gap-6 rounded-2xl border border-border bg-card p-4">
-        <Text variant="small" className="font-medium">{t("tabRefunds")}</Text>
+        <Text
+          variant="small"
+          className="font-medium"
+        >
+          {t("tabRefunds")}
+        </Text>
         <DataTable
           columns={refundColumns}
           data={refunds.data?.data ?? []}

@@ -10,6 +10,9 @@ import {
 
 import { Lock } from "lucide-react";
 
+import { EmptyState } from "@/components/common/EmptyState";
+import type { ReactNode } from "react";
+
 import { Box } from "@/components/common/Box";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
@@ -43,6 +46,8 @@ interface DataTableProps<TData extends { id: string }> {
   isError?: boolean;
   onRetry?: () => void;
   emptyMessage?: string;
+  /** A next step shown under the empty message — e.g. an "Add" button. */
+  emptyAction?: ReactNode;
   /** Plural noun for the footer count and the error state. Kept a prop
    * because every reference frame ships the "of 9999999 transactions" string
    * copy-pasted from Transaction, whatever the table actually lists
@@ -94,6 +99,7 @@ export function DataTable<TData extends { id: string }>({
   isError = false,
   onRetry,
   emptyMessage,
+  emptyAction,
   entityLabel,
   showRowNumber = false,
   enableSelection = true,
@@ -236,9 +242,13 @@ export function DataTable<TData extends { id: string }>({
             <TableRow>
               <TableCell
                 colSpan={columnCount}
-                className="py-8 text-center text-muted-foreground"
+                className="p-4"
               >
-                {emptyMessage ?? t("table.empty", { entity: entityLabel })}
+                <EmptyState
+                  title={emptyMessage ?? t("table.empty", { entity: entityLabel })}
+                  action={emptyAction}
+                  className="border-0 p-4 md:p-6"
+                />
               </TableCell>
             </TableRow>
           ) : (

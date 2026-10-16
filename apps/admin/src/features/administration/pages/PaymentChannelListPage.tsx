@@ -106,7 +106,9 @@ export function PaymentChannelListPage() {
         <Heading
           level={1}
           variant="section"
-        >{t("paymentTitle")}</Heading>
+        >
+          {t("paymentTitle")}
+        </Heading>
         <Text variant="muted">{t("paymentSubtitle")}</Text>
       </Box>
 

@@ -35,12 +35,19 @@ export function BulkActionsMenu({ count, actions }: BulkActionsMenuProps) {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" size="sm" className="rounded-full">
+        <Button
+          variant="outline"
+          size="sm"
+          className="rounded-full"
+        >
           <MoreVertical className="size-4" />
           {count} items selected
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="rounded-2xl">
+      <DropdownMenuContent
+        align="end"
+        className="rounded-2xl"
+      >
         <DropdownMenuLabel>{count} Items Selected</DropdownMenuLabel>
         <DropdownMenuSeparator />
         {actions.map((action) => (

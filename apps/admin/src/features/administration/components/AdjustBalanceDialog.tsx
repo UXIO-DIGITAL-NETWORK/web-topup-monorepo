@@ -19,10 +19,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  balanceAdjustmentSchema,
-  type BalanceAdjustmentFormValues,
-} from "../schemas/balanceAdjustment.schema";
+import { balanceAdjustmentSchema, type BalanceAdjustmentFormValues } from "../schemas/balanceAdjustment.schema";
 import type { BalanceAdjustmentInput } from "../types/administration.type";
 
 interface AdjustBalanceDialogProps {
@@ -45,8 +42,13 @@ const DIRECTION_OPTIONS = [
  * amount must be positive — the direction, not a sign, decides credit vs debit.
  */
 
-
-export function AdjustBalanceDialog({ open, onOpenChange, userName, onConfirm, isPending = false }: AdjustBalanceDialogProps) {
+export function AdjustBalanceDialog({
+  open,
+  onOpenChange,
+  userName,
+  onConfirm,
+  isPending = false,
+}: AdjustBalanceDialogProps) {
   const { t } = useTranslation("administration");
   const {
     control,
@@ -145,7 +147,9 @@ export function AdjustBalanceDialog({ open, onOpenChange, userName, onConfirm, i
               variant="outline"
               className="rounded-xl"
               onClick={() => onOpenChange(false)}
-            >{t("cancel")}</Button>
+            >
+              {t("cancel")}
+            </Button>
             <Button
               type="submit"
               className="rounded-xl"

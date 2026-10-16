@@ -34,9 +34,9 @@ describe("usersService", () => {
   it("adjustBalance requires a reason and posts to the audited endpoint", async () => {
     vi.mocked(api.post).mockResolvedValue(envelope(userRow({ balance: 65000 })));
 
-    await expect(
-      usersService.adjustBalance("1", { amount: 5000, direction: "credit", reason: "  " }),
-    ).rejects.toThrow("A reason is required");
+    await expect(usersService.adjustBalance("1", { amount: 5000, direction: "credit", reason: "  " })).rejects.toThrow(
+      "A reason is required",
+    );
 
     const result = await usersService.adjustBalance("1", {
       amount: 50000,

@@ -1,7 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import userEvent from "@testing-library/user-event";
 
-import { makeUser, renderRoute, screen, within } from "@/test/test-utils";
+import { makeUser, renderRoute, screen } from "@/test/test-utils";
 import { useAuthStore } from "@/store/useAuthStore";
 import { websiteSubscriptionService } from "../services/websiteSubscription.service";
 
@@ -25,7 +24,7 @@ describe("WebsiteSubscriptionCard", () => {
     // The CTA names the action, not kita's brand: this card sits in the
     // client's own panel, and the service label beside it already carries the
     // site's name.
-    const link = await screen.findByRole("link", { name: /Renew subscription/ });
+    const link = await screen.findByRole("link", { name: "Go Check" });
 
     expect(link).toHaveAttribute("href", "https://pay.example.test/app/payment-admin/services/1/checkout");
     // The route is behind a login over there, so it must open in a new tab
@@ -35,25 +34,21 @@ describe("WebsiteSubscriptionCard", () => {
     expect(screen.getByText("9 days remaining")).toBeInTheDocument();
   });
 
-  it("lists each service with just its name and how long it lasts", async () => {
-    // One line per service and nothing else: the caption that used to sit over
-    // the list was longer than the list.
+  it("shows the service name and the date it is active until", async () => {
+    vi.spyOn(websiteSubscriptionService, "get").mockResolvedValue({
+      status: "active",
+      service: { id: 1, code: "uxiolabs", name: "UxioLabs Services" },
+      ends_at: "2026-09-14T00:00:00.000Z",
+      days_remaining: 300,
+      checkout_url: "https://pay.example.test/app/payment-admin/services/1/checkout",
+    });
+
     await renderRoute("/admin/dashboard");
 
-    expect(await screen.findByText("Active until 14 Sep 2026")).toBeInTheDocument();
-    expect(screen.queryByText("Governs the site's licence")).not.toBeInTheDocument();
-  });
-
-  it("opens the full list from Detail", async () => {
-    const user = userEvent.setup();
-    await renderRoute("/admin/dashboard");
-    await screen.findByText("Active until 14 Sep 2026");
-
-    await user.click(screen.getByRole("button", { name: "Detail" }));
-
-    const dialog = await screen.findByRole("dialog");
-    expect(within(dialog).getByText("Site subscription")).toBeInTheDocument();
-    expect(within(dialog).getByText("Active until 14 Sep 2026")).toBeInTheDocument();
+    expect(await screen.findByText("UxioLabs Services")).toBeInTheDocument();
+    expect(screen.getByText("Active until 14 Sep 2026")).toBeInTheDocument();
+    // The per-service list and its Detail dialog are gone from the footer.
+    expect(screen.queryByRole("button", { name: "Detail" })).not.toBeInTheDocument();
   });
 
   it("prints no period for a lifetime licence", async () => {
@@ -79,9 +74,9 @@ describe("WebsiteSubscriptionCard", () => {
 
     await renderRoute("/admin/dashboard");
 
-    // A one-time licence says "Lifetime" twice (summary + its row) and never
-    // an "Active until" period that would promise a renewal that never comes.
-    expect(await screen.findAllByText("Lifetime")).toHaveLength(2);
+    // A one-time licence says "Lifetime" and never an "Active until" period
+    // that would promise a renewal that never comes.
+    expect(await screen.findByText("Lifetime")).toBeInTheDocument();
     expect(screen.queryByText(/Active until/)).not.toBeInTheDocument();
   });
 
@@ -100,9 +95,9 @@ describe("WebsiteSubscriptionCard", () => {
     expect(await screen.findByText("Not subscribed")).toBeInTheDocument();
   });
 
-  it("renders nothing when there is nowhere to send the client", async () => {
-    // No default merchant or no matching service. A card reading "—" on every
-    // page is worse than no card.
+  it("still shows the card, with the button disabled, when billing is not configured", async () => {
+    // No default merchant or no matching service. The card stays visible so the
+    // footer does not look broken, but there is nowhere to send the client.
     vi.spyOn(websiteSubscriptionService, "get").mockResolvedValue({
       status: "unconfigured",
       service: null,
@@ -113,8 +108,10 @@ describe("WebsiteSubscriptionCard", () => {
 
     await renderRoute("/admin/dashboard");
 
-    await screen.findByRole("heading", { level: 1 });
-    expect(screen.queryByRole("link", { name: /Perpanjang/ })).not.toBeInTheDocument();
+    expect(await screen.findByText("Website subscription")).toBeInTheDocument();
+    expect(screen.getByText("Not configured")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Go Check" })).toBeDisabled();
+    expect(screen.queryByRole("link", { name: "Go Check" })).not.toBeInTheDocument();
   });
 
   it("says the site is switched off rather than counting down to a date", async () => {

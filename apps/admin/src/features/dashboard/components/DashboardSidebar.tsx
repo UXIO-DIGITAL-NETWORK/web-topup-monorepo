@@ -34,7 +34,6 @@ import { Text } from "@/components/common/Text";
 import { Link } from "@/components/common/Link";
 import { cn } from "@/lib/utils";
 
-
 export function DashboardSidebar() {
   const { t } = useTranslation("dashboard");
   const { siteName } = useBranding();
@@ -76,11 +75,13 @@ export function DashboardSidebar() {
                 <Box className="grid flex-1 text-left text-sm leading-tight">
                   <Text
                     as="span"
-                    className="truncate text-base font-bold"
-                  >{t("adminDashboard")}</Text>
+                    className="truncate text-sm font-semibold"
+                  >
+                    {t("adminDashboard")}
+                  </Text>
                   <Text
                     as="span"
-                    className="truncate text-[10px] font-semibold tracking-wider text-muted-foreground uppercase"
+                    className="truncate text-xs"
                   >
                     {siteName}
                   </Text>
@@ -97,7 +98,7 @@ export function DashboardSidebar() {
               type="button"
               onClick={() => setCommandOpen(true)}
               aria-label={t("search")}
-              className="ring-offset-background flex size-8 items-center justify-center rounded-lg border border-border bg-background text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="ring-offset-background flex size-8 items-center justify-center rounded-lg border border-input bg-transparent dark:bg-input/30 text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               <Search className="size-4" />
             </Box>
@@ -106,18 +107,20 @@ export function DashboardSidebar() {
               as="button"
               type="button"
               onClick={() => setCommandOpen(true)}
-              className="ring-offset-background flex h-9 w-full items-center gap-2 rounded-lg border border-border bg-background px-3 text-sm text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
+              className="ring-offset-background flex h-8 w-full items-center gap-1.5 rounded-lg border border-input bg-transparent dark:bg-input/30 px-2.5 text-sm text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
             >
               <Search className="size-4 shrink-0" />
               <Text
                 as="span"
                 className="flex-1 text-left"
-              >{t("search")}</Text>
+              >
+                {t("search")}
+              </Text>
               <Text
                 as="span"
-                className="rounded border border-border px-1.5 py-0.5 text-[10px] font-medium"
+                className="rounded-md bg-muted px-1 text-xs font-medium"
               >
-                ⌘F
+                ⌘ F
               </Text>
             </Box>
           )}
@@ -127,9 +130,7 @@ export function DashboardSidebar() {
       <SidebarContent className="[&::-webkit-scrollbar]:hidden [scrollbar-width:none]">
         {NAV_GROUPS.map((group) => (
           <SidebarGroup key={group.labelKey}>
-            <SidebarGroupLabel className="text-[10px] font-semibold text-muted-foreground uppercase">
-              {t(group.labelKey)}
-            </SidebarGroupLabel>
+            <SidebarGroupLabel>{t(group.labelKey)}</SidebarGroupLabel>
             <SidebarGroupContent>
               <SidebarMenu>
                 {group.items.map((item) => {
@@ -141,7 +142,7 @@ export function DashboardSidebar() {
                         isActive={isActive}
                         disabled={item.disabled}
                         className={cn(
-                          "rounded-lg text-muted-foreground hover:bg-accent hover:text-foreground",
+                          "rounded-lg text-foreground hover:bg-accent hover:text-foreground",
                           "data-[active=true]:bg-primary data-[active=true]:text-primary-foreground data-[active=true]:hover:bg-primary data-[active=true]:hover:text-primary-foreground",
                           item.disabled && "disabled:opacity-100",
                         )}
