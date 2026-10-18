@@ -54,6 +54,11 @@ export default function ManualTransactionsPage() {
   // Push new/updated transactions into the table live; the poll above is fallback.
   useTransactionsRealtime();
 
+  const handleResetFilters = () => {
+    setFilters({});
+    setPage(1);
+  };
+
   const handleFilterChange = (patch: Partial<TransactionFilters>) => {
     setFilters((prev) => ({ ...prev, ...patch }));
     setPage(1);
@@ -84,6 +89,7 @@ export default function ManualTransactionsPage() {
           isLoading={isLoading}
           isError={isError}
           onRetry={() => refetch()}
+          onResetFilters={Object.values(filters).some(Boolean) ? handleResetFilters : undefined}
           page={data?.meta.current_page ?? page}
           pageSize={data?.meta.per_page ?? pageSize}
           total={data?.meta.total ?? 0}
