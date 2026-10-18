@@ -8,12 +8,13 @@ import {
   type RowSelectionState,
   type SortingState,
 } from "@tanstack/react-table";
-import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
+import { ArrowDown, ArrowUp, ArrowUpDown, ReceiptText } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
 import { Text } from "@/components/common/Text";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import {
   Pagination,
   PaginationContent,
@@ -48,7 +49,8 @@ interface TransactionsTableProps<TData extends { id: string }> {
   isLoading?: boolean;
   isError?: boolean;
   onRetry?: () => void;
-  emptyMessage?: string;
+  /** Shown as the empty state's action when filters are narrowing the list; omit when there is nothing to clear. */
+  onResetFilters?: () => void;
   page: number;
   pageSize: number;
   total: number;
@@ -77,7 +79,7 @@ export function TransactionsTable<TData extends { id: string }>({
   isLoading = false,
   isError = false,
   onRetry,
-  emptyMessage = "No transactions found.",
+  onResetFilters,
   page,
   pageSize,
   total,
@@ -226,9 +228,24 @@ export function TransactionsTable<TData extends { id: string }>({
             <TableRow>
               <TableCell
                 colSpan={columnCount}
-                className="py-8 text-center text-muted-foreground"
+                className="py-8"
               >
-                {emptyMessage}
+                <Empty>
+                  <EmptyHeader>
+                    <EmptyMedia variant="icon">
+                      <ReceiptText />
+                    </EmptyMedia>
+                    <EmptyTitle>{t(onResetFilters ? "emptyFilteredTitle" : "emptyTitle")}</EmptyTitle>
+                    <EmptyDescription>{t(onResetFilters ? "emptyFilteredDescription" : "emptyDescription")}</EmptyDescription>
+                  </EmptyHeader>
+                  {onResetFilters && (
+                    <EmptyContent>
+                      <Button variant="outline" size="sm" onClick={onResetFilters}>
+                        {t("emptyReset")}
+                      </Button>
+                    </EmptyContent>
+                  )}
+                </Empty>
               </TableCell>
             </TableRow>
           ) : (

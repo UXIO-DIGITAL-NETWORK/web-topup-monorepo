@@ -208,5 +208,10 @@
   "colCreated": "Dibuat Pada",
   "colSent": "Terkirim Pada",
   "colRetriedBy": "Di Rehit Oleh",
-  "rehitCallback": "Rehit"
+  "rehitCallback": "Rehit",
+  "emptyTitle": "Belum ada transaksi",
+  "emptyDescription": "Pesanan akan muncul di sini begitu pelanggan mulai melakukan checkout.",
+  "emptyFilteredTitle": "Transaksi tidak ditemukan",
+  "emptyFilteredDescription": "Tidak ada yang cocok dengan filter saat ini. Coba perluas rentang tanggal atau hapus filter.",
+  "emptyReset": "Hapus filter"
 }
