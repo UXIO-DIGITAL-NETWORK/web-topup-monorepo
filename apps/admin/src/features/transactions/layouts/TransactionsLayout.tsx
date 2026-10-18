@@ -9,7 +9,6 @@ const TABS = [
   { value: "automatic", labelKey: "tabAutomatic", href: "/admin/transactions/automatic" },
   { value: "manual", labelKey: "tabManual", href: "/admin/transactions/manual" },
   { value: "refunds", labelKey: "tabRefunds", href: "/admin/transactions/refunds" },
-  { value: "invoice-log", labelKey: "tabInvoiceLog", href: "/admin/transactions/invoice-log" },
 ];
 
 /**
@@ -37,6 +36,7 @@ export function TransactionsLayout() {
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
+                className="flex-none"
                 asChild
               >
                 <Link href={tab.href}>{t(tab.labelKey)}</Link>

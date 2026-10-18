@@ -71,6 +71,27 @@ describe("transactions routes", () => {
     expect(await screen.findByRole("tab", { name: "Refunds" })).toHaveAttribute("data-state", "active");
   });
 
+  it("keeps Invoice Log out of the tab strip", async () => {
+    await renderRoute("/admin/transactions");
+
+    await screen.findByRole("tab", { name: "Automatic" });
+    expect(screen.queryByRole("tab", { name: "Invoice Log" })).not.toBeInTheDocument();
+  });
+
+  it("serves Invoice Log from its own route, without the Transactions tabs", async () => {
+    await renderRoute("/admin/invoice-log");
+
+    expect(await screen.findByRole("heading", { name: /invoice delivery log/i })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Automatic" })).not.toBeInTheDocument();
+  });
+
+  it("redirects the old /admin/transactions/invoice-log URL to the new one", async () => {
+    await renderRoute("/admin/transactions/invoice-log");
+
+    expect(await screen.findByRole("heading", { name: /invoice delivery log/i })).toBeInTheDocument();
+    expect(screen.queryByRole("tab", { name: "Automatic" })).not.toBeInTheDocument();
+  });
+
   it("hides the Automatic/Manual tabs on the edit sub-route", async () => {
     await renderRoute("/admin/transactions/automatic/ZP2607016UJFJVSHCJ/edit");
 

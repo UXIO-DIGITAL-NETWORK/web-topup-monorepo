@@ -61,6 +61,7 @@ describe("navbar page title", () => {
   it.each([
     ["/admin/users", "Users"],
     ["/admin/transactions/refunds", "Refunds"],
+    ["/admin/invoice-log", "Invoice Log"],
     ["/admin/reports", "Reports"],
     ["/admin/flash-sales", "Flash Sale"],
   ])("names %s rather than calling it the dashboard", async (path, title) => {

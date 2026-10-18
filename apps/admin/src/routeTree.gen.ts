@@ -34,6 +34,7 @@ import { Route as AdminProtectedPricingIndexRouteImport } from './routes/admin/_
 import { Route as AdminProtectedPaymentsIndexRouteImport } from './routes/admin/_protected/payments/index'
 import { Route as AdminProtectedNotificationsIndexRouteImport } from './routes/admin/_protected/notifications/index'
 import { Route as AdminProtectedMembershipsIndexRouteImport } from './routes/admin/_protected/memberships/index'
+import { Route as AdminProtectedInvoiceLogIndexRouteImport } from './routes/admin/_protected/invoice-log/index'
 import { Route as AdminProtectedIntegrationIndexRouteImport } from './routes/admin/_protected/integration/index'
 import { Route as AdminProtectedFlashSalesIndexRouteImport } from './routes/admin/_protected/flash-sales/index'
 import { Route as AdminProtectedFinancialIndexRouteImport } from './routes/admin/_protected/financial/index'
@@ -231,6 +232,12 @@ const AdminProtectedMembershipsIndexRoute =
   AdminProtectedMembershipsIndexRouteImport.update({
     id: '/memberships/',
     path: '/memberships/',
+    getParentRoute: () => AdminProtectedRoute,
+  } as any)
+const AdminProtectedInvoiceLogIndexRoute =
+  AdminProtectedInvoiceLogIndexRouteImport.update({
+    id: '/invoice-log/',
+    path: '/invoice-log/',
     getParentRoute: () => AdminProtectedRoute,
   } as any)
 const AdminProtectedIntegrationIndexRoute =
@@ -605,6 +612,7 @@ export interface FileRoutesByFullPath {
   '/admin/financial/': typeof AdminProtectedFinancialIndexRoute
   '/admin/flash-sales/': typeof AdminProtectedFlashSalesIndexRoute
   '/admin/integration/': typeof AdminProtectedIntegrationIndexRoute
+  '/admin/invoice-log/': typeof AdminProtectedInvoiceLogIndexRoute
   '/admin/memberships/': typeof AdminProtectedMembershipsIndexRoute
   '/admin/notifications/': typeof AdminProtectedNotificationsIndexRoute
   '/admin/payments/': typeof AdminProtectedPaymentsIndexRoute
@@ -680,6 +688,7 @@ export interface FileRoutesByTo {
   '/admin/financial': typeof AdminProtectedFinancialIndexRoute
   '/admin/flash-sales': typeof AdminProtectedFlashSalesIndexRoute
   '/admin/integration': typeof AdminProtectedIntegrationIndexRoute
+  '/admin/invoice-log': typeof AdminProtectedInvoiceLogIndexRoute
   '/admin/memberships': typeof AdminProtectedMembershipsIndexRoute
   '/admin/notifications': typeof AdminProtectedNotificationsIndexRoute
   '/admin/payments': typeof AdminProtectedPaymentsIndexRoute
@@ -765,6 +774,7 @@ export interface FileRoutesById {
   '/admin/_protected/financial/': typeof AdminProtectedFinancialIndexRoute
   '/admin/_protected/flash-sales/': typeof AdminProtectedFlashSalesIndexRoute
   '/admin/_protected/integration/': typeof AdminProtectedIntegrationIndexRoute
+  '/admin/_protected/invoice-log/': typeof AdminProtectedInvoiceLogIndexRoute
   '/admin/_protected/memberships/': typeof AdminProtectedMembershipsIndexRoute
   '/admin/_protected/notifications/': typeof AdminProtectedNotificationsIndexRoute
   '/admin/_protected/payments/': typeof AdminProtectedPaymentsIndexRoute
@@ -848,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/financial/'
     | '/admin/flash-sales/'
     | '/admin/integration/'
+    | '/admin/invoice-log/'
     | '/admin/memberships/'
     | '/admin/notifications/'
     | '/admin/payments/'
@@ -923,6 +934,7 @@ export interface FileRouteTypes {
     | '/admin/financial'
     | '/admin/flash-sales'
     | '/admin/integration'
+    | '/admin/invoice-log'
     | '/admin/memberships'
     | '/admin/notifications'
     | '/admin/payments'
@@ -1007,6 +1019,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/financial/'
     | '/admin/_protected/flash-sales/'
     | '/admin/_protected/integration/'
+    | '/admin/_protected/invoice-log/'
     | '/admin/_protected/memberships/'
     | '/admin/_protected/notifications/'
     | '/admin/_protected/payments/'
@@ -1244,6 +1257,13 @@ declare module '@tanstack/react-router' {
       path: '/memberships'
       fullPath: '/admin/memberships/'
       preLoaderRoute: typeof AdminProtectedMembershipsIndexRouteImport
+      parentRoute: typeof AdminProtectedRoute
+    }
+    '/admin/_protected/invoice-log/': {
+      id: '/admin/_protected/invoice-log/'
+      path: '/invoice-log'
+      fullPath: '/admin/invoice-log/'
+      preLoaderRoute: typeof AdminProtectedInvoiceLogIndexRouteImport
       parentRoute: typeof AdminProtectedRoute
     }
     '/admin/_protected/integration/': {
@@ -1912,6 +1932,7 @@ interface AdminProtectedRouteChildren {
   AdminProtectedFinancialIndexRoute: typeof AdminProtectedFinancialIndexRoute
   AdminProtectedFlashSalesIndexRoute: typeof AdminProtectedFlashSalesIndexRoute
   AdminProtectedIntegrationIndexRoute: typeof AdminProtectedIntegrationIndexRoute
+  AdminProtectedInvoiceLogIndexRoute: typeof AdminProtectedInvoiceLogIndexRoute
   AdminProtectedMembershipsIndexRoute: typeof AdminProtectedMembershipsIndexRoute
   AdminProtectedNotificationsIndexRoute: typeof AdminProtectedNotificationsIndexRoute
   AdminProtectedPaymentsIndexRoute: typeof AdminProtectedPaymentsIndexRoute
@@ -1940,6 +1961,7 @@ const AdminProtectedRouteChildren: AdminProtectedRouteChildren = {
   AdminProtectedFinancialIndexRoute: AdminProtectedFinancialIndexRoute,
   AdminProtectedFlashSalesIndexRoute: AdminProtectedFlashSalesIndexRoute,
   AdminProtectedIntegrationIndexRoute: AdminProtectedIntegrationIndexRoute,
+  AdminProtectedInvoiceLogIndexRoute: AdminProtectedInvoiceLogIndexRoute,
   AdminProtectedMembershipsIndexRoute: AdminProtectedMembershipsIndexRoute,
   AdminProtectedNotificationsIndexRoute: AdminProtectedNotificationsIndexRoute,
   AdminProtectedPaymentsIndexRoute: AdminProtectedPaymentsIndexRoute,

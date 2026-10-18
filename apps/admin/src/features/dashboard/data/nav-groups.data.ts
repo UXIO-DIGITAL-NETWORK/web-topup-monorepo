@@ -12,6 +12,7 @@ import {
   Percent,
   Plug,
   Receipt,
+  ScrollText,
   Settings,
   ShieldCheck,
   Star,
@@ -57,6 +58,7 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: "navOrders",
     items: [
       { labelKey: "navTransaction", href: "/admin/transactions", icon: Receipt },
+      { labelKey: "navInvoiceLog", href: "/admin/invoice-log", icon: ScrollText },
       { labelKey: "navActivity", href: "/admin/activity", icon: Activity },
       { labelKey: "navFeedback", href: "/admin/feedback", icon: Star },
     ],
