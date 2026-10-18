@@ -132,6 +132,43 @@ describe("RefundsPage", () => {
     complete.mockRestore();
   });
 
+  describe("when the list is empty", () => {
+    const emptyPage = {
+      data: [],
+      links: { first: null, last: null, prev: null, next: null },
+      meta: { current_page: 1, from: null, last_page: 1, path: "", per_page: 10, to: null, total: 0 },
+    };
+
+    it("shows the empty state instead of a bare sentence", async () => {
+      const list = vi.spyOn(refundsService, "list").mockResolvedValue(emptyPage);
+
+      await renderRoute("/admin/refunds-preview");
+
+      expect(await screen.findByText("No refunds yet")).toBeInTheDocument();
+      expect(screen.getByText("Refund requests will appear here once customers ask for one.")).toBeInTheDocument();
+      expect(screen.queryByRole("button", { name: "Clear filters" })).not.toBeInTheDocument();
+
+      list.mockRestore();
+    });
+
+    it("offers to clear the filters when they are what emptied the list", async () => {
+      const list = vi.spyOn(refundsService, "list").mockResolvedValue(emptyPage);
+
+      await renderRoute("/admin/refunds-preview");
+      const user = userEvent.setup();
+      await user.type(await screen.findByLabelText("Search refunds"), "nope");
+
+      expect(await screen.findByText("No matching refunds")).toBeInTheDocument();
+
+      await user.click(screen.getByRole("button", { name: "Clear filters" }));
+
+      expect(await screen.findByText("No refunds yet")).toBeInTheDocument();
+      expect(screen.getByLabelText("Search refunds")).toHaveValue("");
+
+      list.mockRestore();
+    });
+  });
+
   it("requires a reason before a refund can be rejected", async () => {
     const reject = vi.spyOn(refundsService, "reject");
 

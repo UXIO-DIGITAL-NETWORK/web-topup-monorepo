@@ -138,6 +138,7 @@
   "deleteDescription": "Catatan transaksi ini akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.",
   "tabAutomatic": "Otomatis",
   "tabManual": "Manual",
+  "tabRefunds": "Pengembalian Dana",
   "tabInvoiceLog": "Log Invoice",
   "invoiceLogTitle": "Log Pengiriman Invoice",
   "invoiceLogSubtitle": "Jejak setiap percobaan pengiriman invoice/struk ke pembeli — terkirim, gagal, atau dilewati beserta alasannya.",

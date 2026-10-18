@@ -60,7 +60,7 @@ describe("navbar logout", () => {
 describe("navbar page title", () => {
   it.each([
     ["/admin/users", "Users"],
-    ["/admin/refunds", "Refunds"],
+    ["/admin/transactions/refunds", "Refunds"],
     ["/admin/reports", "Reports"],
     ["/admin/flash-sales", "Flash Sale"],
   ])("names %s rather than calling it the dashboard", async (path, title) => {

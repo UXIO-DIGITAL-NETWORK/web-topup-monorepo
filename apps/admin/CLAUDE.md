@@ -40,7 +40,7 @@ Precedence when they conflict:
   repos deploy independently — do not make them required.
 - **Refunds are a queue, not a button.** `POST /v1/transactions/{id}/refund` no longer
   fires a gateway refund: a registered member is credited to their balance inline, and a
-  guest is queued on `/admin/refunds` for a manual bank transfer. Two consequences for
+  guest is queued on `/admin/transactions/refunds` for a manual bank transfer. Two consequences for
   anything touching transaction status: the local `refunded` status now asserts that money
   actually left, so it is filterable but **not settable** (`EDITABLE_INVOICE_STATUS_OPTIONS`,
   and the API 422s it on `manual-review`); and the payout bank list is fetched from

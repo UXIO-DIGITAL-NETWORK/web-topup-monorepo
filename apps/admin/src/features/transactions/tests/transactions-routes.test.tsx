@@ -58,6 +58,19 @@ describe("transactions routes", () => {
     expect(await screen.findByRole("heading", { name: "Edit Transaction" })).toBeInTheDocument();
   });
 
+  it("shows Refunds as a tab and resolves its page under Transactions", async () => {
+    await renderRoute("/admin/transactions/refunds");
+
+    expect(await screen.findByRole("heading", { name: "Refunds" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Refunds" })).toHaveAttribute("data-state", "active");
+  });
+
+  it("redirects the old /admin/refunds URL into the Refunds tab", async () => {
+    await renderRoute("/admin/refunds");
+
+    expect(await screen.findByRole("tab", { name: "Refunds" })).toHaveAttribute("data-state", "active");
+  });
+
   it("hides the Automatic/Manual tabs on the edit sub-route", async () => {
     await renderRoute("/admin/transactions/automatic/ZP2607016UJFJVSHCJ/edit");
 

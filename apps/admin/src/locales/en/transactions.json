@@ -138,6 +138,7 @@
   "deleteDescription": "This permanently removes the transaction record. This action cannot be undone.",
   "tabAutomatic": "Automatic",
   "tabManual": "Manual",
+  "tabRefunds": "Refunds",
   "tabInvoiceLog": "Invoice Log",
   "invoiceLogTitle": "Invoice Delivery Log",
   "invoiceLogSubtitle": "Every attempt to deliver an order's invoice to the buyer — sent, failed, or skipped, with the reason.",

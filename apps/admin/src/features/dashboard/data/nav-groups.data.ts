@@ -12,7 +12,6 @@ import {
   Percent,
   Plug,
   Receipt,
-  RotateCcw,
   Settings,
   ShieldCheck,
   Star,
@@ -58,7 +57,6 @@ export const NAV_GROUPS: NavGroup[] = [
     labelKey: "navOrders",
     items: [
       { labelKey: "navTransaction", href: "/admin/transactions", icon: Receipt },
-      { labelKey: "navRefunds", href: "/admin/refunds", icon: RotateCcw },
       { labelKey: "navActivity", href: "/admin/activity", icon: Activity },
       { labelKey: "navFeedback", href: "/admin/feedback", icon: Star },
     ],

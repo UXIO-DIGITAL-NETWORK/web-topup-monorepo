@@ -72,6 +72,7 @@ function getCategoryBreadcrumb(pathname: string, t: TFunction<"dashboard">): str
 const TRANSACTION_TAB_KEYS: Record<string, string> = {
   automatic: "tabAutomatic",
   manual: "tabManual",
+  refunds: "tabRefunds",
 };
 
 function getTransactionBreadcrumb(pathname: string, t: TFunction<"dashboard">): string[] | null {
