@@ -11,6 +11,7 @@
 - Tabs are fit-content (triggers `flex-none`); the bottom border still spans the full width.
 - Invoice Log left the tab strip for its own sidebar entry (`/admin/invoice-log`, Orders group); the old `/admin/transactions/invoice-log` URL redirects.
 - Brought in the transactions-table empty state from PR #24 (cherry-picked) so this branch shows it too.
+- Refunds filter bar + table now sit in the same bordered `bg-card` panel as the Transactions pages.
 - `DataTable` gained an optional `emptyState` node (falls back to `emptyMessage` as before).
 
 ## Why
