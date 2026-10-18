@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   flexRender,
   getCoreRowModel,
@@ -43,6 +43,8 @@ interface DataTableProps<TData extends { id: string }> {
   isError?: boolean;
   onRetry?: () => void;
   emptyMessage?: string;
+  /** Replaces `emptyMessage` with richer content (e.g. a shadcn `Empty`) when there are no rows. */
+  emptyState?: ReactNode;
   /** Plural noun for the footer count and the error state. Kept a prop
    * because every reference frame ships the "of 9999999 transactions" string
    * copy-pasted from Transaction, whatever the table actually lists
@@ -94,6 +96,7 @@ export function DataTable<TData extends { id: string }>({
   isError = false,
   onRetry,
   emptyMessage,
+  emptyState,
   entityLabel,
   showRowNumber = false,
   enableSelection = true,
@@ -236,9 +239,9 @@ export function DataTable<TData extends { id: string }>({
             <TableRow>
               <TableCell
                 colSpan={columnCount}
-                className="py-8 text-center text-muted-foreground"
+                className={emptyState ? "py-8" : "py-8 text-center text-muted-foreground"}
               >
-                {emptyMessage ?? t("table.empty", { entity: entityLabel })}
+                {emptyState ?? emptyMessage ?? t("table.empty", { entity: entityLabel })}
               </TableCell>
             </TableRow>
           ) : (

@@ -138,7 +138,7 @@
   "deleteDescription": "This permanently removes the transaction record. This action cannot be undone.",
   "tabAutomatic": "Automatic",
   "tabManual": "Manual",
-  "tabInvoiceLog": "Invoice Log",
+  "tabRefunds": "Refunds",
   "invoiceLogTitle": "Invoice Delivery Log",
   "invoiceLogSubtitle": "Every attempt to deliver an order's invoice to the buyer — sent, failed, or skipped, with the reason.",
   "invoiceLogSearchPlaceholder": "Invoice no.",
@@ -208,5 +208,10 @@
   "colCreated": "Created At",
   "colSent": "Sent At",
   "colRetriedBy": "Retried By",
-  "rehitCallback": "Rehit"
+  "rehitCallback": "Rehit",
+  "emptyTitle": "No transactions yet",
+  "emptyDescription": "Orders will appear here once customers start checking out.",
+  "emptyFilteredTitle": "No matching transactions",
+  "emptyFilteredDescription": "Nothing matches the current filters. Try widening the date range or clearing the filters.",
+  "emptyReset": "Clear filters"
 }

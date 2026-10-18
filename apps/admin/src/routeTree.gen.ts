@@ -34,6 +34,7 @@ import { Route as AdminProtectedPricingIndexRouteImport } from './routes/admin/_
 import { Route as AdminProtectedPaymentsIndexRouteImport } from './routes/admin/_protected/payments/index'
 import { Route as AdminProtectedNotificationsIndexRouteImport } from './routes/admin/_protected/notifications/index'
 import { Route as AdminProtectedMembershipsIndexRouteImport } from './routes/admin/_protected/memberships/index'
+import { Route as AdminProtectedInvoiceLogIndexRouteImport } from './routes/admin/_protected/invoice-log/index'
 import { Route as AdminProtectedIntegrationIndexRouteImport } from './routes/admin/_protected/integration/index'
 import { Route as AdminProtectedFlashSalesIndexRouteImport } from './routes/admin/_protected/flash-sales/index'
 import { Route as AdminProtectedFinancialIndexRouteImport } from './routes/admin/_protected/financial/index'
@@ -52,6 +53,7 @@ import { Route as AdminPreviewFinancePreviewIndexRouteImport } from './routes/ad
 import { Route as AdminPreviewDashboardPreviewIndexRouteImport } from './routes/admin/_preview/dashboard-preview/index'
 import { Route as AdminPreviewCategoriesPreviewIndexRouteImport } from './routes/admin/_preview/categories-preview/index'
 import { Route as AdminProtectedUsersUserIdIndexRouteImport } from './routes/admin/_protected/users/$userId/index'
+import { Route as AdminProtectedTransactionsRefundsIndexRouteImport } from './routes/admin/_protected/transactions/refunds/index'
 import { Route as AdminProtectedTransactionsManualIndexRouteImport } from './routes/admin/_protected/transactions/manual/index'
 import { Route as AdminProtectedTransactionsInvoiceLogIndexRouteImport } from './routes/admin/_protected/transactions/invoice-log/index'
 import { Route as AdminProtectedTransactionsAutomaticIndexRouteImport } from './routes/admin/_protected/transactions/automatic/index'
@@ -232,6 +234,12 @@ const AdminProtectedMembershipsIndexRoute =
     path: '/memberships/',
     getParentRoute: () => AdminProtectedRoute,
   } as any)
+const AdminProtectedInvoiceLogIndexRoute =
+  AdminProtectedInvoiceLogIndexRouteImport.update({
+    id: '/invoice-log/',
+    path: '/invoice-log/',
+    getParentRoute: () => AdminProtectedRoute,
+  } as any)
 const AdminProtectedIntegrationIndexRoute =
   AdminProtectedIntegrationIndexRouteImport.update({
     id: '/integration/',
@@ -339,6 +347,12 @@ const AdminProtectedUsersUserIdIndexRoute =
     id: '/users/$userId/',
     path: '/users/$userId/',
     getParentRoute: () => AdminProtectedRoute,
+  } as any)
+const AdminProtectedTransactionsRefundsIndexRoute =
+  AdminProtectedTransactionsRefundsIndexRouteImport.update({
+    id: '/refunds/',
+    path: '/refunds/',
+    getParentRoute: () => AdminProtectedTransactionsRouteRoute,
   } as any)
 const AdminProtectedTransactionsManualIndexRoute =
   AdminProtectedTransactionsManualIndexRouteImport.update({
@@ -598,6 +612,7 @@ export interface FileRoutesByFullPath {
   '/admin/financial/': typeof AdminProtectedFinancialIndexRoute
   '/admin/flash-sales/': typeof AdminProtectedFlashSalesIndexRoute
   '/admin/integration/': typeof AdminProtectedIntegrationIndexRoute
+  '/admin/invoice-log/': typeof AdminProtectedInvoiceLogIndexRoute
   '/admin/memberships/': typeof AdminProtectedMembershipsIndexRoute
   '/admin/notifications/': typeof AdminProtectedNotificationsIndexRoute
   '/admin/payments/': typeof AdminProtectedPaymentsIndexRoute
@@ -639,6 +654,7 @@ export interface FileRoutesByFullPath {
   '/admin/transactions/automatic/': typeof AdminProtectedTransactionsAutomaticIndexRoute
   '/admin/transactions/invoice-log/': typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   '/admin/transactions/manual/': typeof AdminProtectedTransactionsManualIndexRoute
+  '/admin/transactions/refunds/': typeof AdminProtectedTransactionsRefundsIndexRoute
   '/admin/users/$userId/': typeof AdminProtectedUsersUserIdIndexRoute
   '/admin/products-preview/main/add/': typeof AdminPreviewProductsPreviewMainAddIndexRoute
   '/admin/transaction-preview/$invoiceNo/edit/': typeof AdminPreviewTransactionPreviewInvoiceNoEditIndexRoute
@@ -672,6 +688,7 @@ export interface FileRoutesByTo {
   '/admin/financial': typeof AdminProtectedFinancialIndexRoute
   '/admin/flash-sales': typeof AdminProtectedFlashSalesIndexRoute
   '/admin/integration': typeof AdminProtectedIntegrationIndexRoute
+  '/admin/invoice-log': typeof AdminProtectedInvoiceLogIndexRoute
   '/admin/memberships': typeof AdminProtectedMembershipsIndexRoute
   '/admin/notifications': typeof AdminProtectedNotificationsIndexRoute
   '/admin/payments': typeof AdminProtectedPaymentsIndexRoute
@@ -713,6 +730,7 @@ export interface FileRoutesByTo {
   '/admin/transactions/automatic': typeof AdminProtectedTransactionsAutomaticIndexRoute
   '/admin/transactions/invoice-log': typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   '/admin/transactions/manual': typeof AdminProtectedTransactionsManualIndexRoute
+  '/admin/transactions/refunds': typeof AdminProtectedTransactionsRefundsIndexRoute
   '/admin/users/$userId': typeof AdminProtectedUsersUserIdIndexRoute
   '/admin/products-preview/main/add': typeof AdminPreviewProductsPreviewMainAddIndexRoute
   '/admin/transaction-preview/$invoiceNo/edit': typeof AdminPreviewTransactionPreviewInvoiceNoEditIndexRoute
@@ -756,6 +774,7 @@ export interface FileRoutesById {
   '/admin/_protected/financial/': typeof AdminProtectedFinancialIndexRoute
   '/admin/_protected/flash-sales/': typeof AdminProtectedFlashSalesIndexRoute
   '/admin/_protected/integration/': typeof AdminProtectedIntegrationIndexRoute
+  '/admin/_protected/invoice-log/': typeof AdminProtectedInvoiceLogIndexRoute
   '/admin/_protected/memberships/': typeof AdminProtectedMembershipsIndexRoute
   '/admin/_protected/notifications/': typeof AdminProtectedNotificationsIndexRoute
   '/admin/_protected/payments/': typeof AdminProtectedPaymentsIndexRoute
@@ -797,6 +816,7 @@ export interface FileRoutesById {
   '/admin/_protected/transactions/automatic/': typeof AdminProtectedTransactionsAutomaticIndexRoute
   '/admin/_protected/transactions/invoice-log/': typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   '/admin/_protected/transactions/manual/': typeof AdminProtectedTransactionsManualIndexRoute
+  '/admin/_protected/transactions/refunds/': typeof AdminProtectedTransactionsRefundsIndexRoute
   '/admin/_protected/users/$userId/': typeof AdminProtectedUsersUserIdIndexRoute
   '/admin/_preview/products-preview/main/add/': typeof AdminPreviewProductsPreviewMainAddIndexRoute
   '/admin/_preview/transaction-preview/$invoiceNo/edit/': typeof AdminPreviewTransactionPreviewInvoiceNoEditIndexRoute
@@ -838,6 +858,7 @@ export interface FileRouteTypes {
     | '/admin/financial/'
     | '/admin/flash-sales/'
     | '/admin/integration/'
+    | '/admin/invoice-log/'
     | '/admin/memberships/'
     | '/admin/notifications/'
     | '/admin/payments/'
@@ -879,6 +900,7 @@ export interface FileRouteTypes {
     | '/admin/transactions/automatic/'
     | '/admin/transactions/invoice-log/'
     | '/admin/transactions/manual/'
+    | '/admin/transactions/refunds/'
     | '/admin/users/$userId/'
     | '/admin/products-preview/main/add/'
     | '/admin/transaction-preview/$invoiceNo/edit/'
@@ -912,6 +934,7 @@ export interface FileRouteTypes {
     | '/admin/financial'
     | '/admin/flash-sales'
     | '/admin/integration'
+    | '/admin/invoice-log'
     | '/admin/memberships'
     | '/admin/notifications'
     | '/admin/payments'
@@ -953,6 +976,7 @@ export interface FileRouteTypes {
     | '/admin/transactions/automatic'
     | '/admin/transactions/invoice-log'
     | '/admin/transactions/manual'
+    | '/admin/transactions/refunds'
     | '/admin/users/$userId'
     | '/admin/products-preview/main/add'
     | '/admin/transaction-preview/$invoiceNo/edit'
@@ -995,6 +1019,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/financial/'
     | '/admin/_protected/flash-sales/'
     | '/admin/_protected/integration/'
+    | '/admin/_protected/invoice-log/'
     | '/admin/_protected/memberships/'
     | '/admin/_protected/notifications/'
     | '/admin/_protected/payments/'
@@ -1036,6 +1061,7 @@ export interface FileRouteTypes {
     | '/admin/_protected/transactions/automatic/'
     | '/admin/_protected/transactions/invoice-log/'
     | '/admin/_protected/transactions/manual/'
+    | '/admin/_protected/transactions/refunds/'
     | '/admin/_protected/users/$userId/'
     | '/admin/_preview/products-preview/main/add/'
     | '/admin/_preview/transaction-preview/$invoiceNo/edit/'
@@ -1233,6 +1259,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminProtectedMembershipsIndexRouteImport
       parentRoute: typeof AdminProtectedRoute
     }
+    '/admin/_protected/invoice-log/': {
+      id: '/admin/_protected/invoice-log/'
+      path: '/invoice-log'
+      fullPath: '/admin/invoice-log/'
+      preLoaderRoute: typeof AdminProtectedInvoiceLogIndexRouteImport
+      parentRoute: typeof AdminProtectedRoute
+    }
     '/admin/_protected/integration/': {
       id: '/admin/_protected/integration/'
       path: '/integration'
@@ -1358,6 +1391,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/users/$userId/'
       preLoaderRoute: typeof AdminProtectedUsersUserIdIndexRouteImport
       parentRoute: typeof AdminProtectedRoute
+    }
+    '/admin/_protected/transactions/refunds/': {
+      id: '/admin/_protected/transactions/refunds/'
+      path: '/refunds'
+      fullPath: '/admin/transactions/refunds/'
+      preLoaderRoute: typeof AdminProtectedTransactionsRefundsIndexRouteImport
+      parentRoute: typeof AdminProtectedTransactionsRouteRoute
     }
     '/admin/_protected/transactions/manual/': {
       id: '/admin/_protected/transactions/manual/'
@@ -1853,6 +1893,7 @@ interface AdminProtectedTransactionsRouteRouteChildren {
   AdminProtectedTransactionsAutomaticIndexRoute: typeof AdminProtectedTransactionsAutomaticIndexRoute
   AdminProtectedTransactionsInvoiceLogIndexRoute: typeof AdminProtectedTransactionsInvoiceLogIndexRoute
   AdminProtectedTransactionsManualIndexRoute: typeof AdminProtectedTransactionsManualIndexRoute
+  AdminProtectedTransactionsRefundsIndexRoute: typeof AdminProtectedTransactionsRefundsIndexRoute
   AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute: typeof AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute
   AdminProtectedTransactionsManualInvoiceNoEditIndexRoute: typeof AdminProtectedTransactionsManualInvoiceNoEditIndexRoute
 }
@@ -1866,6 +1907,8 @@ const AdminProtectedTransactionsRouteRouteChildren: AdminProtectedTransactionsRo
       AdminProtectedTransactionsInvoiceLogIndexRoute,
     AdminProtectedTransactionsManualIndexRoute:
       AdminProtectedTransactionsManualIndexRoute,
+    AdminProtectedTransactionsRefundsIndexRoute:
+      AdminProtectedTransactionsRefundsIndexRoute,
     AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute:
       AdminProtectedTransactionsAutomaticInvoiceNoEditIndexRoute,
     AdminProtectedTransactionsManualInvoiceNoEditIndexRoute:
@@ -1889,6 +1932,7 @@ interface AdminProtectedRouteChildren {
   AdminProtectedFinancialIndexRoute: typeof AdminProtectedFinancialIndexRoute
   AdminProtectedFlashSalesIndexRoute: typeof AdminProtectedFlashSalesIndexRoute
   AdminProtectedIntegrationIndexRoute: typeof AdminProtectedIntegrationIndexRoute
+  AdminProtectedInvoiceLogIndexRoute: typeof AdminProtectedInvoiceLogIndexRoute
   AdminProtectedMembershipsIndexRoute: typeof AdminProtectedMembershipsIndexRoute
   AdminProtectedNotificationsIndexRoute: typeof AdminProtectedNotificationsIndexRoute
   AdminProtectedPaymentsIndexRoute: typeof AdminProtectedPaymentsIndexRoute
@@ -1917,6 +1961,7 @@ const AdminProtectedRouteChildren: AdminProtectedRouteChildren = {
   AdminProtectedFinancialIndexRoute: AdminProtectedFinancialIndexRoute,
   AdminProtectedFlashSalesIndexRoute: AdminProtectedFlashSalesIndexRoute,
   AdminProtectedIntegrationIndexRoute: AdminProtectedIntegrationIndexRoute,
+  AdminProtectedInvoiceLogIndexRoute: AdminProtectedInvoiceLogIndexRoute,
   AdminProtectedMembershipsIndexRoute: AdminProtectedMembershipsIndexRoute,
   AdminProtectedNotificationsIndexRoute: AdminProtectedNotificationsIndexRoute,
   AdminProtectedPaymentsIndexRoute: AdminProtectedPaymentsIndexRoute,

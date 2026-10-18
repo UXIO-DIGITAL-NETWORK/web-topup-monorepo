@@ -8,7 +8,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 const TABS = [
   { value: "automatic", labelKey: "tabAutomatic", href: "/admin/transactions/automatic" },
   { value: "manual", labelKey: "tabManual", href: "/admin/transactions/manual" },
-  { value: "invoice-log", labelKey: "tabInvoiceLog", href: "/admin/transactions/invoice-log" },
+  { value: "refunds", labelKey: "tabRefunds", href: "/admin/transactions/refunds" },
 ];
 
 /**
@@ -28,11 +28,15 @@ export function TransactionsLayout() {
     <Box className="flex flex-col gap-6">
       {!onEditRoute && (
         <Tabs value={activeTab}>
-          <TabsList variant="line">
+          <TabsList
+            variant="line"
+            className="border-border w-full justify-start border-b"
+          >
             {TABS.map((tab) => (
               <TabsTrigger
                 key={tab.value}
                 value={tab.value}
+                className="flex-none"
                 asChild
               >
                 <Link href={tab.href}>{t(tab.labelKey)}</Link>

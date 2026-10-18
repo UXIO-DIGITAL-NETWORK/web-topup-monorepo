@@ -1,10 +1,13 @@
 import { useTranslation } from "react-i18next";
 import { useMemo, useState } from "react";
+import { RotateCcw } from "lucide-react";
 
 import { Box } from "@/components/common/Box";
 import { DataTable } from "@/components/common/DataTable";
 import { Heading } from "@/components/common/Heading";
 import { Text } from "@/components/common/Text";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
 import { formatCurrency } from "@/utils/currency";
 import { refundColumnsFor } from "../components/refundColumns";
 import { RefundFilterBar } from "../components/RefundFilterBar";
@@ -66,6 +69,9 @@ export default function RefundsPage() {
     setFilters(next);
     setPage(1);
   };
+
+  // Search and the two selects all narrow the list; `{}` is "nothing is narrowing it".
+  const filtered = Object.values(filters).some(Boolean);
 
   const outstanding = (data?.data ?? [])
     .filter(
@@ -160,31 +166,54 @@ export default function RefundsPage() {
         </Box>
       )}
 
-      <RefundFilterBar
-        filters={filters}
-        onChange={handleFilterChange}
-      />
+      <Box className="flex flex-col gap-9 rounded-2xl border border-border bg-card p-4">
+        <RefundFilterBar
+          filters={filters}
+          onChange={handleFilterChange}
+        />
 
-      <DataTable
-        columns={refundColumnsFor(t)}
-        data={data?.data ?? []}
-        isLoading={isLoading}
-        isError={isError}
-        onRetry={refetch}
-        entityLabel={t("entity")}
-        emptyMessage={t("empty")}
-        showRowNumber
-        enableSelection={false}
-        page={data?.meta.current_page ?? page}
-        pageSize={pageSize}
-        total={data?.meta.total ?? 0}
-        lastPage={data?.meta.last_page ?? 1}
-        onPageChange={setPage}
-        onPageSizeChange={(size) => {
-          setPageSize(size);
-          setPage(1);
-        }}
-      />
+        <DataTable
+          columns={refundColumnsFor(t)}
+          data={data?.data ?? []}
+          isLoading={isLoading}
+          isError={isError}
+          onRetry={refetch}
+          entityLabel={t("entity")}
+          emptyState={
+            <Empty>
+              <EmptyHeader>
+                <EmptyMedia variant="icon">
+                  <RotateCcw />
+                </EmptyMedia>
+                <EmptyTitle>{t(filtered ? "emptyFilteredTitle" : "emptyTitle")}</EmptyTitle>
+                <EmptyDescription>{t(filtered ? "emptyFilteredDescription" : "emptyDescription")}</EmptyDescription>
+              </EmptyHeader>
+              {filtered && (
+                <EmptyContent>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleFilterChange({})}
+                  >
+                    {t("emptyReset")}
+                  </Button>
+                </EmptyContent>
+              )}
+            </Empty>
+          }
+          showRowNumber
+          enableSelection={false}
+          page={data?.meta.current_page ?? page}
+          pageSize={pageSize}
+          total={data?.meta.total ?? 0}
+          lastPage={data?.meta.last_page ?? 1}
+          onPageChange={setPage}
+          onPageSizeChange={(size) => {
+            setPageSize(size);
+            setPage(1);
+          }}
+        />
+      </Box>
     </Box>
   );
 }
